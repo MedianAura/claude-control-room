@@ -1,24 +1,46 @@
 #!/usr/bin/env node
 // Lanceur et commandes de control-room.
-//   control-room start [--no-open]   lance le serveur et ouvre la page
+//   control-room start [--no-open]                                lance le serveur et ouvre la page
+//   control-room claim --project <dir> --plans <dir> --master <f> l'orchestratrice se déclare (depuis son Bash)
+//   control-room listen                                           l'orchestratrice reçoit les réponses (arrière-plan)
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
-const { stateDir, writeJson } = require('../lib/store');
+const { spawn, execSync } = require('child_process');
+const { stateDir, writeJson, readEvents } = require('../lib/store');
+
+const USAGE = `Usage :
+  control-room start [--no-open]
+  control-room claim --project <dossier> --plans <dossier des plans> --master <plan maître>
+  control-room listen`;
+
+function flag(args, name) {
+  const i = args.indexOf(`--${name}`);
+  return i >= 0 ? args[i + 1] : undefined;
+}
+
+function sessionInbox() {
+  const socket = process.env.CLAUDE_CODE_MESSAGING_SOCKET, token = process.env.CLAUDE_CODE_MESSAGING_TOKEN;
+  if (!socket || !token) {
+    console.error('Lance cette commande depuis le Bash de la session orchestratrice : CLAUDE_CODE_MESSAGING_SOCKET et CLAUDE_CODE_MESSAGING_TOKEN sont absents.');
+    process.exit(2);
+  }
+  return { socket, token };
+}
 
 const commands = {
   async start(args) {
     const { createServer } = require('../lib/server');
     const { loadClientSecret, newPageSecret } = require('../lib/auth');
+    const right = require('../lib/right');
+    const { createDelivery } = require('../lib/delivery');
     const port = parseInt(process.env.CONTROL_ROOM_PORT || '4242', 10);
     const pageSecret = newPageSecret();
     const bootstrapKey = newPageSecret();
-    const right = require('../lib/right');
-    const { readEvents } = require('../lib/store');
+    const delivery = createDelivery();
     const server = createServer({
-      pageSecret, bootstrapKey, clientSecret: loadClientSecret(), deliver: async () => {},
-      routes: [...right.routes],
-      state: () => ({ right: right.rightState(), events: readEvents() }),
+      pageSecret, bootstrapKey, clientSecret: loadClientSecret(), deliver: delivery.deliver,
+      routes: [...right.routes, ...delivery.routes],
+      state: () => ({ right: right.rightState(), events: readEvents(), alerts: delivery.alerts() }),
     });
     server.on('error', (e) => {
       if (e.code === 'EADDRINUSE') console.error(`control-room est déjà lancé (port ${port} occupé).`);
@@ -38,7 +60,29 @@ const commands = {
       if (!args.includes('--no-open')) openBrowser(url);
     });
   },
+
+  async claim(args) {
+    const { call } = require('../lib/client');
+    const inbox = sessionInbox();
+    const body = { ...inbox, project: flag(args, 'project'), plans: flag(args, 'plans'), master: flag(args, 'master'), version: claudeVersion() };
+    for (const k of ['project', 'plans', 'master']) if (!body[k]) { console.error(USAGE); process.exit(2); }
+    const r = await call('POST', '/api/claim', body);
+    if (r.status === 0) { console.error('control-room ne tourne pas : demande à l\'utilisateur de lancer control-room start.'); process.exit(1); }
+    if (r.status !== 200) { console.error(`Déclaration refusée (${r.status}).`); process.exit(1); }
+    console.log('Orchestratrice déclarée. Lance maintenant control-room listen en arrière-plan.');
+  },
+
+  async listen() {
+    const { listenForever } = require('../lib/listener');
+    const inbox = sessionInbox();
+    console.log('control-room listen : en écoute.');
+    await listenForever(inbox, (m) => console.log(`control-room listen : ${m}`));
+  },
 };
+
+function claudeVersion() {
+  try { return execSync('claude --version', { encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { return null; }
+}
 
 function openBrowser(url) {
   const [cmd, argv] = process.platform === 'win32' ? ['cmd', ['/c', 'start', '""', url]]
@@ -47,8 +91,5 @@ function openBrowser(url) {
 }
 
 const [name, ...args] = process.argv.slice(2);
-if (!commands[name]) {
-  console.error('Usage : control-room start [--no-open]');
-  process.exit(2);
-}
+if (!commands[name]) { console.error(USAGE); process.exit(2); }
 commands[name](args);

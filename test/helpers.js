@@ -20,6 +20,7 @@ async function startTestServer(opts = {}) {
   const server = createServer({ pageSecret, bootstrapKey, clientSecret, deliver: async (t) => { delivered.push(t); }, ...opts });
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const port = server.address().port;
+  fs.writeFileSync(path.join(process.env.CONTROL_ROOM_DIR, 'server.json'), JSON.stringify({ port, pid: process.pid }));
   return { server, port, pageSecret, bootstrapKey, clientSecret, delivered, close: () => new Promise(r => server.close(r)) };
 }
 

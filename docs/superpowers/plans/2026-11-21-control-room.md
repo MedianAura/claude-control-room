@@ -235,7 +235,7 @@ test('tickTest finds the line after it moved', () => { /* insert 5 lines above, 
   - `POST /api/plans` (client) `{name, dir, label, state: 'active'|'archived'}` → `active-plans.json`.
   - Voie `listener` : `control-room listen` (lancé en arrière-plan par l'orchestratrice) attend les messages du serveur en long poll et les écrit dans sa propre boîte. Voie `poll` : `deliver` ne fait que garder le message pour `wait_answers` (tâche 7).
 
-- [ ] **Step 1: Écrire les tests** (faux canal : `net.createServer` sur un canal nommé de test `\\.\pipe\cr-test-<hasard>` qui enregistre les lignes reçues)
+- [x] **Step 1: Écrire les tests** (faux canal : `net.createServer` sur un canal nommé de test `\\.\pipe\cr-test-<hasard>` qui enregistre les lignes reçues)
 
 ```js
 test('claim then answer delivers the auth line then the message', async () => {
@@ -248,11 +248,11 @@ test('a new claim takes over and warns the previous inbox', async () => { /* cla
 test('pending answers survive a takeover', async () => { /* answer while A's pipe is down → undelivered.jsonl; claim B → B receives it */ });
 ```
 
-- [ ] **Step 2: Lancer `node --test test/claim.test.js`** — attendu : FAIL.
-- [ ] **Step 3: Implémenter** `client.js`, `inbox.js`, `claim`, les deux routes ; `start` branche `deliver` sur `deliverTo(orchestrator.json)`.
-- [ ] **Step 4: Lancer `node --test test/`** — attendu : PASS.
-- [ ] **Step 5 (user):** dans une vraie session, `control-room claim …`, répondre à une carte dans la page : la session se réveille avec le texte de la réponse.
-- [ ] **Step 6: Commit** `feat: déclaration de l'orchestratrice et livraison dans sa boîte`
+- [x] **Step 2: Lancer `node --test test/claim.test.js`** — attendu : FAIL.
+- [x] **Step 3: Implémenter** `client.js`, `inbox.js`, `claim`, les deux routes ; `start` branche `deliver` sur `deliverTo(orchestrator.json)`.
+- [x] **Step 4: Lancer `node --test test/`** — attendu : PASS.
+- [x] **Step 5 (user):** dans une vraie session, `control-room claim …`, répondre à une carte dans la page : la session se réveille avec le texte de la réponse.
+- [x] **Step 6: Commit** `feat: déclaration de l'orchestratrice et livraison dans sa boîte`
 
 ---
 
