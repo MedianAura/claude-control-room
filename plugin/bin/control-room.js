@@ -39,7 +39,7 @@ const commands = {
     const delivery = createDelivery();
     const server = createServer({
       pageSecret, bootstrapKey, clientSecret: loadClientSecret(), deliver: delivery.deliver,
-      routes: [...right.routes, ...delivery.routes],
+      routes: [...right.routes, ...delivery.routes, ...require('../lib/orchestrator-routes').routes],
       state: () => ({ right: right.rightState(), events: readEvents(), alerts: delivery.alerts() }),
     });
     server.on('error', (e) => {

@@ -117,6 +117,15 @@ function createDelivery({ ackTimeoutMs = 30000 } = {}) {
     } },
     { method: 'GET', match: p => p === '/api/outbox/pending', auth: 'client', handle: async (req, res, url, { send }) =>
       send(res, 200, { messages: pendingFor(url.searchParams.get('socket')) }) },
+    // Mode secours (wait_answers) : la file de l'orchestratrice déclarée, remise et acquittée d'un coup.
+    { method: 'GET', match: p => p === '/api/outbox/drain', auth: 'client', handle: async (req, res, url, { send }) => {
+      const o = readJson(orchFile());
+      if (!o) return send(res, 200, { messages: [] });
+      const wait = Math.max(0, Math.min(Number(url.searchParams.get('wait')) || 0, 600));
+      const r = await take(o.socket, wait);
+      for (const m of r.messages) ack(m.id);
+      return send(res, 200, { messages: r.messages });
+    } },
     { method: 'POST', match: p => p === '/api/ack', auth: 'client', handle: async (req, res, url, { readBody, send }) => {
       const { id } = await readBody(req);
       return send(res, ack(id) ? 200 : 404, { ok: true });

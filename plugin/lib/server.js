@@ -8,7 +8,7 @@ const { isClient, isPage, same } = require('./auth');
 const UI_FILE = path.join(__dirname, '..', 'ui', 'index.html');
 const MAX_WAIT_S = 870;
 
-function readBody(req, limit = 1e6) {
+function readBody(req, limit = 1024 * 1024) {
   return new Promise((resolve, reject) => {
     let size = 0; const chunks = [];
     req.on('data', (d) => {

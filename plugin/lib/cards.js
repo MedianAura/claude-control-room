@@ -61,6 +61,14 @@ function answerCard(id, { choice, note }) {
   return { ok: true, card };
 }
 
+function cancelCard(id) {
+  const card = readCard(id);
+  if (!card || card.status !== 'pending') return false;
+  card.status = 'cancelled';
+  writeCard(card);
+  return true;
+}
+
 function takeUndelivered(owner) {
   const out = [];
   for (const c of allCards()) {
@@ -87,4 +95,4 @@ function formatAnswer(card) {
   return t;
 }
 
-module.exports = { createCard, readCard, pendingCards, answerCard, takeUndelivered, formatAnswer, allCards };
+module.exports = { createCard, readCard, pendingCards, answerCard, cancelCard, takeUndelivered, formatAnswer, allCards };

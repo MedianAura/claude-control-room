@@ -274,11 +274,11 @@ test('pending answers survive a takeover', async () => { /* answer while A's pip
   - Serveur absent : chaque outil répond `isError` « control-room ne tourne pas : lance `control-room start` ».
 - Produces, `POST /api/message` (page) `{text, image?: dataURL}` : image → `<dir>/uploads/<horodatage>.png` ; livre `[control-room] Message de l'utilisateur : <text>` + `\nCapture : <chemin absolu>` ; > 10 Mo → 413, type hors `image/png|jpeg|webp` → 415.
 
-- [ ] **Step 1: Écrire les tests** : `tools/list` contient les 6 outils ; `queue_decision` crée une carte visible dans `/api/state` ; outil appelé serveur arrêté → `isError` avec le texte ci-dessus ; `/api/message` avec une image de 11 Mo → 413, rien de livré ; avec `data:text/html…` → 415.
-- [ ] **Step 2: Lancer `node --test test/mcp.test.js`** — attendu : FAIL.
-- [ ] **Step 3: Implémenter** le serveur MCP et la route ; UI : Ctrl+V d'une image dans la zone de saisie → aperçu + envoi.
-- [ ] **Step 4: Lancer `node --test test/`** — attendu : PASS.
-- [ ] **Step 5: Commit** `feat: outils MCP de l'orchestratrice et messages libres avec capture`
+- [x] **Step 1: Écrire les tests** : `tools/list` contient les 6 outils ; `queue_decision` crée une carte visible dans `/api/state` ; outil appelé serveur arrêté → `isError` avec le texte ci-dessus ; `/api/message` avec une image de 11 Mo → 413, rien de livré ; avec `data:text/html…` → 415.
+- [x] **Step 2: Lancer `node --test test/mcp.test.js`** — attendu : FAIL.
+- [x] **Step 3: Implémenter** le serveur MCP et la route ; UI : Ctrl+V d'une image dans la zone de saisie → aperçu + envoi.
+- [x] **Step 4: Lancer `node --test test/`** — attendu : PASS.
+- [x] **Step 5: Commit** `feat: outils MCP de l'orchestratrice et messages libres avec capture`
 
 ---
 
