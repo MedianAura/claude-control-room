@@ -45,12 +45,12 @@ Le format des messages n'est pas documenté (seule la ligne `{"type":"auth","tok
 **Interfaces:**
 - Produces : la note donne (a) le format de ligne qui livre un message, (b) le texte tel que la session le reçoit, (c) si `CLAUDE_CODE_MESSAGING_SOCKET` est visible dans l'environnement d'un hook, (d) la voie de livraison retenue : `server` (le serveur écrit), `listener` (un processus lancé par l'orchestratrice écrit dans sa propre boîte) ou `poll` (`wait_answers`).
 
-- [ ] **Step 1: Écrire `spike/inbox-probe.js <variant> <delaySec>`** : attend `delaySec`, ouvre `net.createConnection(process.env.CLAUDE_CODE_MESSAGING_SOCKET)`, écrit la ligne d'auth avec `CLAUDE_CODE_MESSAGING_TOKEN`, puis une ligne selon `variant` : `plain` (texte brut), `json-text` (`{"type":"message","text":…}`), `json-message` (`{"message":…}`), `json-content` (`{"content":…}`) ; affiche tout ce que la connexion renvoie avant de fermer.
-- [ ] **Step 2: Depuis une session Claude Code, lancer chaque variante en arrière-plan** (`node spike/inbox-probe.js plain 15`, un à la fois, la session restant inactive pendant le délai). Résultat attendu : au moins une variante fait démarrer un tour avec le texte envoyé. Noter le texte reçu mot pour mot et toute réponse du canal.
-- [ ] **Step 3: Vérifier qu'un processus non enfant peut livrer** : copier chemin et jeton dans un fichier, puis lancer la variante gagnante depuis un autre terminal (pas un enfant de la session). Noter si le message arrive, est retenu pour approbation, ou est refusé.
-- [ ] **Step 4: Vérifier l'environnement des hooks** : un hook `SessionStart` temporaire (`.claude/settings.local.json` de ce dépôt) écrit `CLAUDE_CODE_MESSAGING_SOCKET` dans un fichier. Noter s'il est présent et identique à celui de Bash. Retirer le hook.
-- [ ] **Step 5: Écrire la note** `docs/superpowers/specs/2026-11-21-inbox-spike.md` (points a–d, plus la version de Claude Code). Choix de voie : `server` si l'étape 3 livre ; sinon `listener` si l'étape 2 livre ; sinon `poll`.
-- [ ] **Step 6: Supprimer `spike/` et commiter la note**
+- [x] **Step 1: Écrire `spike/inbox-probe.js <variant> <delaySec>`** : attend `delaySec`, ouvre `net.createConnection(process.env.CLAUDE_CODE_MESSAGING_SOCKET)`, écrit la ligne d'auth avec `CLAUDE_CODE_MESSAGING_TOKEN`, puis une ligne selon `variant` : `plain` (texte brut), `json-text` (`{"type":"message","text":…}`), `json-message` (`{"message":…}`), `json-content` (`{"content":…}`) ; affiche tout ce que la connexion renvoie avant de fermer.
+- [x] **Step 2: Depuis une session Claude Code, lancer chaque variante en arrière-plan** (`node spike/inbox-probe.js plain 15`, un à la fois, la session restant inactive pendant le délai). Résultat attendu : au moins une variante fait démarrer un tour avec le texte envoyé. Noter le texte reçu mot pour mot et toute réponse du canal.
+- [x] **Step 3: Vérifier qu'un processus non enfant peut livrer** : copier chemin et jeton dans un fichier, puis lancer la variante gagnante depuis un autre terminal (pas un enfant de la session). Noter si le message arrive, est retenu pour approbation, ou est refusé.
+- [x] **Step 4: Vérifier l'environnement des hooks** : un hook `SessionStart` temporaire (`.claude/settings.local.json` de ce dépôt) écrit `CLAUDE_CODE_MESSAGING_SOCKET` dans un fichier. Noter s'il est présent et identique à celui de Bash. Retirer le hook.
+- [x] **Step 5: Écrire la note** `docs/superpowers/specs/2026-11-21-inbox-spike.md` (points a–d, plus la version de Claude Code). Choix de voie : `server` si l'étape 3 livre ; sinon `listener` si l'étape 2 livre ; sinon `poll`.
+- [x] **Step 6: Supprimer `spike/` et commiter la note**
 
 ```bash
 git add docs/superpowers/specs/2026-11-21-inbox-spike.md
@@ -76,7 +76,7 @@ git commit -m "docs: résultat de l'essai sur la boîte de réception"
   - `takeUndelivered(owner): Card[]` — réponses non livrées de ce propriétaire, marquées livrées.
   - `formatAnswer(card): string` — le texte livré à l'orchestratrice.
 
-- [ ] **Step 1: Écrire les tests**
+- [x] **Step 1: Écrire les tests**
 
 ```js
 test('approval cards sort before urgent and normal cards', () => {
@@ -106,10 +106,10 @@ test('formatAnswer names the agent, the choice label and the note', () => {
 
 Chaque test fixe `process.env.CONTROL_ROOM_DIR` sur un dossier `fs.mkdtempSync`.
 
-- [ ] **Step 2: Lancer `node --test test/cards.test.js`** — attendu : FAIL, modules absents.
-- [ ] **Step 3: Implémenter `store.js` et `cards.js`** en reprenant `writeCard`/`allCards`/`takeAnswers` de decision-inbox (`C:\Users\Aura\Downloads\decision-inbox.zip`, `server/server.js` l. 24-77), propriétaire stable au lieu de `hostname-pid-hasard`. `formatAnswer` : `[control-room] <agent> — « <summary> » → <libellé du choix>` + `\nNote : <note>` si présente ; `choice: 'proposition'` → « proposition acceptée : <proposition> », `choice: 'note'` → « réponse libre ».
-- [ ] **Step 4: Lancer `node --test test/`** — attendu : PASS.
-- [ ] **Step 5: Commit** `feat: stockage et cartes, propriétaire stable`
+- [x] **Step 2: Lancer `node --test test/cards.test.js`** — attendu : FAIL, modules absents.
+- [x] **Step 3: Implémenter `store.js` et `cards.js`** en reprenant `writeCard`/`allCards`/`takeAnswers` de decision-inbox (`C:\Users\Aura\Downloads\decision-inbox.zip`, `server/server.js` l. 24-77), propriétaire stable au lieu de `hostname-pid-hasard`. `formatAnswer` : `[control-room] <agent> — « <summary> » → <libellé du choix>` + `\nNote : <note>` si présente ; `choice: 'proposition'` → « proposition acceptée : <proposition> », `choice: 'note'` → « réponse libre ».
+- [x] **Step 4: Lancer `node --test test/`** — attendu : PASS.
+- [x] **Step 5: Commit** `feat: stockage et cartes, propriétaire stable`
 
 ---
 
@@ -130,7 +130,7 @@ Chaque test fixe `process.env.CONTROL_ROOM_DIR` sur un dossier `fs.mkdtempSync`.
   - `GET /api/cards/:id/answer?wait=<s>` (client) → réponse ou 204 au bout de `wait` (max 870).
 - Produces (`control-room.js`) : sous-commande `start` : écrit `<dir>/server.json` `{port, pid}`, écoute, ouvre le navigateur sur `http://127.0.0.1:<port>/?k=<page>` (`start ""` sous Windows) et affiche l'URL ; port occupé → message « déjà lancé » et sortie 1.
 
-- [ ] **Step 1: Écrire les tests** (serveur sur `port: 0`, `deliver` espion)
+- [x] **Step 1: Écrire les tests** (serveur sur `port: 0`, `deliver` espion)
 
 ```js
 test('the client secret cannot answer a card', async () => {
@@ -151,10 +151,10 @@ test('the long poll returns the answer as soon as it exists', async () => { /* a
 test('the page secret never reaches the state dir', () => { /* grep every file under CONTROL_ROOM_DIR for pageSecret → none */ });
 ```
 
-- [ ] **Step 2: Lancer `node --test test/server.test.js`** — attendu : FAIL.
-- [ ] **Step 3: Implémenter `auth.js`, `server.js`, `start`** ; comparaison des secrets en `crypto.timingSafeEqual`.
-- [ ] **Step 4: Lancer `node --test test/`** — attendu : PASS.
-- [ ] **Step 5: Commit** `feat: serveur autonome, deux secrets, lanceur`
+- [x] **Step 2: Lancer `node --test test/server.test.js`** — attendu : FAIL.
+- [x] **Step 3: Implémenter `auth.js`, `server.js`, `start`** ; comparaison des secrets en `crypto.timingSafeEqual`.
+- [x] **Step 4: Lancer `node --test test/`** — attendu : PASS.
+- [x] **Step 5: Commit** `feat: serveur autonome, deux secrets, lanceur`
 
 ---
 
@@ -168,12 +168,12 @@ test('the page secret never reaches the state dir', () => { /* grep every file u
 - Consumes : `GET /api/state`, `POST /api/answer` (tâche 3).
 - Produces : la mise en page des maquettes `F:\AzerothCoreCOA\.superpowers\brainstorm\269611-1795301586\content\layout-v2.html` : bandeau Sessions (vide jusqu'à la tâche 8), « À trancher n/m · ensuite : … », carte, zone « Écrire à l'orchestratrice… », bouton 🕘, colonne de droite (vide jusqu'à la tâche 5).
 
-- [ ] **Step 1: Forker `ui.html`** : garder `esc`, `md`, `render`, raccourcis 1–9 / Entrée / N / Maj+chiffre / Ctrl+Entrée. Les cartes `approval` montrent la commande (`tool.input.command` ou JSON) et deux boutons « Autoriser » / « Refuser » + note. Les cartes `reply` n'ont qu'un bouton « Lu ».
-- [ ] **Step 2: Règle « rien ne bouge »** : le rafraîchissement (toutes les 1,5 s) ne remplace jamais la carte affichée tant qu'elle n'est pas répondue ; seuls « ensuite : … », le compteur et le bandeau changent. 🕘 ouvre un tiroir avec `recent` (réponses et événements), fermé par défaut.
-- [ ] **Step 3: Résumé au retour** : sur `visibilitychange`/`focus` après plus de 120 s d'absence, une ligne « Pendant ton absence (N min) : … » liste les `events` postérieurs au départ (cartes arrivées, tests ajoutés, changements d'état des sessions) ; elle reste jusqu'au clic sur ✕.
-- [ ] **Step 4: Vérifier avec `node --test test/`** (aucune régression), puis lancer `control-room start`, créer 3 cartes au secret des clients (`curl`) et répondre au clavier.
+- [x] **Step 1: Forker `ui.html`** : garder `esc`, `md`, `render`, raccourcis 1–9 / Entrée / N / Maj+chiffre / Ctrl+Entrée. Les cartes `approval` montrent la commande (`tool.input.command` ou JSON) et deux boutons « Autoriser » / « Refuser » + note. Les cartes `reply` n'ont qu'un bouton « Lu ».
+- [x] **Step 2: Règle « rien ne bouge »** : le rafraîchissement (toutes les 1,5 s) ne remplace jamais la carte affichée tant qu'elle n'est pas répondue ; seuls « ensuite : … », le compteur et le bandeau changent. 🕘 ouvre un tiroir avec `recent` (réponses et événements), fermé par défaut.
+- [x] **Step 3: Résumé au retour** : sur `visibilitychange`/`focus` après plus de 120 s d'absence, une ligne « Pendant ton absence (N min) : … » liste les `events` postérieurs au départ (cartes arrivées, tests ajoutés, changements d'état des sessions) ; elle reste jusqu'au clic sur ✕.
+- [x] **Step 4: Vérifier avec `node --test test/`** (aucune régression), puis lancer `control-room start`, créer 3 cartes au secret des clients (`curl`) et répondre au clavier.
 - [ ] **Step 5 (user):** la carte ne change pas pendant qu'on la lit alors que deux cartes arrivent ; le résumé apparaît après 2 min dans une autre fenêtre.
-- [ ] **Step 6: Commit** `feat: page de la salle de contrôle`
+- [x] **Step 6: Commit** `feat: page de la salle de contrôle`
 
 ---
 
