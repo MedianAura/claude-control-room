@@ -132,8 +132,11 @@ function md(s) {
   return out + (inList ? '</ul>' : '');
 }
 const hhmm = (t) => new Date(t).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
+// Erreur réseau (serveur arrêté, connexion coupée) : status 0, jamais d'exception silencieuse.
 async function post(url, body) {
-  const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  let r;
+  try { r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }); }
+  catch { return { status: 0 }; }
   let json; try { json = await r.json(); } catch {}
   return { status: r.status, json };
 }
@@ -159,6 +162,7 @@ function renderCard() {
     return;
   }
   currentId = next.id;
+  shownAt = Date.now();
   const opts = optionsOf(next);
   const optHtml = opts.map((o, i) => `
     <button class="opt ${next.recommended === o.id ? 'rec' : ''} ${o.cls || ''}" data-choice="${esc(o.id)}">
@@ -213,8 +217,15 @@ async function answer(choice) {
   }
 }
 
+// Une approbation n'accepte de raccourci qu'après ce délai : une touche répétée ou un double appui sur la carte
+// précédente ne doit jamais tomber sur « Autoriser » (revue #10).
+const APPROVAL_ARM_MS = 800;
+let shownAt = 0;
+
 document.addEventListener('keydown', (e) => {
+  if (e.repeat) return;
   const c = currentId && state.pending.find(x => x.id === currentId); if (!c) return;
+  if (c.kind === 'approval' && Date.now() - shownAt < APPROVAL_ARM_MS && !e.target.closest?.('#note')) return;
   const a = document.activeElement;
   if (a && (a.id === 'msg' || (a.closest && a.closest('aside')))) return;
   if (a && a.id === 'note') {
@@ -281,7 +292,9 @@ $('#msg').addEventListener('paste', (e) => {
   e.preventDefault();
   const reader = new FileReader();
   reader.onload = () => { shot = reader.result; $('#shot').style.display = 'block'; $('#shot').innerHTML = `<img src="${shot}" alt=""> capture jointe · <a href="#" id="dropShot">retirer</a>`; $('#dropShot').onclick = (ev) => { ev.preventDefault(); clearShot(); }; };
-  reader.readAsDataURL(f.getAsFile());
+  const file = f.getAsFile();
+  if (file.size > 10 * 1024 * 1024) { $('#shot').style.display = 'block'; $('#shot').textContent = 'Capture trop lourde (10 Mo max).'; return; }
+  reader.readAsDataURL(file);
 });
 function clearShot() { shot = null; $('#shot').style.display = 'none'; $('#shot').innerHTML = ''; }
 async function sendMessage() {
@@ -289,7 +302,7 @@ async function sendMessage() {
   if (!text && !shot) return;
   const r = await post('/api/message', { text, image: shot || undefined });
   if (r.status === 200) { $('#msg').value = ''; clearShot(); load(); }
-  else { $('#shot').style.display = 'block'; $('#shot').textContent = r.status === 413 ? 'Capture trop lourde (10 Mo max).' : r.status === 415 ? 'Ce n\'est pas une image PNG, JPEG ou WebP.' : `Envoi impossible (${r.status}).`; shot = null; }
+  else { $('#shot').style.display = 'block'; $('#shot').textContent = r.status === 413 ? 'Capture trop lourde (10 Mo max).' : r.status === 415 ? 'Ce n\'est pas une image PNG, JPEG ou WebP.' : r.status === 0 ? 'control-room ne répond plus (serveur arrêté ?).' : `Envoi impossible (${r.status}).`; shot = null; }
 }
 $('#sendMsg').onclick = sendMessage;
 $('#msg').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendMessage(); } });

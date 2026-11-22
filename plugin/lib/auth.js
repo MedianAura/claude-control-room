@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { stateDir } = require('./store');
+const { HOST } = require('./host');
 
 function clientSecretPath() { return path.join(stateDir(), 'client.secret'); }
 
@@ -35,7 +36,7 @@ function cookie(req, name) {
 }
 
 function hostOk(req, port) {
-  return [`127.0.0.1:${port}`, `localhost:${port}`].includes(req.headers.host);
+  return req.headers.host === `${HOST}:${port}`;
 }
 
 function isClient(req, clientSecret) {
@@ -46,7 +47,7 @@ function isClient(req, clientSecret) {
 function isPage(req, pageSecret, port, { write = false } = {}) {
   if (!same(cookie(req, 'cr_page'), pageSecret) || !hostOk(req, port)) return false;
   if (!write) return true;
-  return [`http://127.0.0.1:${port}`, `http://localhost:${port}`].includes(req.headers.origin);
+  return req.headers.origin === `http://${HOST}:${port}`;
 }
 
 module.exports = { loadClientSecret, newPageSecret, isClient, isPage, same };

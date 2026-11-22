@@ -17,8 +17,8 @@ Node pur, aucune dépendance. État dans `~/.claude/control-room/`.
 
 1. Dans **ton** terminal : `control-room start`. La page s'ouvre. Ne laisse pas une session Claude le lancer :
    l'adresse ouverte contient une clé (à usage unique) qui permet d'approuver.
-2. Lance l'orchestratrice et dis-lui : « Utilise le skill control-room. » Elle se déclare (`claim`) et lance son
-   écouteur (`listen`).
+2. Lance l'orchestratrice et dis-lui : « Utilise le skill control-room. » Elle se déclare (`claim`, qui lui donne
+   un code de confiance) et lance son écouteur (`listen --claim …`).
 3. Lance les sessions de travail. L'orchestratrice leur demande de s'inscrire (`control-room label …`).
 
 Commencer avec 2 ou 3 sessions.
@@ -43,6 +43,9 @@ control-room claim --project F:\AzerothCoreCOA --plans F:\AzerothCoreCOA\.agents
 ```
 
 ## Limites connues
+
+- La page vit sur `http://127.83.82.1:4242` (bouclage dédié : son cookie n'est pas envoyé aux autres serveurs
+  locaux). Surcharge : `CONTROL_ROOM_HOST`. Un redémarrage du navigateur demande de relancer `control-room start`.
 
 - La livraison à l'orchestratrice écrit dans sa boîte de réception de session avec un format **non documenté**
   (trouvé dans Claude Code 2.1.330). Une mise à jour peut le casser : la page l'affiche alors en rouge et les

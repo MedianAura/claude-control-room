@@ -1,66 +1,81 @@
 // Livraison vers l'orchestratrice, voie « listener » (essai de la tâche 1) :
-// le serveur garde une file par boîte de réception ; `control-room listen`, enfant de l'orchestratrice,
-// la vide et écrit dans sa propre boîte ; le hook UserPromptSubmit renvoie l'accusé `[cr:<id>]`.
+// le serveur garde une file ; `control-room listen --claim <id>`, enfant de l'orchestratrice, la vide et écrit
+// dans sa propre boîte ; le hook UserPromptSubmit renvoie l'accusé `[cr:<id>:<code>]`.
+//
+// Confiance (revue #7/#8) : `claim` rend un identifiant de déclaration connu de la seule orchestratrice.
+// orchestrator.json ne garde que des empreintes (socket, claim) : une autre session ne peut ni vider la file
+// (il faut le claimId) ni recevoir les réponses en souffrance (il faut le socket de l'orchestratrice). Le code
+// de 6 caractères, montré à l'orchestratrice, signe chaque message : le skill lui demande de le vérifier.
 const path = require('path');
 const crypto = require('crypto');
 const { stateDir, readJson, writeJson, addEvent } = require('./store');
 
 const TAKEOVER = '[control-room] Une autre orchestratrice a pris le relais. Arrête control-room listen ; tes cartes en attente passent à la nouvelle.';
+const sha = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');
+const codeOf = (claimId) => sha(`code:${claimId}`).slice(0, 6);
 
-function createDelivery({ ackTimeoutMs = 30000 } = {}) {
+function createDelivery({ ackTimeoutMs = 120000, foreignTtlMs = 10 * 60000 } = {}) {
   const outboxFile = () => path.join(stateDir(), 'outbox.json');
   const orchFile = () => path.join(stateDir(), 'orchestrator.json');
   const plansFile = () => path.join(stateDir(), 'active-plans.json');
   const load = () => readJson(outboxFile()) || [];
   const save = (box) => writeJson(outboxFile(), box);
+  const current = () => readJson(orchFile());
   const waiters = new Set();
-  const wakeAll = () => { for (const w of waiters) w(); waiters.clear(); };
-  const superseded = new Set();
+  const wakeAll = () => { for (const w of [...waiters]) w(); };
+  const superseded = new Set(); // empreintes de déclarations remplacées
 
-  function push(socket, text) {
+  function push(owner, code, text) {
     const id = crypto.randomBytes(4).toString('hex');
     const box = load();
-    box.push({ id, socket, text: `${text}\n[cr:${id}]`, at: Date.now(), sentAt: null });
+    box.push({ id, owner, code, text, at: Date.now(), sentAt: null });
     save(box);
     wakeAll();
     return id;
   }
+  const withMark = (m) => `${m.text}\n[cr:${m.id}${m.code ? `:${m.code}` : ''}]`;
 
   async function deliver(text) {
-    const o = readJson(orchFile());
-    push(o ? o.socket : null, text);
+    const o = current();
+    push(o ? o.claimHash : null, o ? o.code : null, text);
   }
 
-  function claim(info) {
-    const prev = readJson(orchFile());
-    writeJson(orchFile(), { ...info, claimedAt: Date.now() });
+  function claim({ socket, project, plans, master, version }) {
+    const prev = current();
+    const claimId = crypto.randomBytes(16).toString('hex');
+    const next = { claimHash: sha(claimId), socketHash: sha(socket), code: codeOf(claimId), project, plans, master, version: version || null, claimedAt: Date.now() };
+    writeJson(orchFile(), next);
     const box = load();
-    // Tout message non acquitté de l'ancienne boîte (ou sans boîte) passe à la nouvelle ; ceux de la boîte
-    // qui se redéclare sont remis en circulation (écouteur relancé) : un doublon vaut mieux qu'une perte.
     for (const m of box) {
-      if (m.socket === info.socket || m.socket === null || (prev && m.socket === prev.socket && m.text.indexOf(TAKEOVER) !== 0)) {
-        m.socket = info.socket; m.sentAt = null;
-      }
+      const fromPrev = prev && m.owner === prev.claimHash && m.text !== TAKEOVER;
+      if (fromPrev || m.owner === null) { m.owner = next.claimHash; m.code = next.code; m.sentAt = null; }
     }
     save(box);
-    if (prev && prev.socket !== info.socket) {
-      superseded.add(prev.socket);
-      push(prev.socket, TAKEOVER);
-      addEvent('une nouvelle orchestratrice a pris le relais');
+    if (prev) {
+      superseded.add(prev.claimHash);
+      if (prev.socketHash !== next.socketHash) {
+        push(prev.claimHash, prev.code, TAKEOVER);
+        addEvent('une nouvelle orchestratrice a pris le relais');
+      }
     }
-    superseded.delete(info.socket);
     wakeAll();
+    return { claimId, code: next.code };
   }
 
-  async function take(socket, waitS) {
+  // `isGone()` : la requête de l'écouteur a été abandonnée (écouteur tué) — ne rien lui remettre.
+  async function take(claimId, waitS, isGone = () => false) {
+    const owner = sha(claimId);
+    const o = current();
+    if (!(o && o.claimHash === owner) && !superseded.has(owner)) return null;
     const deadline = Date.now() + waitS * 1000;
     for (;;) {
+      if (isGone()) return { messages: [], superseded: false };
       const box = load();
-      const mine = box.filter(m => m.socket === socket && m.sentAt === null);
-      if (mine.length || Date.now() >= deadline) {
+      const mine = box.filter(m => m.owner === owner && m.sentAt === null);
+      if (mine.length || Date.now() >= deadline || superseded.has(owner)) {
         for (const m of mine) m.sentAt = Date.now();
         if (mine.length) save(box);
-        return { messages: mine.map(({ id, text }) => ({ id, text })), superseded: superseded.has(socket) };
+        return { messages: mine.map(m => ({ id: m.id, text: withMark(m) })), superseded: superseded.has(owner) };
       }
       await new Promise((r) => {
         const done = () => { clearTimeout(timer); waiters.delete(done); r(); };
@@ -79,30 +94,39 @@ function createDelivery({ ackTimeoutMs = 30000 } = {}) {
     return true;
   }
 
-  // Messages non acquittés pour cette boîte (le hook Stop de l'orchestratrice les lui repousse).
-  function pendingFor(socket) { return load().filter(m => m.socket === socket).map(({ id, text }) => ({ id, text })); }
+  // File de l'orchestratrice en cours (tests et diagnostic).
+  function pendingFor() {
+    const o = current();
+    return o ? load().filter(m => m.owner === o.claimHash).map(m => ({ id: m.id, text: withMark(m) })) : [];
+  }
 
-  // Messages en souffrance (remis sans accusé, ou jamais pris faute d'écouteur) : rendus et acquittés,
-  // pour que le hook Stop de l'orchestratrice les lui donne à la fin de son tour.
+  const isStale = (m, now) => (m.sentAt !== null ? now - m.sentAt : now - m.at) > ackTimeoutMs;
+
+  // Messages en souffrance de l'orchestratrice dont c'est le socket : rendus et retirés de la file, pour que
+  // son hook Stop les lui donne à la fin de son tour.
   function takeStale(socket) {
+    const o = current();
+    if (!o || o.socketHash !== sha(socket)) return { messages: [], listenerMissing: false };
     const now = Date.now();
     const box = load();
-    const stale = box.filter(m => m.socket === socket && (m.sentAt !== null ? now - m.sentAt > ackTimeoutMs : now - m.at > ackTimeoutMs));
-    const listenerMissing = stale.some(m => m.sentAt === null);
+    const stale = box.filter(m => m.owner === o.claimHash && isStale(m, now));
     if (stale.length) save(box.filter(m => !stale.includes(m)));
-    return { messages: stale.map(({ id, text }) => ({ id, text })), listenerMissing };
+    return { messages: stale.map(m => ({ id: m.id, text: m.text })), listenerMissing: stale.some(m => m.sentAt === null) };
   }
 
   function alerts() {
+    const o = current();
     const now = Date.now();
-    const box = load();
+    let box = load();
+    const keep = box.filter(m => (o && m.owner === o.claimHash) || now - m.at < foreignTtlMs);
+    if (keep.length !== box.length) { save(keep); box = keep; }
+    const mine = box.filter(m => (o ? m.owner === o.claimHash : m.owner === null) && isStale(m, now));
     const out = [];
-    if (box.some(m => m.sentAt !== null && now - m.sentAt > ackTimeoutMs)) {
-      out.push('Livraison à l\'orchestratrice sans accusé de réception : format de boîte peut-être changé par une mise à jour de Claude Code. Mode secours : tes réponses restent en attente et lui seront repoussées à la fin de son prochain tour.');
+    if (mine.some(m => m.sentAt !== null)) {
+      out.push('Pas d\'accusé de réception de l\'orchestratrice depuis plus de 2 min. Si elle est dans une longue tâche, c\'est normal ; sinon le format de sa boîte a peut-être changé avec une mise à jour de Claude Code. Tes réponses lui seront rendues à la fin de son prochain tour.');
     }
-    if (box.some(m => m.sentAt === null && now - m.at > ackTimeoutMs)) {
-      out.push(readJson(orchFile())
-        ? 'L\'orchestratrice n\'écoute pas : demande-lui de relancer control-room listen.'
+    if (mine.some(m => m.sentAt === null)) {
+      out.push(o ? 'L\'orchestratrice n\'écoute pas : demande-lui de relancer control-room listen.'
         : 'Aucune orchestratrice déclarée : elle doit lancer control-room claim puis control-room listen.');
     }
     return out;
@@ -115,25 +139,34 @@ function createDelivery({ ackTimeoutMs = 30000 } = {}) {
     addEvent(state === 'archived' ? `plan archivé : ${name}` : `plan actif : ${label || name}`);
   }
 
+  // Attente abandonnée quand la réponse ne peut plus partir (client parti).
+  function goneFlag(res) {
+    let gone = false;
+    res.on('close', () => { if (!res.writableEnded) { gone = true; wakeAll(); } });
+    return () => gone || res.destroyed;
+  }
+
   const routes = [
     { method: 'POST', match: p => p === '/api/claim', auth: 'client', handle: async (req, res, url, { readBody, send }) => {
       const b = await readBody(req);
-      if (!b.socket || !b.token) return send(res, 400, { error: 'socket et token requis (lance claim depuis le Bash de l\'orchestratrice)' });
-      claim({ socket: b.socket, token: b.token, project: b.project, plans: b.plans, master: b.master, version: b.version });
-      return send(res, 200, { ok: true });
+      if (!b.socket) return send(res, 400, { error: 'socket requis (lance claim depuis le Bash de l\'orchestratrice)' });
+      return send(res, 200, claim(b));
     } },
     { method: 'GET', match: p => p === '/api/outbox', auth: 'client', handle: async (req, res, url, { send }) => {
       const wait = Math.max(0, Math.min(Number(url.searchParams.get('wait')) || 0, 120));
-      return send(res, 200, await take(url.searchParams.get('socket'), wait));
+      const r = await take(url.searchParams.get('claim'), wait, goneFlag(res));
+      if (!r) return send(res, 403, { error: 'déclaration inconnue' });
+      if (res.destroyed) return;
+      return send(res, 200, r);
     } },
-    { method: 'GET', match: p => p === '/api/outbox/pending', auth: 'client', handle: async (req, res, url, { send }) =>
-      send(res, 200, { messages: pendingFor(url.searchParams.get('socket')) }) },
-    // Mode secours (wait_answers) : la file de l'orchestratrice déclarée, remise et acquittée d'un coup.
+    // Mode secours (wait_answers) : la file de l'orchestratrice, remise et acquittée d'un coup.
     { method: 'GET', match: p => p === '/api/outbox/drain', auth: 'client', handle: async (req, res, url, { send }) => {
-      const o = readJson(orchFile());
-      if (!o) return send(res, 200, { messages: [] });
+      const claimId = url.searchParams.get('claim');
+      const o = current();
+      if (!o || o.claimHash !== sha(claimId)) return send(res, 403, { error: 'déclaration inconnue' });
       const wait = Math.max(0, Math.min(Number(url.searchParams.get('wait')) || 0, 600));
-      const r = await take(o.socket, wait);
+      const r = await take(claimId, wait, goneFlag(res));
+      if (res.destroyed) return;
       for (const m of r.messages) ack(m.id);
       return send(res, 200, { messages: r.messages });
     } },
@@ -152,4 +185,4 @@ function createDelivery({ ackTimeoutMs = 30000 } = {}) {
   return { deliver, claim, take, ack, pendingFor, takeStale, alerts, setPlan, routes };
 }
 
-module.exports = { createDelivery, TAKEOVER };
+module.exports = { createDelivery, TAKEOVER, codeOf };

@@ -3,7 +3,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
-const { tempStateDir, startTestServer, request, pageHeaders, clientHeaders } = require('./helpers');
+const { tempStateDir, startTestServer, request, pageHeaders, clientHeaders, claimAs } = require('./helpers');
 const { createDelivery } = require('../plugin/lib/delivery');
 const sessions = require('../plugin/lib/sessions');
 const { pendingCards } = require('../plugin/lib/cards');
@@ -120,15 +120,15 @@ test('PermissionDenied shows the auto-mode refusal as activity', async () => {
 });
 
 test('the orchestrator receiving a [cr:id] message acks it', async () => {
-  await request(t.port, 'POST', '/api/claim', { body: { socket: 'K1', token: 't', project: 'p', plans: 'p', master: 'm' }, headers: clientHeaders(t) });
+  const { code } = await claimAs(t, 'K1');
   await delivery.deliver('réponse');
-  const id = delivery.pendingFor('K1')[0].id;
-  await runHook('status', { hook_event_name: 'UserPromptSubmit', prompt: `[control-room] réponse\n[cr:${id}]` });
-  assert.equal(delivery.pendingFor('K1').length, 0);
+  const id = delivery.pendingFor()[0].id;
+  await runHook('status', { hook_event_name: 'UserPromptSubmit', prompt: `[control-room] réponse\n[cr:${id}:${code}]` });
+  assert.equal(delivery.pendingFor().length, 0);
 });
 
 test('Stop pushes stale answers back to the orchestrator once', async () => {
-  await request(t.port, 'POST', '/api/claim', { body: { socket: 'K1', token: 't', project: 'p', plans: 'p', master: 'm' }, headers: clientHeaders(t) });
+  await claimAs(t, 'K1');
   await delivery.deliver('[control-room] Vol — « Patch ? » → Oui');
   await new Promise(r => setTimeout(r, 300));
   const r = await runHook('stop', { hook_event_name: 'Stop', stop_hook_active: false });
@@ -136,6 +136,6 @@ test('Stop pushes stale answers back to the orchestrator once', async () => {
   assert.equal(o.decision, 'block');
   assert.match(o.reason, /Vol — « Patch \? » → Oui/);
   assert.match(o.reason, /control-room listen/);
-  assert.equal(delivery.pendingFor('K1').length, 0);
+  assert.equal(delivery.pendingFor().length, 0);
   assert.equal((await runHook('stop', { hook_event_name: 'Stop', stop_hook_active: true })).out, '');
 });

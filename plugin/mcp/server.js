@@ -40,7 +40,10 @@ const TOOLS = [
   {
     name: 'wait_answers',
     description: "Mode secours seulement (la page signale que la livraison est cassée) : attend et renvoie les réponses de l'utilisateur.",
-    inputSchema: { type: 'object', properties: { timeout_seconds: { type: 'number', description: 'Défaut 240, max 600.' } } },
+    inputSchema: { type: 'object', required: ['claim'], properties: {
+      claim: { type: 'string', description: 'Identifiant de déclaration donné par control-room claim.' },
+      timeout_seconds: { type: 'number', description: 'Défaut 240, max 600.' },
+    } },
   },
 ];
 
@@ -71,7 +74,7 @@ async function callTool(name, a = {}) {
     case 'list_pending': return text(await http('GET', '/api/pending'));
     case 'wait_answers': {
       const wait = Math.max(1, Math.min(a.timeout_seconds || 240, 600));
-      const r = await http('GET', `/api/outbox/drain?wait=${wait}`, undefined, { timeoutMs: (wait + 15) * 1000 });
+      const r = await http('GET', `/api/outbox/drain?claim=${encodeURIComponent(a.claim || '')}&wait=${wait}`, undefined, { timeoutMs: (wait + 15) * 1000 });
       return text(r.messages.length ? r : { messages: [], note: 'Pas encore de réponse. Rappelle wait_answers.' });
     }
     default: return text(`Outil inconnu : ${name}`, true);

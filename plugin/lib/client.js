@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { stateDir, readJson } = require('./store');
+const { HOST } = require('./host');
 
 function serverInfo() {
   const dir = stateDir();
@@ -18,8 +19,8 @@ function call(method, urlPath, body, { timeoutMs = 10000 } = {}) {
   if (!info) return Promise.resolve({ status: 0 });
   return new Promise((resolve) => {
     const data = body === undefined ? undefined : JSON.stringify(body);
-    const req = http.request({ host: '127.0.0.1', port: info.port, method, path: urlPath, timeout: timeoutMs,
-      headers: { 'x-cr-secret': info.secret, host: `127.0.0.1:${info.port}`, ...(data ? { 'content-type': 'application/json' } : {}) } }, (res) => {
+    const req = http.request({ host: HOST, port: info.port, method, path: urlPath, timeout: timeoutMs,
+      headers: { 'x-cr-secret': info.secret, host: `${HOST}:${info.port}`, ...(data ? { 'content-type': 'application/json' } : {}) } }, (res) => {
       let buf = '';
       res.on('data', d => { buf += d; });
       res.on('end', () => { let json; try { json = JSON.parse(buf); } catch {} resolve({ status: res.statusCode, json }); });

@@ -38,4 +38,12 @@ function readEvents() {
   } catch { return []; }
 }
 
-module.exports = { stateDir, readJson, writeJson, appendHistory, addEvent, readEvents };
+// Dernières lignes d'historique, la plus récente d'abord.
+function readHistory(n = 30) {
+  try {
+    return fs.readFileSync(path.join(stateDir(), 'history.jsonl'), 'utf8').trim().split('\n').slice(-n).reverse()
+      .map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  } catch { return []; }
+}
+
+module.exports = { stateDir, readJson, writeJson, appendHistory, readHistory, addEvent, readEvents };

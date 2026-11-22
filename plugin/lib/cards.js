@@ -61,6 +61,14 @@ function answerCard(id, { choice, note }) {
   return { ok: true, card };
 }
 
+function expireCard(id) {
+  const card = readCard(id);
+  if (!card || card.status !== 'pending') return false;
+  card.status = 'expired';
+  writeCard(card);
+  return true;
+}
+
 function cancelCard(id) {
   const card = readCard(id);
   if (!card || card.status !== 'pending') return false;
@@ -90,9 +98,21 @@ function choiceLabel(card) {
 }
 
 function formatAnswer(card) {
+  if (card.kind !== 'decision') return `[control-room] Réponse de l'utilisateur à « ${card.summary} » :\n${card.answer.note}`;
   let t = `[control-room] ${card.agent} — « ${card.summary} » → ${choiceLabel(card)}`;
   if (card.answer.note) t += `\nNote : ${card.answer.note}`;
   return t;
 }
 
-module.exports = { createCard, readCard, pendingCards, answerCard, cancelCard, takeUndelivered, formatAnswer, allCards };
+// Ligne d'historique (tiroir 🕘).
+function historyLine(card) {
+  const note = card.answer.note ? ` (${card.answer.note})` : '';
+  if (card.kind === 'approval') {
+    const cmd = card.tool && card.tool.input && card.tool.input.command;
+    return `${card.agent} : ${card.answer.choice === 'allow' ? 'Autorisé' : 'Refusé'}${cmd ? ` — ${cmd}` : ''}${note}`;
+  }
+  if (card.kind !== 'decision') return `${card.agent} — « ${card.summary} » → lu${note}`;
+  return `${card.agent} — « ${card.summary} » → ${choiceLabel(card)}${note}`;
+}
+
+module.exports = { createCard, readCard, pendingCards, answerCard, cancelCard, expireCard, takeUndelivered, formatAnswer, historyLine, allCards };

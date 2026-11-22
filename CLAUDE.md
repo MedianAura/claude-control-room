@@ -23,7 +23,7 @@ Le design fait foi : `docs/superpowers/specs/2026-11-21-control-room-design.md`.
 
 - `plugin/lib/server.js` : serveur HTTP autonome (cartes, réponses, attente longue) ; les autres modules ajoutent
   des `routes` (`right.js`, `delivery.js`, `orchestrator-routes.js`, `sessions.js`) et un `state()` pour la page.
-- `plugin/bin/control-room.js` : `start`, `claim`, `listen`, `label`, `hook <permission|stop|status>`.
+- `plugin/bin/control-room.js` : `start`, `claim`, `listen --claim <id>`, `label`, `hook <permission|stop|status>`.
 - `plugin/mcp/server.js` : outils MCP de l'orchestratrice, clients HTTP du serveur (`lib/client.js`).
 - `plugin/hooks/hooks.json` + `lib/hooks.js` : bandeau, approbations, accusés, relance de l'orchestratrice.
 - `plugin/ui/index.html` : la page (un fichier, forké de decision-inbox).
@@ -33,13 +33,17 @@ Le design fait foi : `docs/superpowers/specs/2026-11-21-control-room-design.md`.
 - Node built-ins uniquement, pas de `npm install`. Node v24, Windows 10 en premier.
 - **Livraison à l'orchestratrice** : seul un processus *enfant* de sa session peut écrire dans sa boîte de
   réception (essai : `docs/superpowers/specs/2026-11-21-inbox-spike.md`). D'où `control-room listen`, lancé par
-  elle. Le format de ligne n'est pas documenté (binaire 2.1.330) : l'accusé `[cr:<id>]` + les alertes détectent
+  elle. Le format de ligne n'est pas documenté (binaire 2.1.330) : l'accusé `[cr:<id>:<code>]` + les alertes détectent
   une casse après mise à jour.
 - **Deux secrets** : celui des clients (fichier `client.secret`) crée des cartes et lit leurs réponses, jamais ne
   répond, n'approuve ni ne coche ; celui de la page vit en mémoire et en cookie `HttpOnly`, jamais sur disque. La
   clé d'URL `?k=` est distincte et à usage unique. `Origin` + `Host` vérifiés sur les écritures de la page.
 - Le hook de permission n'intercepte que les sessions inscrites (`control-room label`), sinon une session hors
   équipe paraîtrait figée jusqu'à 900 s.
+- **Confiance** : `claim` rend un identifiant (pour `listen`/`wait_answers`) et un code de 6 caractères qui signe
+  chaque message `[cr:<id>:<code>]` ; `orchestrator.json` ne garde que des empreintes. Serveur sur `127.83.82.1`
+  (`lib/host.js`) pour que le cookie de la page ne parte pas vers les autres serveurs locaux.
+- Une approbation dont le hook ne tire plus depuis 90 s expire (plus d'« Autoriser » dans le vide).
 - Rien de codé en dur pour un projet : chemins donnés par `claim`. Les tests `(user)` du plan maître s'identifient
   par leur texte, pas leur numéro de ligne.
 

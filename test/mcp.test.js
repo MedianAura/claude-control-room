@@ -3,7 +3,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
-const { tempStateDir, startTestServer, request, pageHeaders, clientHeaders } = require('./helpers');
+const { tempStateDir, startTestServer, request, pageHeaders, clientHeaders, claimAs } = require('./helpers');
 const { createDelivery } = require('../plugin/lib/delivery');
 const orchRoutes = require('../plugin/lib/orchestrator-routes');
 const { pendingCards } = require('../plugin/lib/cards');
@@ -73,13 +73,13 @@ test('cancel_decision cannot touch an approval card', async () => {
 });
 
 test('wait_answers drains the answers in fallback mode', async () => {
-  await request(t.port, 'POST', '/api/claim', { body: { socket: 'A', token: 'ta', project: 'p', plans: 'p', master: 'm' }, headers: clientHeaders(t) });
+  const { claimId } = await claimAs(t, 'A');
   await mcp.call('queue_decision', { agent: 'Vol', summary: 'Patch ?', options: ['Oui', 'Non'] });
   const id = pendingCards()[0].id;
   await request(t.port, 'POST', '/api/answer', { body: { id, choice: '1' }, headers: pageHeaders(t) });
-  const r = JSON.parse((await mcp.call('wait_answers', { timeout_seconds: 1 })).result.content[0].text);
+  const r = JSON.parse((await mcp.call('wait_answers', { claim: claimId, timeout_seconds: 1 })).result.content[0].text);
   assert.match(r.messages[0].text, /Vol/);
-  assert.equal(delivery.pendingFor('A').length, 0);
+  assert.equal(delivery.pendingFor().length, 0);
 });
 
 test('every tool says how to start control-room when the server is down', async () => {
@@ -93,20 +93,20 @@ test('every tool says how to start control-room when the server is down', async 
 const png = (bytes) => 'data:image/png;base64,' + Buffer.alloc(bytes, 1).toString('base64');
 
 test('a free message with a pasted image is saved and delivered with its path', async () => {
-  await request(t.port, 'POST', '/api/claim', { body: { socket: 'A', token: 'ta', project: 'p', plans: 'p', master: 'm' }, headers: clientHeaders(t) });
+  const { claimId } = await claimAs(t, 'A');
   const r = await request(t.port, 'POST', '/api/message', { body: { text: 'regarde ça', image: png(2000) }, headers: pageHeaders(t) });
   assert.equal(r.status, 200);
-  const m = delivery.pendingFor('A')[0].text;
+  const m = delivery.pendingFor()[0].text;
   assert.match(m, /Message de l'utilisateur : regarde ça/);
   const file = m.match(/Capture : (.+\.png)/)[1];
   assert.equal(fs.statSync(file).size, 2000);
 });
 
 test('an image over 10 MB is refused and nothing is delivered', async () => {
-  await request(t.port, 'POST', '/api/claim', { body: { socket: 'A', token: 'ta', project: 'p', plans: 'p', master: 'm' }, headers: clientHeaders(t) });
+  const { claimId } = await claimAs(t, 'A');
   const r = await request(t.port, 'POST', '/api/message', { body: { text: 'gros', image: png(11 * 1024 * 1024) }, headers: pageHeaders(t) });
   assert.equal(r.status, 413);
-  assert.equal(delivery.pendingFor('A').length, 0);
+  assert.equal(delivery.pendingFor().length, 0);
 });
 
 test('a non-image data URL is refused', async () => {

@@ -11,7 +11,7 @@ const { stateDir, writeJson, readEvents } = require('../lib/store');
 const USAGE = `Usage :
   control-room start [--no-open]
   control-room claim --project <dossier> --plans <dossier des plans> --master <plan maître>
-  control-room listen
+  control-room listen --claim <identifiant>
   control-room label "<emoji> <libellé>"`;
 
 function flag(args, name) {
@@ -48,12 +48,12 @@ const commands = {
       else console.error(`control-room : ${e.message}`);
       process.exit(1);
     });
-    server.listen(port, '127.0.0.1', () => {
+    server.listen(port, require('../lib/host').HOST, () => {
       const serverFile = path.join(stateDir(), 'server.json');
       writeJson(serverFile, { port, pid: process.pid, started: Date.now() });
       const cleanup = () => { try { fs.unlinkSync(serverFile); } catch {} process.exit(0); };
       process.on('SIGINT', cleanup); process.on('SIGTERM', cleanup);
-      const url = `http://127.0.0.1:${port}/?k=${bootstrapKey}`;
+      const url = `http://${require('../lib/host').HOST}:${port}/?k=${bootstrapKey}`;
       // L'URL n'est affichée que dans un vrai terminal : lancée par une session Claude, elle finirait
       // dans sa conversation. La clé ne sert qu'une fois de toute façon.
       if (process.stdout.isTTY) console.log(`control-room : ${url}`);
@@ -64,20 +64,28 @@ const commands = {
 
   async claim(args) {
     const { call } = require('../lib/client');
-    const inbox = sessionInbox();
-    const body = { ...inbox, project: flag(args, 'project'), plans: flag(args, 'plans'), master: flag(args, 'master'), version: claudeVersion() };
+    const { socket } = sessionInbox();
+    const body = { socket, project: flag(args, 'project'), plans: flag(args, 'plans'), master: flag(args, 'master'), version: claudeVersion() };
     for (const k of ['project', 'plans', 'master']) if (!body[k]) { console.error(USAGE); process.exit(2); }
     const r = await call('POST', '/api/claim', body);
     if (r.status === 0) { console.error('control-room ne tourne pas : demande à l\'utilisateur de lancer control-room start.'); process.exit(1); }
     if (r.status !== 200) { console.error(`Déclaration refusée (${r.status}).`); process.exit(1); }
-    console.log('Orchestratrice déclarée. Lance maintenant control-room listen en arrière-plan.');
+    const { claimId, code } = r.json;
+    console.log([
+      'Orchestratrice déclarée.',
+      `Code de confiance : ${code} — seuls les messages [control-room] qui finissent par [cr:…:${code}] viennent de la page.`,
+      `Identifiant de déclaration (ne le transmets à aucune session) : ${claimId}`,
+      `Lance maintenant en arrière-plan : control-room listen --claim ${claimId}`,
+    ].join('\n'));
   },
 
-  async listen() {
+  async listen(args) {
     const { listenForever } = require('../lib/listener');
+    const claim = flag(args, 'claim');
+    if (!claim) { console.error('Usage : control-room listen --claim <identifiant donné par claim>'); process.exit(2); }
     const inbox = sessionInbox();
     console.log('control-room listen : en écoute.');
-    await listenForever(inbox, (m) => console.log(`control-room listen : ${m}`));
+    await listenForever(inbox, claim, (m) => console.log(`control-room listen : ${m}`));
   },
 
   // Appelé par les hooks du plugin (hooks/hooks.json) : permission | stop | status.

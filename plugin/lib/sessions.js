@@ -31,10 +31,15 @@ const STATUS = {
     : e.notification_type === 'idle_prompt' ? { status: 'idle', activity: '' } : {},
 };
 
+// Une session muette depuis 2 h (fermée sans SessionEnd, tuée) quitte le bandeau (revue #12).
+const SESSION_TTL_MS = 2 * 3600e3;
+
 function list() {
   const dir = path.join(stateDir(), 'sessions');
   const pending = cards.pendingCards();
+  const now = Date.now();
   return fs.readdirSync(dir).filter(f => f.endsWith('.json')).map(f => readJson(path.join(dir, f))).filter(Boolean)
+    .filter(s => now - (s.at || 0) < SESSION_TTL_MS)
     .map(({ key, label, status, activity, at }) => {
       if (pending.some(c => c.kind === 'approval' && c.session === key)) status = 'approval';
       else if (pending.some(c => c.kind === 'decision' && c.session && c.session === label)) status = 'decision';
@@ -48,11 +53,12 @@ function routes(delivery) {
     { method: 'POST', match: p => p === '/api/sessions/event', auth: 'client', handle: async (req, res, url, { readBody, send }) => {
       const e = await readBody(req, 4 * 1024 * 1024);
       if (!e.key) return send(res, 400, { error: 'key requise' });
+      if (e.event === 'SessionEnd') { try { fs.unlinkSync(fileOf(e.key)); } catch {} return send(res, 200, { ok: true }); }
       const map = STATUS[e.event];
       const s = update(e.key, { session_id: e.session_id, cwd: e.cwd, ...(map ? map(e) : {}) });
       if (e.event === 'PermissionDenied') addEvent(`${s.label} : ${s.activity}`);
       // Accusé de réception : un message [cr:<id>] vient d'arriver dans la session.
-      if (e.event === 'UserPromptSubmit' && typeof e.prompt === 'string') for (const m of e.prompt.matchAll(/\[cr:([0-9a-f]+)\]/g)) delivery.ack(m[1]);
+      if (e.event === 'UserPromptSubmit' && typeof e.prompt === 'string') for (const m of e.prompt.matchAll(/\[cr:([0-9a-f]+)(?::[0-9a-f]+)?\]/g)) delivery.ack(m[1]);
       return send(res, 200, { ok: true });
     } },
     { method: 'POST', match: p => p === '/api/sessions/label', auth: 'client', handle: async (req, res, url, { readBody, send }) => {

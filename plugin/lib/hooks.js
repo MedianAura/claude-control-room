@@ -40,14 +40,17 @@ async function permission(input) {
   while (Date.now() < deadline) {
     const wait = Math.min(LONG_POLL_S, Math.ceil((deadline - Date.now()) / 1000));
     const r = await call('GET', `/api/cards/${created.json.id}/answer?wait=${wait}`, undefined, { timeoutMs: (wait + 10) * 1000 });
-    if (r.status === 0) return null;
+    if (r.status === 0 || r.status === 410) return null;
     if (r.status !== 200) continue;
     const decision = r.json.choice === 'allow'
       ? { behavior: 'allow' }
       : { behavior: 'deny', message: `Refusé depuis control-room${r.json.note ? ` : ${r.json.note}` : '.'}` };
     return { hookSpecificOutput: { hookEventName: 'PermissionRequest', decision } };
   }
-  return null; // délai dépassé : la demande normale s'affiche dans le terminal
+  // Délai dépassé : la carte expire (la page ne doit plus proposer d'autoriser) et la demande normale
+  // s'affiche dans le terminal.
+  await call('POST', `/api/cards/${created.json.id}/expire`, undefined, { timeoutMs: 3000 });
+  return null;
 }
 
 async function stop(input) {

@@ -42,6 +42,15 @@ async function handleTest(req, res, url, { readBody, send, deliver }) {
     return send(res, 409, { error: r });
   }
   addEvent(`test OK : ${text}`);
+  // Dernier test ouvert d'une fonctionnalité de « To do » : l'orchestratrice doit proposer l'archivage (revue #11).
+  if (t && m.todos.some(td => td.name === t.parent)) {
+    const after = parseMaster(fs.readFileSync(m.file, 'utf8'));
+    if (!after.tests.some(x => x.parent === t.parent && !x.done)) {
+      const td = after.todos.find(x => x.name === t.parent);
+      await deliver(`[control-room] Tous les tests (user) de « ${t.parent} » sont OK : propose l'archivage de son plan${td && td.planDir ? ` (${td.planDir})` : ''}.`);
+      addEvent(`tous les tests OK : ${t.parent}`);
+    }
+  }
   return send(res, 200, { ok: true });
 }
 
