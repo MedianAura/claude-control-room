@@ -172,7 +172,7 @@ test('the page secret never reaches the state dir', () => { /* grep every file u
 - [x] **Step 2: Règle « rien ne bouge »** : le rafraîchissement (toutes les 1,5 s) ne remplace jamais la carte affichée tant qu'elle n'est pas répondue ; seuls « ensuite : … », le compteur et le bandeau changent. 🕘 ouvre un tiroir avec `recent` (réponses et événements), fermé par défaut.
 - [x] **Step 3: Résumé au retour** : sur `visibilitychange`/`focus` après plus de 120 s d'absence, une ligne « Pendant ton absence (N min) : … » liste les `events` postérieurs au départ (cartes arrivées, tests ajoutés, changements d'état des sessions) ; elle reste jusqu'au clic sur ✕.
 - [x] **Step 4: Vérifier avec `node --test test/`** (aucune régression), puis lancer `control-room start`, créer 3 cartes au secret des clients (`curl`) et répondre au clavier.
-- [ ] **Step 5 (user):** la carte ne change pas pendant qu'on la lit alors que deux cartes arrivent ; le résumé apparaît après 2 min dans une autre fenêtre.
+- [x] **Step 5 (user):** la carte ne change pas pendant qu'on la lit alors que deux cartes arrivent ; le résumé apparaît après 2 min dans une autre fenêtre.
 - [x] **Step 6: Commit** `feat: page de la salle de contrôle`
 
 ---
@@ -332,5 +332,5 @@ test('PreToolUse updates the session line in place', async () => { /* two events
 - [x] **Step 4 (user):** installer le plugin, `control-room start`, une orchestratrice + 2 sessions de travail sur SoloConquest (conseil de decision-inbox : 2-3 sessions pour commencer).
 - [ ] **Step 5 (user):** une décision complète sans ouvrir de terminal : demande écrite dans la page → délégation → carte → réponse → la session concernée reçoit la décision.
 - [ ] **Step 6 (user):** une approbation depuis la page (par exemple `docker compose build` chez la session des builds) : Autoriser fait continuer la session ; Refuser + note lui renvoie la note.
-- [ ] **Step 7 (user):** un test OK coche la case dans `plan.md` ; un test KO renvoie la note à la bonne session.
-- [ ] **Step 8 (user):** ménage ponctuel de SoloConquest par l'orchestratrice : archiver coa-stats-weight, crucible-absorb-all, crucible-stat-pins ; faire cocher fly-anywhere et gathering-yield.
+- [x] **Step 7 (user):** un test OK coche la case dans `plan.md` ; un test KO renvoie la note à la bonne session.
+- [x] **Step 8 (user):** ménage ponctuel de SoloConquest par l'orchestratrice : archiver coa-stats-weight, crucible-absorb-all, crucible-stat-pins ; faire cocher fly-anywhere et gathering-yield.
