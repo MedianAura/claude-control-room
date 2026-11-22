@@ -13,7 +13,13 @@ const commands = {
     const port = parseInt(process.env.CONTROL_ROOM_PORT || '4242', 10);
     const pageSecret = newPageSecret();
     const bootstrapKey = newPageSecret();
-    const server = createServer({ pageSecret, bootstrapKey, clientSecret: loadClientSecret(), deliver: async () => {} });
+    const right = require('../lib/right');
+    const { readEvents } = require('../lib/store');
+    const server = createServer({
+      pageSecret, bootstrapKey, clientSecret: loadClientSecret(), deliver: async () => {},
+      routes: [...right.routes],
+      state: () => ({ right: right.rightState(), events: readEvents() }),
+    });
     server.on('error', (e) => {
       if (e.code === 'EADDRINUSE') console.error(`control-room est déjà lancé (port ${port} occupé).`);
       else console.error(`control-room : ${e.message}`);

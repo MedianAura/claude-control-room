@@ -25,4 +25,17 @@ function appendHistory(entry) {
   fs.appendFileSync(path.join(stateDir(), 'history.jsonl'), JSON.stringify({ at: Date.now(), ...entry }) + '\n');
 }
 
-module.exports = { stateDir, readJson, writeJson, appendHistory };
+// Événements courts pour le résumé au retour (« build réussi », « test ajouté »…).
+const MAX_EVENTS = 200;
+function eventsFile() { return path.join(stateDir(), 'events.jsonl'); }
+function addEvent(text) {
+  fs.appendFileSync(eventsFile(), JSON.stringify({ at: Date.now(), text }) + '\n');
+}
+function readEvents() {
+  try {
+    return fs.readFileSync(eventsFile(), 'utf8').trim().split('\n').slice(-MAX_EVENTS)
+      .map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  } catch { return []; }
+}
+
+module.exports = { stateDir, readJson, writeJson, appendHistory, addEvent, readEvents };

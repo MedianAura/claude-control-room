@@ -191,7 +191,7 @@ test('the page secret never reaches the state dir', () => { /* grep every file u
   - `planProgress(planFile): {done, total}`.
   - `POST /api/test` (page) `{text, result: 'ok'|'fail', note}` : `ok` → `tickTest` ; `fail` → `deliver("[control-room] Test KO — <parent> : <text>\nNote : <note>")`, sans toucher au fichier. Échec de `tickTest` → carte `kind: 'error'`.
 
-- [ ] **Step 1: Écrire les tests sur la fixture**
+- [x] **Step 1: Écrire les tests sur la fixture**
 
 ```js
 test('dungeon speed owns its seven (user) tests, two done', () => {
@@ -210,11 +210,11 @@ test('tickTest refuses an ambiguous or vanished line and writes nothing', () => 
 test('tickTest finds the line after it moved', () => { /* insert 5 lines above, tick → 'ok', only that line changed */ });
 ```
 
-- [ ] **Step 2: Lancer `node --test test/plan-file.test.js`** — attendu : FAIL.
-- [ ] **Step 3: Implémenter `plan-file.js`**, puis `right` dans `/api/state` : `tests` non cochés groupés par `parent`, `plans` = `active-plans.json` (tâche 6) avec `planProgress`, `todos` non cochés. Relecture des fichiers à chaque `/api/state` (pas de cache).
-- [ ] **Step 4: UI** : trois sections repliables « À tester par toi (n) », « Plans actifs (n) », « TODO (n) » ; sur un test, OK / Problème (+ note). Rien ne se réordonne pendant qu'une section est survolée.
-- [ ] **Step 5: Lancer `node --test test/`** — attendu : PASS.
-- [ ] **Step 6: Commit** `feat: colonne À tester / Plans / TODO lue depuis le plan maître`
+- [x] **Step 2: Lancer `node --test test/plan-file.test.js`** — attendu : FAIL.
+- [x] **Step 3: Implémenter `plan-file.js`**, puis `right` dans `/api/state` : `tests` non cochés groupés par `parent`, `plans` = `active-plans.json` (tâche 6) avec `planProgress`, `todos` non cochés. Relecture des fichiers à chaque `/api/state` (pas de cache).
+- [x] **Step 4: UI** : trois sections repliables « À tester par toi (n) », « Plans actifs (n) », « TODO (n) » ; sur un test, OK / Problème (+ note). Rien ne se réordonne pendant qu'une section est survolée.
+- [x] **Step 5: Lancer `node --test test/`** — attendu : PASS.
+- [x] **Step 6: Commit** `feat: colonne À tester / Plans / TODO lue depuis le plan maître`
 
 ---
 
