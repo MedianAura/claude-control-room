@@ -326,9 +326,9 @@ test('PreToolUse updates the session line in place', async () => { /* two events
 - Consumes : tous les outils et commandes précédents.
 - Produces : les règles de la spec, section « Méthode de travail », écrites pour l'orchestratrice : `control-room claim` au démarrage (avec les chemins du projet) ; chaque décision en carte, une ligne d'état dans le terminal ; `reply` pour répondre au texte libre ; `set_plan` actif quand elle confie un plan ; carte « Archiver <plan> ? » quand tous les tests `(user)` de la fonctionnalité sont cochés, et sur accord déplacement du dossier dans `<plans>/_archive/` puis `set_plan state: 'archived'` ; demander à chaque session confiée de lancer `control-room label …` et de cocher son plan à chaque tâche finie ; ne jamais répondre elle-même à une carte d'approbation.
 
-- [ ] **Step 1: Écrire `SKILL.md` et `README.md`** (installation : `/plugin marketplace add E:\workspaces\claude\control-room`, puis `/plugin install control-room@control-room` dans chaque session ; mode auto conseillé pour les sessions de travail).
-- [ ] **Step 2: Lancer `node --test test/`** — attendu : PASS.
-- [ ] **Step 3: Commit** `docs: skill de l'orchestratrice et installation`
+- [x] **Step 1: Écrire `SKILL.md` et `README.md`** (installation : `/plugin marketplace add E:\workspaces\claude\control-room`, puis `/plugin install control-room@control-room` dans chaque session ; mode auto conseillé pour les sessions de travail).
+- [x] **Step 2: Lancer `node --test test/`** — attendu : PASS.
+- [x] **Step 3: Commit** `docs: skill de l'orchestratrice et installation`
 - [ ] **Step 4 (user):** installer le plugin, `control-room start`, une orchestratrice + 2 sessions de travail sur SoloConquest (conseil de decision-inbox : 2-3 sessions pour commencer).
 - [ ] **Step 5 (user):** une décision complète sans ouvrir de terminal : demande écrite dans la page → délégation → carte → réponse → la session concernée reçoit la décision.
 - [ ] **Step 6 (user):** une approbation depuis la page (par exemple `docker compose build` chez la session des builds) : Autoriser fait continuer la session ; Refuser + note lui renvoie la note.
