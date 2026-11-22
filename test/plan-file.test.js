@@ -83,3 +83,17 @@ test('planProgress counts checked and total boxes', () => {
   const f = tempCopy('# P\n### Task 1: a\n- [x] **Step 1**\n- [ ] **Step 2**\n  - [x] nested\n');
   assert.deepEqual(planProgress(f), { done: 2, total: 3 });
 });
+
+test('a test carries its indented continuation lines as detail', () => {
+  const t = parseMaster(fixture).tests;
+  assert.equal(t.find(x => x.text.startsWith('Mob behaviour')).detail,
+    "pathing around CoA buildings on Kalimdor, the Eastern Kingdoms and Outland. CoA's custom maps have no mmaps: straight-line movement there is expected.");
+  assert.equal(t.find(x => x.text.startsWith('`60`: Scan')).detail,
+    'dimmed rows light up; Upgrade → covered rows done, others refused with their reason.');
+});
+
+test('a following bullet or a blank line ends the detail', () => {
+  const t = parseMaster('## S\n- [ ] (user) one\n  more\n  - [ ] (user) two\n\n  not two\n').tests;
+  assert.equal(t[0].detail, 'more');
+  assert.equal(t[1].detail, '');
+});

@@ -26,6 +26,7 @@
   .panel .body { margin-top: 8px; }
   code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
   .none { color: var(--muted); font-size: 13px; }
+  .tdetail { color: var(--muted); }
 
   /* Bandeau des sessions : une ligne par session, mise à jour sur place. */
   #sessions .row { display: grid; grid-template-columns: 12px minmax(120px, 190px) 1fr 46px; gap: 10px; align-items: center; padding: 4px 6px; border-radius: 6px; font-size: 13.5px; }
@@ -268,8 +269,9 @@ function markBack() {
   if (away < AWAY_MS) return;
   load().then(() => {
     const ev = (state.events || []).filter(e => e.at > since);
+    if (!ev.length) return;
     const mins = Math.round(away / 60000);
-    const text = ev.length ? ev.map(e => esc(e.text)).join(' · ') : 'rien de nouveau';
+    const text = ev.map(e => esc(e.text)).join(' · ');
     $('#away').innerHTML = `<div class="banner away"><b>Pendant ton absence (${mins} min) :</b> <span>${text}</span><button class="x" title="Fermer">✕</button></div>`;
     $('#away .x').onclick = () => { $('#away').innerHTML = ''; };
   });
@@ -326,7 +328,7 @@ function renderSide() {
   for (const t of r.tests) { if (!groups.has(t.parent)) groups.set(t.parent, []); groups.get(t.parent).push(t); }
   $('#tcount').textContent = r.tests.length || '';
   $('#tests').innerHTML = r.tests.length ? [...groups].map(([g, items]) => `<div class="grp">${esc(g)}</div>` + items.map(t => `
-    <div class="item" data-test="${esc(t.text)}"><div>${md(t.text)}</div>
+    <div class="item" data-test="${esc(t.text)}"><div>${md(t.text)}${t.detail ? ` <span class="tdetail">${md(t.detail)}</span>` : ''}</div>
       <div class="tb"><button class="okb">OK</button><button class="ko">Problème</button></div></div>`).join('')).join('')
     : '<div class="none">Rien à tester.</div>';
   $('#tests').querySelectorAll('.item').forEach(el => {

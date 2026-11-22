@@ -329,7 +329,7 @@ test('PreToolUse updates the session line in place', async () => { /* two events
 - [x] **Step 1: Écrire `SKILL.md` et `README.md`** (installation : `/plugin marketplace add E:\workspaces\claude\control-room`, puis `/plugin install control-room@control-room` dans chaque session ; mode auto conseillé pour les sessions de travail).
 - [x] **Step 2: Lancer `node --test test/`** — attendu : PASS.
 - [x] **Step 3: Commit** `docs: skill de l'orchestratrice et installation`
-- [ ] **Step 4 (user):** installer le plugin, `control-room start`, une orchestratrice + 2 sessions de travail sur SoloConquest (conseil de decision-inbox : 2-3 sessions pour commencer).
+- [x] **Step 4 (user):** installer le plugin, `control-room start`, une orchestratrice + 2 sessions de travail sur SoloConquest (conseil de decision-inbox : 2-3 sessions pour commencer).
 - [ ] **Step 5 (user):** une décision complète sans ouvrir de terminal : demande écrite dans la page → délégation → carte → réponse → la session concernée reçoit la décision.
 - [ ] **Step 6 (user):** une approbation depuis la page (par exemple `docker compose build` chez la session des builds) : Autoriser fait continuer la session ; Refuser + note lui renvoie la note.
 - [ ] **Step 7 (user):** un test OK coche la case dans `plan.md` ; un test KO renvoie la note à la bonne session.

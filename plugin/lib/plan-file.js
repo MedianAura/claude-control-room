@@ -7,13 +7,22 @@ const USER_TEST = /^(\s*)- \[([ xX])\] \(user\) (.*)$/;
 const TOP_BULLET = /^[-*] /;
 const PLAN_DIR = /\.agents\/plans\/[\w.-]+\//;
 const BOX = /^\s*[-*] \[([ xX])\]/;
+const ANY_BULLET = /^\s*[-*] /;
 
 const compact = (s) => s.replace(/\s+/g, ' ').trim();
 
 function parseMaster(text) {
   const tests = [], todos = [];
-  let section = null, entry = null;
+  let section = null, entry = null, open = null;   // open : test dont on lit encore la suite
   for (const line of text.split(/\r?\n/)) {
+    if (open) {
+      const indent = line.match(/^\s*/)[0].length;
+      if (line.trim() && indent > open.indent && !ANY_BULLET.test(line)) {
+        open.test.detail = compact(`${open.test.detail} ${line}`);
+        continue;
+      }
+      open = null;
+    }
     const h = line.match(H2);
     if (h) { section = h[1]; entry = null; continue; }
     if (/^#/.test(line)) { entry = null; continue; }
@@ -28,7 +37,9 @@ function parseMaster(text) {
     const u = line.match(USER_TEST);
     if (u) {
       const nested = u[1].length > 0;
-      tests.push({ text: compact(u[3]), done: u[2] !== ' ', parent: nested && entry ? entry.name : section });
+      const t = { text: compact(u[3]), detail: '', done: u[2] !== ' ', parent: nested && entry ? entry.name : section };
+      tests.push(t);
+      open = { test: t, indent: u[1].length };
     } else if (entry && !entry.planDir) {
       const p = line.match(PLAN_DIR);
       if (p) entry.planDir = p[0];
