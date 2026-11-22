@@ -30,8 +30,9 @@ function send(res, status, body, headers = {}) {
   res.end(body === undefined ? undefined : isText ? body : JSON.stringify(body));
 }
 
-function createServer({ pageSecret, clientSecret, deliver, state = () => ({}), routes = [] }) {
+function createServer({ pageSecret, bootstrapKey, clientSecret, deliver, state = () => ({}), routes = [] }) {
   const waiters = new Map(); // id -> Set(resolve)
+  let key = bootstrapKey; // à usage unique : une URL qui traîne (sortie, historique) ne vaut plus rien
 
   function wake(id) {
     for (const r of waiters.get(id) || []) r();
@@ -65,7 +66,8 @@ function createServer({ pageSecret, clientSecret, deliver, state = () => ({}), r
       if (req.method === 'GET' && url.pathname === '/') {
         const k = url.searchParams.get('k');
         if (k !== null) {
-          if (!same(k, pageSecret)) return send(res, 403, 'Clé invalide.');
+          if (!key || !same(k, key)) return send(res, 403, 'Clé invalide ou déjà utilisée : relance control-room start.');
+          key = null;
           return send(res, 302, '', { location: '/', 'set-cookie': `cr_page=${pageSecret}; HttpOnly; SameSite=Strict; Path=/` });
         }
         if (!page(false)) return send(res, 401, 'Ouvre l\'URL donnée par control-room start.');

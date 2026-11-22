@@ -73,10 +73,19 @@ test('the long poll gives 204 when nobody answers in time', async () => {
 });
 
 test('the key URL sets an HttpOnly cookie and redirects to /', async () => {
-  const r = await request(t.port, 'GET', `/?k=${t.pageSecret}`);
+  const r = await request(t.port, 'GET', `/?k=${t.bootstrapKey}`);
   assert.equal(r.status, 302);
   assert.equal(r.headers.location, '/');
-  assert.match(r.headers['set-cookie'][0], /cr_page=[0-9a-f]{64}; HttpOnly; SameSite=Strict; Path=\//);
+  assert.equal(r.headers['set-cookie'][0], `cr_page=${t.pageSecret}; HttpOnly; SameSite=Strict; Path=/`);
+});
+
+test('the key URL works only once', async () => {
+  assert.equal((await request(t.port, 'GET', `/?k=${t.bootstrapKey}`)).status, 302);
+  assert.equal((await request(t.port, 'GET', `/?k=${t.bootstrapKey}`)).status, 403);
+});
+
+test('the page secret itself is not a valid key', async () => {
+  assert.equal((await request(t.port, 'GET', `/?k=${t.pageSecret}`)).status, 403);
 });
 
 test('the page without the cookie asks for the launcher URL', async () => {

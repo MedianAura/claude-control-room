@@ -12,7 +12,8 @@ const commands = {
     const { loadClientSecret, newPageSecret } = require('../lib/auth');
     const port = parseInt(process.env.CONTROL_ROOM_PORT || '4242', 10);
     const pageSecret = newPageSecret();
-    const server = createServer({ pageSecret, clientSecret: loadClientSecret(), deliver: async () => {} });
+    const bootstrapKey = newPageSecret();
+    const server = createServer({ pageSecret, bootstrapKey, clientSecret: loadClientSecret(), deliver: async () => {} });
     server.on('error', (e) => {
       if (e.code === 'EADDRINUSE') console.error(`control-room est déjà lancé (port ${port} occupé).`);
       else console.error(`control-room : ${e.message}`);
@@ -23,8 +24,11 @@ const commands = {
       writeJson(serverFile, { port, pid: process.pid, started: Date.now() });
       const cleanup = () => { try { fs.unlinkSync(serverFile); } catch {} process.exit(0); };
       process.on('SIGINT', cleanup); process.on('SIGTERM', cleanup);
-      const url = `http://127.0.0.1:${port}/?k=${pageSecret}`;
-      console.log(`control-room : ${url}`);
+      const url = `http://127.0.0.1:${port}/?k=${bootstrapKey}`;
+      // L'URL n'est affichée que dans un vrai terminal : lancée par une session Claude, elle finirait
+      // dans sa conversation. La clé ne sert qu'une fois de toute façon.
+      if (process.stdout.isTTY) console.log(`control-room : ${url}`);
+      else console.log(`control-room lancé sur le port ${port} (page ouverte dans le navigateur).`);
       if (!args.includes('--no-open')) openBrowser(url);
     });
   },

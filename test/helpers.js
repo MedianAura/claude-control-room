@@ -15,11 +15,12 @@ async function startTestServer(opts = {}) {
   const { loadClientSecret, newPageSecret } = require('../plugin/lib/auth');
   const delivered = [];
   const pageSecret = newPageSecret();
+  const bootstrapKey = newPageSecret();
   const clientSecret = loadClientSecret();
-  const server = createServer({ pageSecret, clientSecret, deliver: async (t) => { delivered.push(t); }, ...opts });
+  const server = createServer({ pageSecret, bootstrapKey, clientSecret, deliver: async (t) => { delivered.push(t); }, ...opts });
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const port = server.address().port;
-  return { server, port, pageSecret, clientSecret, delivered, close: () => new Promise(r => server.close(r)) };
+  return { server, port, pageSecret, bootstrapKey, clientSecret, delivered, close: () => new Promise(r => server.close(r)) };
 }
 
 function request(port, method, urlPath, { body, headers = {} } = {}) {
