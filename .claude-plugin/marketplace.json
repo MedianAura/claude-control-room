@@ -1,0 +1,13 @@
+{
+  "name": "control-room",
+  "owner": { "name": "Sébastien" },
+  "description": "Marketplace locale du plugin control-room",
+  "plugins": [
+    {
+      "name": "control-room",
+      "source": "./plugin",
+      "description": "Salle de contrôle visuelle pour une orchestratrice Claude et ses sessions de travail",
+      "version": "0.1.0"
+    }
+  ]
+}
