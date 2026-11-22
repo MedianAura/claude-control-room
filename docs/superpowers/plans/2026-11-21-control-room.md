@@ -299,7 +299,7 @@ test('pending answers survive a takeover', async () => { /* answer while A's pip
   - États du bandeau : `working`, `decision` (une carte `session` = cette session attend), `approval`, `idle` ; libellé par défaut `<dossier cwd> · <4 premiers caractères de session_id>`.
   - `control-room label "<emoji> <libellé>"` (exécuté par la session de travail, à la demande de l'orchestratrice) → `POST /api/sessions/label` avec sa clé.
 
-- [ ] **Step 1: Écrire les tests** (le hook lancé en sous-processus avec un JSON sur stdin)
+- [x] **Step 1: Écrire les tests** (le hook lancé en sous-processus avec un JSON sur stdin)
 
 ```js
 test('PermissionRequest allow prints the allow decision', async () => { /* spawn hook, answer the approval card 'allow' via page → stdout JSON behavior 'allow' */ });
@@ -309,10 +309,10 @@ test('the approval card cannot be answered with the client secret', async () => 
 test('PreToolUse updates the session line in place', async () => { /* two events, same key → one session, activity = last description */ });
 ```
 
-- [ ] **Step 2: Lancer `node --test test/hooks.test.js`** — attendu : FAIL.
-- [ ] **Step 3: Implémenter** hooks, routes, `label`, bandeau dans l'UI (une ligne par session, pastille, activité, heure ; jamais de nouvelle ligne pour un événement).
-- [ ] **Step 4: Lancer `node --test test/`** — attendu : PASS.
-- [ ] **Step 5: Commit** `feat: bandeau des sessions et approbations depuis la page`
+- [x] **Step 2: Lancer `node --test test/hooks.test.js`** — attendu : FAIL.
+- [x] **Step 3: Implémenter** hooks, routes, `label`, bandeau dans l'UI (une ligne par session, pastille, activité, heure ; jamais de nouvelle ligne pour un événement).
+- [x] **Step 4: Lancer `node --test test/`** — attendu : PASS.
+- [x] **Step 5: Commit** `feat: bandeau des sessions et approbations depuis la page`
 
 ---
 

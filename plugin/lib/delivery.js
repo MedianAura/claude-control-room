@@ -82,6 +82,17 @@ function createDelivery({ ackTimeoutMs = 30000 } = {}) {
   // Messages non acquittés pour cette boîte (le hook Stop de l'orchestratrice les lui repousse).
   function pendingFor(socket) { return load().filter(m => m.socket === socket).map(({ id, text }) => ({ id, text })); }
 
+  // Messages en souffrance (remis sans accusé, ou jamais pris faute d'écouteur) : rendus et acquittés,
+  // pour que le hook Stop de l'orchestratrice les lui donne à la fin de son tour.
+  function takeStale(socket) {
+    const now = Date.now();
+    const box = load();
+    const stale = box.filter(m => m.socket === socket && (m.sentAt !== null ? now - m.sentAt > ackTimeoutMs : now - m.at > ackTimeoutMs));
+    const listenerMissing = stale.some(m => m.sentAt === null);
+    if (stale.length) save(box.filter(m => !stale.includes(m)));
+    return { messages: stale.map(({ id, text }) => ({ id, text })), listenerMissing };
+  }
+
   function alerts() {
     const now = Date.now();
     const box = load();
@@ -126,6 +137,8 @@ function createDelivery({ ackTimeoutMs = 30000 } = {}) {
       for (const m of r.messages) ack(m.id);
       return send(res, 200, { messages: r.messages });
     } },
+    { method: 'GET', match: p => p === '/api/outbox/stale', auth: 'client', handle: async (req, res, url, { send }) =>
+      send(res, 200, takeStale(url.searchParams.get('socket'))) },
     { method: 'POST', match: p => p === '/api/ack', auth: 'client', handle: async (req, res, url, { readBody, send }) => {
       const { id } = await readBody(req);
       return send(res, ack(id) ? 200 : 404, { ok: true });
@@ -136,7 +149,7 @@ function createDelivery({ ackTimeoutMs = 30000 } = {}) {
     } },
   ];
 
-  return { deliver, claim, take, ack, pendingFor, alerts, setPlan, routes };
+  return { deliver, claim, take, ack, pendingFor, takeStale, alerts, setPlan, routes };
 }
 
 module.exports = { createDelivery, TAKEOVER };

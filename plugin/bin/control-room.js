@@ -11,7 +11,8 @@ const { stateDir, writeJson, readEvents } = require('../lib/store');
 const USAGE = `Usage :
   control-room start [--no-open]
   control-room claim --project <dossier> --plans <dossier des plans> --master <plan maître>
-  control-room listen`;
+  control-room listen
+  control-room label "<emoji> <libellé>"`;
 
 function flag(args, name) {
   const i = args.indexOf(`--${name}`);
@@ -39,8 +40,8 @@ const commands = {
     const delivery = createDelivery();
     const server = createServer({
       pageSecret, bootstrapKey, clientSecret: loadClientSecret(), deliver: delivery.deliver,
-      routes: [...right.routes, ...delivery.routes, ...require('../lib/orchestrator-routes').routes],
-      state: () => ({ right: right.rightState(), events: readEvents(), alerts: delivery.alerts() }),
+      routes: [...right.routes, ...delivery.routes, ...require('../lib/orchestrator-routes').routes, ...require('../lib/sessions').routes(delivery)],
+      state: () => ({ right: right.rightState(), events: readEvents(), alerts: delivery.alerts(), sessions: require('../lib/sessions').list() }),
     });
     server.on('error', (e) => {
       if (e.code === 'EADDRINUSE') console.error(`control-room est déjà lancé (port ${port} occupé).`);
@@ -78,6 +79,12 @@ const commands = {
     console.log('control-room listen : en écoute.');
     await listenForever(inbox, (m) => console.log(`control-room listen : ${m}`));
   },
+
+  // Appelé par les hooks du plugin (hooks/hooks.json) : permission | stop | status.
+  async hook(args) { await require('../lib/hooks').runHook(args[0]); },
+
+  // Une session de travail s'inscrit dans l'équipe (à la demande de l'orchestratrice).
+  async label(args) { await require('../lib/hooks').label(args.join(' ').trim()); },
 };
 
 function claudeVersion() {
