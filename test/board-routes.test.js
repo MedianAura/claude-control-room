@@ -35,14 +35,37 @@ test('the page secret cannot use the board routes', async () => {
   assert.equal((await get('/api/board', pageHeaders(t))).status, 403);
 });
 
-test('no board claimed → 409 no-board', async () => {
+test('no board claimed → 409 that says how to declare one', async () => {
+  const NO_BOARD = 'aucun tableau déclaré : refaire control-room claim … --board <fichier>';
   let r = await post('/api/board/items', { kind: 'todo', text: 'x' });
   assert.equal(r.status, 409);
-  assert.equal(r.json.error, 'no-board');
+  assert.equal(r.json.error, NO_BOARD);
   await claimAs(t, 'A', { board: undefined }); // déclaration sans tableau (orchestrator.json d'avant --board)
   r = await get('/api/board');
   assert.equal(r.status, 409);
-  assert.equal(r.json.error, 'no-board');
+  assert.equal(r.json.error, NO_BOARD);
+});
+
+test('lowercase ids work and events name the canonical id', async () => {
+  await claimAs(t, 'A', { board: boardPath });
+  const did = (await post('/api/board/items', { kind: 'todo', text: 'b' })).json.id;
+  const r = await post(`/api/board/items/${did.toLowerCase()}/close`, { state: 'done' });
+  assert.equal(r.status, 200);
+  assert.equal(r.json.item.id, did);
+  assert.ok(events().includes(`TODO #${did} fait`));
+});
+
+test('a board locked by another process → 503, nothing written', async (tt) => {
+  await claimAs(t, 'A', { board: boardPath });
+  await post('/api/board/items', { kind: 'todo', text: 'b' });
+  const before = fs.readFileSync(boardPath, 'utf8');
+  const real = fs.renameSync;
+  fs.renameSync = () => { throw Object.assign(new Error('EBUSY'), { code: 'EBUSY' }); };
+  tt.after(() => { fs.renameSync = real; });
+  const r = await post('/api/board/items', { kind: 'todo', text: 'c' });
+  assert.equal(r.status, 503);
+  assert.match(r.json.error, /EBUSY/);
+  assert.equal(fs.readFileSync(boardPath, 'utf8'), before);
 });
 
 test('an unknown id → 404, bad input → 400, wrong state → 409', async () => {

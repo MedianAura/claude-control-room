@@ -9,16 +9,15 @@ coordonne d'autres sessions par `SendMessage`. Cartes de décision une à la foi
 approbations de permission depuis la page, colonne TODO → Plan → À tester lue depuis le tableau JSON du projet (`claim --board`), plus les plans pour la
 progression.
 
-Design du tableau : `docs/superpowers/specs/2026-11-22-board-design.md` (remplace la lecture du plan maître).
-
-Le design fait foi : `docs/superpowers/specs/2026-11-21-control-room-design.md`. Le plan et ses décisions :
-`docs/superpowers/plans/2026-11-21-control-room.md`. Usage : `README.md`.
+Le design fait foi : `docs/superpowers/specs/2026-11-21-control-room-design.md` et, pour le tableau, `docs/superpowers/specs/2026-11-22-board-design.md` ; plan et décisions : `docs/superpowers/plans/2026-11-21-control-room.md` ; usage : `README.md`.
 
 ## Commandes
 
 - Tests : `node --test` (découverte auto ; `node --test test/` ne marche pas en Node 24). Un fichier :
   `node --test test/cards.test.js`. Les tests utilisent toujours `CONTROL_ROOM_DIR` temporaire.
 - Valider le plugin : `claude plugin validate ./plugin` et `claude plugin validate .` (marketplace).
+- Orchestratrice de ce dépôt (chemins absolus : `claim` ne résout que `--board`) :
+  `control-room claim --project E:\workspaces\claude\control-room --plans E:\workspaces\claude\control-room\docs\superpowers\plans --board E:\workspaces\claude\control-room\.control-room\board.json`
 - Lancer : `control-room start` — **dans le terminal de l'utilisateur seulement**. Lancé depuis une session Claude,
   il n'affiche pas l'URL (pas de TTY) ; ne contourne pas ça.
 

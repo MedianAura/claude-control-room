@@ -48,9 +48,9 @@ function pageHeaders(t) {
 }
 function clientHeaders(t) { return { 'x-cr-secret': t.clientSecret }; }
 
-// Déclare une orchestratrice ; rend { claimId, code }.
+// Déclare une orchestratrice ; rend { claimId, code }. Tableau par défaut dans le dossier d'état temporaire.
 async function claimAs(t, socket, extra = {}) {
-  const r = await request(t.port, 'POST', '/api/claim', { body: { socket, project: 'F:/p', plans: 'F:/p/plans', board: 'F:/p/.control-room/board.json', ...extra }, headers: clientHeaders(t) });
+  const r = await request(t.port, 'POST', '/api/claim', { body: { socket, project: 'F:/p', plans: 'F:/p/plans', board: path.join(process.env.CONTROL_ROOM_DIR, '.control-room', 'board.json'), ...extra }, headers: clientHeaders(t) });
   if (r.status !== 200) throw new Error(`claim ${r.status}`);
   return r.json;
 }

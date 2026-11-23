@@ -215,3 +215,57 @@ test('removeItem and reopenItem need a non-empty string reason', () => {
   for (const r of [undefined, '', 3]) assert.throws(() => reopenItem(file, t.id, r), { code: 'invalid' });
   assert.equal(readBoard(file).items[0].state, 'ok');
 });
+
+test('a board with malformed items is unreadable, and nothing is written to it', () => {
+  const ok = { id: 'AAAA', kind: 'test', text: 'x', state: 'open', notes: [] };
+  const bad = [null, 3, 'AAAA', { ...ok, id: 3 }, { ...ok, kind: undefined }, { ...ok, text: null }, { ...ok, plan: 3 }];
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  for (const b of bad) {
+    const raw = JSON.stringify({ version: 1, items: [ok, b] });
+    fs.writeFileSync(file, raw);
+    const r = readBoard(file);
+    assert.ok(r.error, JSON.stringify(b));
+    assert.deepEqual(r.items, []);
+    assert.throws(() => addItem(file, 'todo', { text: 'y' }), { code: 'unreadable' });
+    assert.equal(fs.readFileSync(file, 'utf8'), raw);
+  }
+});
+
+test('ids are matched case-insensitively', () => {
+  const t = addItem(file, 'test', { text: 'x' });
+  const d = addItem(file, 'todo', { text: 'y' });
+  assert.equal(addNote(file, t.id.toLowerCase(), 'n', 'orchestrator').id, t.id);
+  assert.equal(tickTest(file, t.id.toLowerCase()).state, 'ok');
+  assert.equal(closeTodo(file, d.id.toLowerCase(), 'done').state, 'done');
+});
+
+test('view orders tasks by their first test ever created, closed ones included', () => {
+  const first = addItem(file, 'test', { text: 'a', plan: 'p', task: 'T2' });
+  addItem(file, 'test', { text: 'b', plan: 'p', task: 'T1' });
+  addItem(file, 'test', { text: 'c', plan: 'p', task: 'T2' });
+  tickTest(file, first.id);
+  assert.deepEqual(view(readBoard(file).items, []).tests[0].tasks.map(t => t.task), ['T2', 'T1']);
+});
+
+test('a locked rename is retried once, then refused with the tmp file removed', (t) => {
+  addItem(file, 'test', { text: 'x' });
+  const before = fs.readFileSync(file, 'utf8');
+  const real = fs.renameSync;
+  let calls = 0;
+  const locked = (code, times) => (a, b) => { if (++calls <= times) throw Object.assign(new Error(code), { code }); return real(a, b); };
+  t.after(() => { fs.renameSync = real; });
+
+  fs.renameSync = locked('EPERM', 1);
+  addItem(file, 'test', { text: 'y' });
+  assert.equal(calls, 2);
+  assert.equal(readBoard(file).items.length, 2);
+
+  calls = 0;
+  const two = fs.readFileSync(file, 'utf8');
+  fs.renameSync = locked('EBUSY', Infinity);
+  assert.throws(() => addItem(file, 'test', { text: 'z' }), { code: 'busy' });
+  assert.equal(calls, 2);
+  assert.equal(fs.readFileSync(file, 'utf8'), two);
+  assert.deepEqual(fs.readdirSync(path.dirname(file)), ['board.json']);
+  assert.notEqual(before, two);
+});

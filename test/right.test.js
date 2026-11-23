@@ -65,6 +65,8 @@ test('an unreadable board is shown, not emptied', async () => {
   assert.deepEqual(r.tests, []);
   assert.equal((await ok('45BG')).status, 409);
   assert.equal(fs.readFileSync(boardPath, 'utf8'), '{ "items": [ cassé');
+  assert.equal(pendingCards().filter(c => c.kind === 'error').length, 1);
+  assert.deepEqual(t.delivered, []);
 });
 
 test('OK ticks the test and tells the orchestrator', async () => {
@@ -126,4 +128,61 @@ test('wrapDeliver appends the refs block', async () => {
 
 test('withRefs leaves a text without known ids untouched', () => {
   assert.equal(right.withRefs('rien #ZZZZ'), 'rien #ZZZZ');
+});
+
+test('a KO without a note and a malformed body → 400, nothing written', async () => {
+  addWithId('45BG', 'test', { text: 'scan' });
+  const before = fs.readFileSync(boardPath, 'utf8');
+  assert.equal((await ko('45BG', '  ')).status, 400);
+  assert.equal((await ko('45BG')).status, 400);
+  for (const body of [{ id: '45BG', result: 'maybe' }, { result: 'ok' }, { id: 3, result: 'ok' }]) {
+    assert.equal((await request(t.port, 'POST', '/api/test', { body, headers: pageHeaders(t) })).status, 400, JSON.stringify(body));
+  }
+  assert.equal((await request(t.port, 'POST', '/api/test', { raw: '{pas du json', headers: pageHeaders(t) })).status, 400);
+  assert.equal(fs.readFileSync(boardPath, 'utf8'), before);
+  assert.deepEqual(t.delivered, []);
+});
+
+test('OK accepts a lowercase id and delivers the canonical one', async () => {
+  addWithId('45BG', 'test', { text: 'scan' });
+  assert.equal((await ok('45bg')).status, 200);
+  assert.equal(item('45BG').state, 'ok');
+  assert.deepEqual(t.delivered, ['[control-room] Test OK #45BG : fais cocher son étape dans le plan.']);
+});
+
+test('OK through wrapDeliver carries the refs block with the closed state', async () => {
+  addWithId('45BG', 'test', { text: 'scan', plan: 'p', task: 'Task 4' });
+  addWithId('K2P9', 'test', { text: 'autre', plan: 'p' });
+  const delivered = [];
+  const s = await startTestServer({ routes, deliver: right.wrapDeliver(async (x) => { delivered.push(x); }) });
+  try {
+    assert.equal((await request(s.port, 'POST', '/api/test', { body: { id: '45BG', result: 'ok' }, headers: pageHeaders(s) })).status, 200);
+  } finally { await s.close(); }
+  assert.deepEqual(delivered, ['[control-room] Test OK #45BG : fais cocher son étape dans le plan.\n#45BG (test, p › Task 4, medium, ok) : scan']);
+});
+
+test('a claimed orchestrator without a board says so instead of an empty column', async () => {
+  writeJson(path.join(dir, 'orchestrator.json'), { plans: plansRoot });
+  const r = rightState();
+  assert.equal(r.board.error, 'aucun tableau déclaré : refaire control-room claim … --board <fichier>');
+  const res = await ok('45BG');
+  assert.equal(res.status, 409);
+  assert.equal(res.json.error, r.board.error);
+});
+
+test('a board that view cannot render is reported, not a 500', (t2) => {
+  addWithId('45BG', 'test', { text: 'scan' });
+  const real = board.view;
+  board.view = () => { throw new TypeError('x.localeCompare is not a function'); };
+  t2.after(() => { board.view = real; });
+  const r = rightState();
+  assert.match(r.board.error, /localeCompare/);
+  assert.deepEqual([r.tests, r.todos], [[], []]);
+});
+
+test('withRefs lists cited ids it cannot expand when the board is unreadable', () => {
+  fs.mkdirSync(path.dirname(boardPath), { recursive: true });
+  fs.writeFileSync(boardPath, '{ cassé');
+  assert.equal(right.withRefs('voir #45bg et #K2P9, #45BG'), 'voir #45bg et #K2P9, #45BG\n(tableau illisible : #45BG, #K2P9 non développés)');
+  assert.equal(right.withRefs('rien à citer #1'), 'rien à citer #1');
 });

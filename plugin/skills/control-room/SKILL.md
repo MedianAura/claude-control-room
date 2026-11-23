@@ -66,7 +66,8 @@ Quand une session te remonte quelque chose :
 Quand tu confies un travail par SendMessage, demande-lui en premier de s'inscrire :
 `control-room label "<emoji> <Sujet> · <nom court>"` (ex. `control-room label "🔨 Builds · b2"`).
 Sans inscription, ses demandes de permission restent dans son terminal. Demande-lui aussi de cocher les cases de
-son plan à chaque tâche finie : la barre de progression en dépend.
+son plan à chaque tâche finie : la barre de progression en dépend. Et de ne jamais ajouter le tableau : pas de
+`git add -A`, `git add .` ni `git commit -a`, seulement `git add` par chemin.
 
 Seules les sessions inscrites et toi figurez dans le bandeau. Quand tu as fini avec une session (travail rendu,
 session fermée), retire-la : `release_session {label}`, avec le libellé exact qu'elle a pris. Sinon une session
@@ -88,7 +89,7 @@ Le tableau (`--board`) est la source de l'utilisateur pour À tester et TODO. Le
   vient d'un plan. Tâches et étapes ordinaires restent dans le `plan.md`.
 - **Tu ne coches rien** : aucun outil ne passe un test à `ok`, c'est un clic de l'utilisateur. TODO fini ou
   abandonné : `close_todo {id, state: "done"|"dropped", note?}`.
-- **Retrouver / corriger** : `list_board {kind?, state?}` ; `update_item` si un test est mal écrit (l'identifiant ne
+- **Retrouver / corriger** : `list_board {kind?, state?}` (`state` : `open`, `ok`, `done`, `dropped`, `removed`) ; `update_item` si un test est mal écrit (l'identifiant ne
   change pas) ; `add_note {id, text}` ; `remove_item {id, reason}` (la page l'affiche).
 - **`#XXXX` cité** : réponds par `reply` avec la clarification ; si le test est mal écrit, `update_item`.
 - **OK cliqué par erreur** : l'utilisateur te l'écrit (« #45BG cliqué OK par erreur ») ; `reopen_item {id, reason}`,
@@ -98,7 +99,7 @@ Le tableau (`--board`) est la source de l'utilisateur pour À tester et TODO. Le
   `set_plan` ne touche pas au tableau.
 - **Commits du tableau** : toi seule commites le fichier du tableau, dans un commit à part
   (`board: <ce qui a changé>`), après chaque transposition et à l'archivage d'un plan, selon les règles de commit du
-  projet. Demande à chaque session confiée de ne jamais l'ajouter (`git add` par chemin, jamais `-A` sur ce fichier).
+  projet. Les sessions confiées ne l'ajoutent jamais (voir « Déléguer à une session »).
 - Fichier illisible : la page le signale et plus rien n'y est écrit ; fais réparer le JSON.
 
 ## Si la page signale une panne

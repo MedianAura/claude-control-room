@@ -4,14 +4,20 @@
     {
       "id": "KRVH",
       "kind": "todo",
-      "state": "open",
+      "state": "done",
       "text": "Page soignée",
       "detail": "passe de design de la page avec les skills (`frontend-design`).",
       "group": "Page",
       "plan": null,
-      "notes": [],
+      "notes": [
+        {
+          "at": "2026-11-23T04:39:35.275Z",
+          "by": "orchestrator",
+          "text": "passe de design terminée (confirmé par l'utilisateur)"
+        }
+      ],
       "createdAt": "2026-11-23T04:15:52.121Z",
-      "closedAt": null
+      "closedAt": "2026-11-23T04:39:35.274Z"
     },
     {
       "id": "KRUV",

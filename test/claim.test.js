@@ -68,7 +68,7 @@ test('the orchestrator file keeps only fingerprints, never the socket, token or 
   const { claimId } = await claimAs(t, 'A', { token: 'secret-token' });
   const raw = JSON.stringify(readJson(path.join(dir, 'orchestrator.json')));
   assert.ok(!raw.includes('"A"') && !raw.includes('secret-token') && !raw.includes(claimId));
-  assert.equal(readJson(path.join(dir, 'orchestrator.json')).board, 'F:/p/.control-room/board.json');
+  assert.equal(readJson(path.join(dir, 'orchestrator.json')).board, path.join(dir, '.control-room', 'board.json'));
 });
 
 test('claim needs the client secret', async () => {

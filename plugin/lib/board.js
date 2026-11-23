@@ -14,6 +14,15 @@ class BoardError extends Error {
   constructor(code, message) { super(message); this.name = 'BoardError'; this.code = code; }
 }
 
+const STRING_FIELDS = ['detail', 'plan', 'task', 'group'];
+
+// Élément inutilisable par view et les mutations (fichier retouché à la main) : le tableau entier est illisible.
+function malformed(it) {
+  return !it || typeof it !== 'object' || Array.isArray(it)
+    || !['id', 'kind', 'text'].every(k => typeof it[k] === 'string')
+    || !STRING_FIELDS.every(k => it[k] == null || typeof it[k] === 'string');
+}
+
 function readBoard(file) {
   let raw;
   try { raw = fs.readFileSync(file, 'utf8'); } catch (e) {
@@ -23,9 +32,25 @@ function readBoard(file) {
   try {
     const data = JSON.parse(raw);
     if (!data || !Array.isArray(data.items)) return { items: [], error: 'le fichier n\'a pas de tableau « items »' };
+    const bad = data.items.findIndex(malformed);
+    if (bad >= 0) return { items: [], error: `élément n° ${bad + 1} mal formé (id, kind, text en texte ; detail, plan, task, group en texte ou null)` };
     return { items: data.items, error: null };
   } catch (e) {
     return { items: [], error: `JSON invalide : ${e.message}` };
+  }
+}
+
+// Windows : un éditeur, un antivirus ou l'indexeur qui tient le fichier fait échouer le rename un court instant.
+const LOCKED = ['EPERM', 'EBUSY', 'EACCES'];
+const RETRY_MS = 50;
+function replaceFile(tmp, file) {
+  for (let attempt = 0; ; attempt++) {
+    try { return fs.renameSync(tmp, file); } catch (e) {
+      if (LOCKED.includes(e.code) && attempt === 0) { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, RETRY_MS); continue; }
+      try { fs.unlinkSync(tmp); } catch {}
+      if (LOCKED.includes(e.code)) throw new BoardError('busy', `tableau verrouillé par un autre programme (${e.code}) : rien n'a été écrit, réessaie`);
+      throw e;
+    }
   }
 }
 
@@ -37,7 +62,7 @@ function mutate(file, fn) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const tmp = `${file}.${process.pid}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify({ version: 1, items }, null, 2));
-  fs.renameSync(tmp, file);
+  replaceFile(tmp, file);
   return result;
 }
 
@@ -50,8 +75,9 @@ function newId(items) {
   }
 }
 
+// Les identifiants s'écrivent en majuscules ; l'orchestratrice ou l'utilisateur peut les taper en minuscules.
 function find(items, id) {
-  const it = items.find(i => i.id === id);
+  const it = items.find(i => i.id === String(id).toUpperCase());
   if (!it) throw new BoardError('not-found', `élément inconnu : ${id}`);
   return it;
 }
@@ -63,7 +89,6 @@ function checkText(t) {
   if (typeof t !== 'string' || !t.trim()) throw new BoardError('invalid', 'texte vide');
 }
 
-const STRING_FIELDS = ['detail', 'plan', 'task', 'group'];
 function checkField(k, v) {
   if (k === 'text') return checkText(v);
   if (STRING_FIELDS.includes(k) && v !== null && typeof v !== 'string') throw new BoardError('invalid', `${k} doit être un texte`);
@@ -196,7 +221,8 @@ function view(items, plans = []) {
     })
     .map(([plan, list]) => {
       const tasks = [...groupBy(list, i => i.task)]
-        .map(([task, ti]) => ({ task, first: items.indexOf(ti[0]), items: ti.sort(byWeightThenText) }))
+        // Ordre de création du premier test de la tâche, fermés compris : une tâche ne recule pas quand son premier test passe OK.
+        .map(([task, ti]) => ({ task, first: items.findIndex(i => i.kind === 'test' && (i.plan ?? null) === plan && (i.task ?? null) === task), items: ti.sort(byWeightThenText) }))
         .sort((a, b) => (a.task === null ? -1 : b.task === null ? 1 : a.first - b.first))
         .map(({ task, items: ti }) => ({ task, items: ti }));
       const label = plan === null ? 'Hors plan' : plans.find(p => p.name === plan)?.label ?? plan;
@@ -213,16 +239,19 @@ function view(items, plans = []) {
   return { tests, todos };
 }
 
+// #XXXX cités dans un texte, en majuscules, sans doublon, dans l'ordre d'apparition.
+function citedIds(text) {
+  return [...new Set([...String(text).matchAll(/(?<![\w#])#([A-Za-z0-9]+)(?![\w])/g)].map(m => m[1].toUpperCase()))];
+}
+const ID_SHAPE = new RegExp(`^[${ID_ALPHABET}]{${ID_LENGTH}}$`);
+const looksLikeId = (id) => ID_SHAPE.test(id);
+
 // Bloc de références : une entrée par #XXXX connu, dans l'ordre d'apparition.
 function refsBlock(items, text) {
-  const seen = new Set();
   const out = [];
-  for (const m of String(text).matchAll(/(?<![\w#])#([A-Za-z0-9]+)(?![\w])/g)) {
-    const id = m[1].toUpperCase();
-    if (seen.has(id)) continue;
+  for (const id of citedIds(text)) {
     const it = items.find(i => i.id === id);
     if (!it) continue;
-    seen.add(id);
     const where = it.kind === 'test'
       ? `test, ${it.plan ?? 'Hors plan'}${it.task ? ` › ${it.task}` : ''}`
       : `todo, ${it.group ?? 'Divers'}`;
@@ -237,6 +266,6 @@ function refsBlock(items, text) {
 
 module.exports = {
   BoardError, readBoard, addItem, updateItem, closeTodo, addNote, removeItem, reopenItem, tickTest,
-  view, refsBlock, WEIGHTS, ID_ALPHABET,
+  view, refsBlock, citedIds, looksLikeId, WEIGHTS, ID_ALPHABET,
   _random: (n) => crypto.randomInt(n),
 };

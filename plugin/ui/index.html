@@ -491,6 +491,10 @@ document.querySelectorAll('aside .panel').forEach(p => {
   cap.onclick = () => { p.classList.toggle('closed'); sync(); closed[p.classList.contains('closed') ? 'add' : 'delete'](p.dataset.sec); localStorage.setItem('cr-closed', JSON.stringify([...closed])); };
 });
 let lastSide = '', hovering = false;
+// Tests passés OK depuis cette page (id → 'sending' puis 'sent') : masqués dès le clic, même sous la souris et même si
+// un /api/state parti avant la réponse les liste encore (comme `answered` pour les cartes). Oubliés quand l'état ne
+// les liste plus (un test rouvert doit revenir), ou aussitôt si l'envoi échoue (le test revient).
+const submitted = new Map();
 $('aside').addEventListener('mouseenter', () => { hovering = true; });
 $('aside').addEventListener('mouseleave', () => { hovering = false; });
 
@@ -546,7 +550,12 @@ function cite(id) {
 }
 
 function renderSide(force) {
-  const r = state.right || { board: { error: null }, tests: [], plans: [], todos: [] };
+  const r0 = state.right || { board: { error: null }, tests: [], plans: [], todos: [] };
+  const listed = new Set(r0.tests.flatMap(g => g.tasks.flatMap(k => k.items.map(t => t.id))));
+  for (const [id, s] of submitted) if (s === 'sent' && !listed.has(id)) submitted.delete(id);
+  const r = { ...r0, tests: r0.tests
+    .map(g => ({ ...g, tasks: g.tasks.map(k => ({ ...k, items: k.items.filter(t => !submitted.has(t.id)) })).filter(k => k.items.length) }))
+    .filter(g => g.tasks.length) };
   const key = JSON.stringify(r);
   // Gelée sous la souris et pendant une saisie (note KO). Un bouton focalisé ne gèle pas la colonne : il est
   // retrouvé par sa clé data-fk après le rendu, pour qu'on puisse la parcourir au clavier.
@@ -563,14 +572,28 @@ function renderSide(force) {
     : `<div class="none">${unreadable ? 'Tableau illisible.' : 'Rien à tester.'}</div>`;
   $('#tests').querySelectorAll('.item').forEach(el => {
     const id = el.dataset.id;
-    el.querySelector('.okb').onclick = () => post('/api/test', { id, result: 'ok' }).then(() => { lastSide = ''; load(); });
+    // Rendus forcés : sous la souris la colonne est gelée, et le test cliqué ne doit pas rester à portée d'un second clic.
+    el.querySelector('.okb').onclick = async () => {
+      submitted.set(id, 'sending'); renderSide(true);
+      const res = await post('/api/test', { id, result: 'ok' });
+      if (res.status === 200) submitted.set(id, 'sent'); else submitted.delete(id);
+      await load(); renderSide(true);
+    };
     el.querySelector('.ko').onclick = () => {
       const tb = el.querySelector('.tb');
       tb.innerHTML = `<input placeholder="Qu'est-ce qui ne marche pas ? (Entrée)"><button class="ko">Envoyer</button>`;
-      const input = tb.querySelector('input'); input.focus();
-      const go = () => input.value.trim() && post('/api/test', { id, result: 'fail', note: input.value.trim() }).then(() => { input.blur(); lastSide = ''; load(); });
-      input.onkeydown = (e) => { if (e.key === 'Enter') go(); if (e.key === 'Escape') { input.blur(); lastSide = ''; renderSide(); } };
-      tb.querySelector('button').onclick = go;
+      const input = tb.querySelector('input'), send = tb.querySelector('button'); input.focus();
+      // Saisie bloquée pendant l'envoi : un double Entrée ne doit pas ajouter deux notes ni livrer deux KO.
+      const go = async () => {
+        const note = input.value.trim();
+        if (!note || input.disabled) return;
+        input.disabled = send.disabled = true;
+        const res = await post('/api/test', { id, result: 'fail', note });
+        if (res.status !== 200) { input.disabled = send.disabled = false; input.focus(); return; }
+        input.blur(); await load(); renderSide(true);
+      };
+      input.onkeydown = (e) => { if (e.key === 'Enter') go(); if (e.key === 'Escape') { input.blur(); renderSide(true); } };
+      send.onclick = go;
     };
   });
   $('#pcount').textContent = r.plans.length || '';

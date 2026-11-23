@@ -4,7 +4,9 @@ const { stateDir, readJson, addEvent } = require('./store');
 const path = require('path');
 const board = require('./board');
 
-const STATUS = { 'not-found': 404, invalid: 400, state: 409, unreadable: 409 };
+const STATUS = { 'not-found': 404, invalid: 400, state: 409, unreadable: 409, busy: 503 };
+// orchestrator.json sans « board » (déclaration d'avant --board) : la page et les outils disent quoi faire.
+const NO_BOARD = 'aucun tableau déclaré : refaire control-room claim … --board <fichier>';
 
 function boardFile() {
   const o = readJson(path.join(stateDir(), 'orchestrator.json'));
@@ -16,7 +18,7 @@ const ITEM = /^\/api\/board\/items\/([^/]+)(?:\/(close|note|remove|reopen))?$/;
 // Enveloppe commune : fichier du tableau, corps JSON, BoardError → statut HTTP.
 const guarded = (fn) => async (req, res, url, { readBody, send }) => {
   const file = boardFile();
-  if (!file) return send(res, 409, { error: 'no-board' });
+  if (!file) return send(res, 409, { error: NO_BOARD });
   try {
     const body = req.method === 'POST' ? await readBody(req) : {};
     if (!body || typeof body !== 'object' || Array.isArray(body)) return send(res, 400, { error: 'corps JSON objet attendu' });
@@ -41,18 +43,18 @@ const routes = [
         case undefined: return { item: board.updateItem(file, id, body) };
         case 'close': {
           const item = board.closeTodo(file, id, body.state, body.note);
-          addEvent(`TODO #${id} ${body.state === 'done' ? 'fait' : 'abandonné'}`);
+          addEvent(`TODO #${item.id} ${body.state === 'done' ? 'fait' : 'abandonné'}`);
           return { item };
         }
         case 'note': return { item: board.addNote(file, id, body.text, 'orchestrator') };
         case 'remove': {
           const item = board.removeItem(file, id, body.reason);
-          addEvent(`#${id} retiré : ${body.reason.trim()}`);
+          addEvent(`#${item.id} retiré : ${body.reason.trim()}`);
           return { item };
         }
         case 'reopen': {
           const item = board.reopenItem(file, id, body.reason);
-          addEvent(`#${id} rouvert : ${body.reason.trim()}`);
+          addEvent(`#${item.id} rouvert : ${body.reason.trim()}`);
           return { item };
         }
       }
@@ -65,4 +67,4 @@ const routes = [
   }) },
 ];
 
-module.exports = { boardFile, routes };
+module.exports = { boardFile, routes, NO_BOARD };
