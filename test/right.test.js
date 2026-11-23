@@ -33,7 +33,7 @@ test('the right column lists only open tests and open todos', () => {
 
 test('active plans show their progress from their own plan file', () => {
   writeJson(path.join(dir, 'active-plans.json'), [{ name: 'dungeon-speed', dir: path.join(plansRoot, 'dungeon-speed'), label: '🏃 dungeon-speed' }]);
-  assert.deepEqual(rightState().plans, [{ name: 'dungeon-speed', label: '🏃 dungeon-speed', done: 1, total: 2 }]);
+  assert.deepEqual(rightState().plans, [{ name: 'dungeon-speed', label: '🏃 dungeon-speed', done: 1, total: 2, tasks: [] }]);
 });
 
 test('without a claimed orchestrator the column is empty', () => {

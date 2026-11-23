@@ -132,7 +132,9 @@ Trois sections repliables, lues depuis les fichiers du projet, relues en direct.
   ou la section qui les contient. OK coche la case dans le fichier ; KO demande une note et l'envoie à
   l'orchestratrice, qui la relaie à la session concernée.
 - **Plans actifs** : les plans superpowers déclarés actifs par l'orchestratrice (elle sait ce qu'elle a confié),
-  avec la progression calculée sur leurs cases cochées. Quand tous les tests d'une fonctionnalité sont OK,
+  avec la progression calculée sur leurs cases cochées. Un clic déplie le plan : ses tâches (titres `###`) avec
+  leur progression, la tâche en cours (première non finie) dépliée sur ses étapes de premier niveau, les autres à
+  la demande. Quand tous les tests d'une fonctionnalité sont OK,
   l'orchestratrice propose une carte « Archiver <plan> ? » ; accepter déplace le dossier du plan dans un dossier
   d'archive et le retire de la section.
 - **TODO** : les entrées de premier niveau `- [ ] **Nom**` de la section `## To do` du plan maître : les

@@ -104,6 +104,14 @@
   .tb input { flex: 1; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font: inherit; font-size: 12px; }
   .bar { height: 4px; background: var(--line); border-radius: 3px; margin: 6px 0 2px; overflow: hidden; }
   .bar i { display: block; height: 100%; background: var(--accent); }
+  .phead, .task { cursor: pointer; user-select: none; }
+  .chev { color: var(--muted); display: inline-block; width: 1.1em; }
+  .tasks { margin: 4px 0 2px 1.1em; font-size: 12.5px; }
+  .task { padding: 2px 0; color: var(--muted); }
+  .task.cur { color: var(--text); font-weight: 600; }
+  .task.tdone { color: var(--muted); opacity: .75; }
+  .steps { margin: 0 0 4px 1.2em; font-size: 12px; color: var(--text); }
+  .steps .sdone { color: var(--muted); }
   .pct { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; float: right; }
 </style>
 </head>
@@ -373,10 +381,34 @@ let lastSide = '', hovering = false;
 $('aside').addEventListener('mouseenter', () => { hovering = true; });
 $('aside').addEventListener('mouseleave', () => { hovering = false; });
 
-function renderSide() {
+// Plans dépliables : un clic sur le plan montre ses tâches ; la tâche en cours (première non finie) montre ses
+// étapes d'office, un clic sur une tâche inverse ce choix.
+const openPlans = new Set(JSON.parse(localStorage.getItem('cr-open-plans') || '[]'));
+const saveOpenPlans = () => localStorage.setItem('cr-open-plans', JSON.stringify([...openPlans]));
+const flippedTasks = new Set();
+const inline = (t) => esc(t).replace(/`([^`]+)`/g, '<code>$1</code>');
+const flip = (set, k) => set.has(k) ? set.delete(k) : set.add(k);
+function planHtml(p) {
+  const pct = p.total ? Math.round(100 * p.done / p.total) : 0;
+  const open = openPlans.has(p.name);
+  const head = `<div class="phead" data-plan="${esc(p.name)}"><span class="pct">${p.done}/${p.total}</span><span class="chev">${open ? '▾' : '▸'}</span>${esc(p.label || p.name)}</div><div class="bar"><i style="width:${pct}%"></i></div>`;
+  if (!open) return `<div class="item">${head}</div>`;
+  const tasks = p.tasks || [];
+  const cur = tasks.findIndex(t => t.done < t.total);
+  const body = tasks.length ? tasks.map((t, i) => {
+    const k = `${p.name}::${t.title}`;
+    const shown = (i === cur) !== flippedTasks.has(k);
+    const mark = t.total && t.done === t.total ? '✓' : i === cur ? '●' : '○';
+    const steps = shown && t.steps.length ? `<div class="steps">${t.steps.map(s => `<div class="${s.done ? 'sdone' : ''}">${s.done ? '✓' : '○'} ${inline(s.text)}</div>`).join('')}</div>` : '';
+    return `<div class="task ${i === cur ? 'cur' : ''} ${mark === '✓' ? 'tdone' : ''}" data-task="${esc(k)}"><span class="pct">${t.done}/${t.total}</span>${mark} ${inline(t.title)}</div>${steps}`;
+  }).join('') : '<div class="none">Pas de tâches « ### » dans ce plan.</div>';
+  return `<div class="item">${head}<div class="tasks">${body}</div></div>`;
+}
+
+function renderSide(force) {
   const r = state.right || { tests: [], plans: [], todos: [] };
   const key = JSON.stringify(r);
-  if (key === lastSide || hovering || document.activeElement?.closest?.('aside')) return;
+  if (!force && (key === lastSide || hovering || document.activeElement?.closest?.('aside'))) return;
   lastSide = key;
   const groups = new Map();
   for (const t of r.tests) { if (!groups.has(t.parent)) groups.set(t.parent, []); groups.get(t.parent).push(t); }
@@ -398,10 +430,9 @@ function renderSide() {
     };
   });
   $('#pcount').textContent = r.plans.length || '';
-  $('#plans').innerHTML = r.plans.length ? r.plans.map(p => {
-    const pct = p.total ? Math.round(100 * p.done / p.total) : 0;
-    return `<div class="item"><span class="pct">${p.done}/${p.total}</span>${esc(p.label || p.name)}<div class="bar"><i style="width:${pct}%"></i></div></div>`;
-  }).join('') : '<div class="none">Aucun plan actif.</div>';
+  $('#plans').innerHTML = r.plans.length ? r.plans.map(planHtml).join('') : '<div class="none">Aucun plan actif.</div>';
+  $('#plans').querySelectorAll('[data-plan]').forEach(el => el.onclick = () => { flip(openPlans, el.dataset.plan); saveOpenPlans(); renderSide(true); });
+  $('#plans').querySelectorAll('[data-task]').forEach(el => el.onclick = () => { flip(flippedTasks, el.dataset.task); renderSide(true); });
   $('#dcount').textContent = r.todos.length || '';
   $('#todos').innerHTML = r.todos.length ? r.todos.map(t => `<div class="item">${esc(t.name)}${t.planDir ? ' <span class="none">· plan</span>' : ''}</div>`).join('')
     : '<div class="none">Rien en attente.</div>';

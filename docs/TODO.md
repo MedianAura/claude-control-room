@@ -19,7 +19,7 @@ Format lu par `plugin/lib/plan-file.js` : entrées `- [ ] **Nom**` de premier ni
 - [ ] **TODO priorisé** : priorité par entrée, tri sur la page.
 - [ ] **À tester repensé** : priorité, regroupement par tâche, identifiant unique par test (aujourd'hui
   l'identité d'un test est son texte normalisé).
-- [ ] **Plans actifs dépliables** : déplier un plan pour voir ses tâches et étapes, pas seulement la progression.
+- [x] **Plans actifs dépliables** : déplier un plan pour voir ses tâches et étapes, pas seulement la progression.
 - [x] **« À trancher » = la file** : le compteur 5/5 → 6/6 n'apporte rien ; afficher la file de ce que j'ai à
   faire.
 - [ ] **Page soignée** : passe de design de la page avec les skills (`frontend-design`).

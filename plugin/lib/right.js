@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const { stateDir, readJson, addEvent } = require('./store');
-const { parseMaster, tickTest, planProgress } = require('./plan-file');
+const { parseMaster, tickTest, planOutline } = require('./plan-file');
 const cards = require('./cards');
 
 function orchestrator() { return readJson(path.join(stateDir(), 'orchestrator.json')); }
@@ -19,7 +19,7 @@ function rightState() {
   if (!m) return { tests: [], plans: [], todos: [] };
   return {
     tests: m.tests.filter(x => !x.done).map(({ text, parent }) => ({ text, parent })),
-    plans: activePlans().map(p => ({ name: p.name, label: p.label || p.name, ...planProgress(path.join(p.dir, 'plan.md')) })),
+    plans: activePlans().map(p => ({ name: p.name, label: p.label || p.name, ...planOutline(path.join(p.dir, 'plan.md')) })),
     todos: m.todos.filter(x => !x.done).map(({ name, planDir }) => ({ name, planDir })),
   };
 }
