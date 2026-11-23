@@ -13,7 +13,7 @@ Format lu par `plugin/lib/plan-file.js` : entrées `- [ ] **Nom**` de premier ni
   Évite le double clic quand on croit que ça n'a pas marché.
 - [x] **Sessions déconnectées** : le bandeau ne montre que l'équipe (orchestratrice + inscrites) ;
   `release_session` retire un worker dont l'orchestratrice a fini.
-- [ ] **Test de vie des sessions** : une session inscrite qui plante reste affichée jusqu'à 2 h. Piste : se
+- [x] **Test de vie des sessions** : une session inscrite qui plante reste affichée jusqu'à 2 h. Piste : se
   connecter à son `CLAUDE_CODE_MESSAGING_SOCKET` (clé de la session) ; essai d'abord, pour vérifier qu'une
   connexion de sonde n'a pas d'effet sur sa boîte de réception.
 - [ ] **TODO priorisé** : priorité par entrée, tri sur la page.

@@ -154,3 +154,22 @@ test('Stop pushes stale answers back to the orchestrator once', async () => {
   assert.equal(delivery.pendingFor().length, 0);
   assert.equal((await runHook('stop', { hook_event_name: 'Stop', stop_hook_active: true })).out, '');
 });
+
+test('an enrolled session whose socket is gone drops off the strip', async () => {
+  const net = require('net'), os = require('os');
+  const pipe = process.platform === 'win32' ? String.raw`\\.\pipe\cr-test-` + `${process.pid}-${Date.now()}` : path.join(os.tmpdir(), `cr-test-${process.pid}-${Date.now()}.sock`);
+  const srv = net.createServer(c => c.end());
+  await new Promise(r => srv.listen(pipe, r));
+  await label(pipe, '🔨 Builds · b2');
+  await sessions.sweep();
+  assert.equal((await state()).sessions.length, 1);
+  await new Promise(r => srv.close(r));
+  await sessions.sweep();
+  assert.equal((await state()).sessions.length, 0);
+});
+
+test('a session key that is not a socket path is never probed away', async () => {
+  await label('K1', 'w');
+  await sessions.sweep();
+  assert.equal((await state()).sessions.length, 1);
+});

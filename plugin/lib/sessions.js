@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const net = require('net');
 const { stateDir, readJson, writeJson, addEvent } = require('./store');
 const cards = require('./cards');
 
@@ -43,12 +44,45 @@ function inTeam() {
 // Une session muette depuis 2 h (fermée sans SessionEnd, tuée) quitte le bandeau (revue #12).
 const SESSION_TTL_MS = 2 * 3600e3;
 
-function list() {
+const readAll = () => {
   const dir = path.join(stateDir(), 'sessions');
+  return fs.readdirSync(dir).filter(f => f.endsWith('.json')).map(f => readJson(path.join(dir, f))).filter(Boolean);
+};
+
+// Test de vie (essai docs/superpowers/specs/2026-11-22-liveness-spike.md) : une connexion vide au socket de la
+// session, fermée aussitôt, sans effet sur elle. Morte seulement si le socket n'existe plus (ENOENT, pipe Windows)
+// ou refuse (ECONNREFUSED, socket Unix resté sur disque) ; tout le reste compte comme vivante, car retirer une
+// session vivante est pire que garder un fantôme 30 s de plus.
+const PROBE_EVERY_MS = 30e3;
+const probeable = (key) => /^\\\\[.?]\\pipe\\/i.test(String(key)) || path.isAbsolute(String(key));
+function alive(key) {
+  return new Promise((resolve) => {
+    let s;
+    const end = (v) => { if (s) s.destroy(); resolve(v); };
+    try { s = net.createConnection(key); } catch { return resolve(true); }
+    s.setTimeout(2000, () => end(true));
+    s.on('connect', () => end(true));
+    s.on('error', (e) => end(e.code !== 'ENOENT' && e.code !== 'ECONNREFUSED'));
+  });
+}
+
+let lastSweep = 0, sweeping = null;
+async function sweep() {
+  lastSweep = Date.now();
+  const team = inTeam();
+  await Promise.all(readAll().filter(s => team(s) && probeable(s.key)).map(async (s) => {
+    if (await alive(s.key)) return;
+    try { fs.unlinkSync(fileOf(s.key)); } catch {}
+    addEvent(`session fermée : ${s.label}`);
+  }));
+}
+
+function list() {
+  if (!sweeping && Date.now() - lastSweep > PROBE_EVERY_MS) sweeping = sweep().catch(() => {}).finally(() => { sweeping = null; });
   const pending = cards.pendingCards();
   const now = Date.now();
   const team = inTeam();
-  return fs.readdirSync(dir).filter(f => f.endsWith('.json')).map(f => readJson(path.join(dir, f))).filter(Boolean)
+  return readAll()
     .filter(s => team(s) && now - (s.at || 0) < SESSION_TTL_MS)
     .map(({ key, label, status, activity, at }) => {
       if (pending.some(c => c.kind === 'approval' && c.session === key)) status = 'approval';
@@ -96,4 +130,4 @@ function routes(delivery) {
   ];
 }
 
-module.exports = { routes, list, defaultLabel };
+module.exports = { routes, list, sweep, defaultLabel };
