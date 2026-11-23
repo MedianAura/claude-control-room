@@ -6,7 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Plugin Claude Code : une salle de contrôle dans un onglet de navigateur pour une session « orchestratrice » qui
 coordonne d'autres sessions par `SendMessage`. Cartes de décision une à la fois, bandeau d'état des sessions,
-approbations de permission depuis la page, colonne TODO → Plan → À tester lue depuis les plans du projet.
+approbations de permission depuis la page, colonne TODO → Plan → À tester lue depuis le tableau JSON du projet (`claim --board`), plus les plans pour la
+progression.
+
+Design du tableau : `docs/superpowers/specs/2026-11-22-board-design.md` (remplace la lecture du plan maître).
 
 Le design fait foi : `docs/superpowers/specs/2026-11-21-control-room-design.md`. Le plan et ses décisions :
 `docs/superpowers/plans/2026-11-21-control-room.md`. Usage : `README.md`.
@@ -44,8 +47,10 @@ Le design fait foi : `docs/superpowers/specs/2026-11-21-control-room-design.md`.
   chaque message `[cr:<id>:<code>]` ; `orchestrator.json` ne garde que des empreintes. Serveur sur `127.83.82.1`
   (`lib/host.js`) pour que le cookie de la page ne parte pas vers les autres serveurs locaux.
 - Une approbation dont le hook ne tire plus depuis 90 s expire (plus d'« Autoriser » dans le vide).
-- Rien de codé en dur pour un projet : chemins donnés par `claim`. Les tests `(user)` du plan maître s'identifient
-  par leur texte, pas leur numéro de ligne.
+- Rien de codé en dur pour un projet : chemins donnés par `claim`.
+- **Tableau** (`plugin/lib/board.js`) : écrit seulement par le serveur, via les outils MCP du secret client ; le
+  client ne coche jamais un test (OK = clic de la page). Les `plan.md` ne sont jamais réécrits par le serveur.
+  **L'orchestratrice seule commite le tableau** (`board: …`, commit à part) ; les sessions ne l'ajoutent jamais.
 
 ## Git
 

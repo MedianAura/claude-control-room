@@ -2,7 +2,7 @@
 
 Plugin Claude Code : une salle de contrôle dans un onglet de navigateur pour une session orchestratrice et ses
 sessions de travail. Une décision à la fois, une ligne par session, les approbations de permission depuis la page,
-et la colonne À tester / Plans actifs / TODO lue depuis le plan maître du projet. Rien ne défile.
+et la colonne À tester / Plans actifs / TODO lue depuis le tableau du projet. Rien ne défile.
 
 Node pur, aucune dépendance. État dans `~/.claude/control-room/`.
 
@@ -34,12 +34,21 @@ Commencer avec 2 ou 3 sessions.
 | `Ctrl` + `Entrée` | envoyer la note ou le message |
 | `Ctrl` + `V` dans la zone de message | joindre une capture |
 
+## Le tableau
+
+Un fichier JSON par projet (`--board`), écrit seulement par le serveur, à la demande de l'orchestratrice (outils
+`add_test`, `add_todo`, `update_item`, `close_todo`, `add_note`, `remove_item`, `reopen_item`, `list_board`). Il
+remplace les tests `(user)` et la section `## To do` du plan maître. À tester : plan › tâche, le plus important
+d'abord ; TODO : groupes, même tri. Chaque entrée a un identifiant `#XXXX` qu'on peut citer dans un message
+(« Clarifie #45BG ») : l'orchestratrice le reçoit développé. Seul l'utilisateur coche un test (OK / KO dans la
+page). L'orchestratrice seule commite le fichier. Fichier absent : tableau vide ; JSON cassé : la page le signale.
+
 ## Projet SoloConquest
 
 Chemins à donner à `claim` (à mettre dans le `CLAUDE.md` du projet) :
 
 ```
-control-room claim --project F:\AzerothCoreCOA --plans F:\AzerothCoreCOA\.agents\plans --master F:\AzerothCoreCOA\.agents\plans\solo-power-creep\plan.md
+control-room claim --project F:\AzerothCoreCOA --plans F:\AzerothCoreCOA\.agents\plans --board <fichier du tableau>
 ```
 
 ## Limites connues

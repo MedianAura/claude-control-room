@@ -38,7 +38,8 @@ et le zip d'origine dans `C:\Users\Aura\Downloads\decision-inbox.zip`.
 ## Anti-objectifs (échec même si ça marche)
 
 - Un fil qui défile, ou une carte qui change pendant qu'on la lit.
-- Une deuxième source de vérité pour les tests ou les TODO : le plan maître versionné reste la seule.
+- ~~Une deuxième source de vérité pour les tests ou les TODO : le plan maître versionné reste la seule.~~
+  Remplacé par `2026-11-22-board-design.md` : le tableau JSON du projet est la source pour À tester et TODO.
 - Une approbation de permission qui pourrait venir d'autre chose qu'un clic de l'utilisateur dans la page
   (autre processus local, autre onglet, autre session Claude). Ce serait du blanchiment de permission.
 - Une orchestratrice qui brûle des tours de modèle à attendre (boucle `wait_answers` toutes les 4 minutes).
@@ -127,6 +128,9 @@ L'utilisateur a choisi l'approche 1.
 - **Historique** (🕘) : fermé par défaut, ouvert à la demande ; c'est le seul endroit où le passé s'accumule.
 
 ### La page, colonne de droite : le cycle TODO → Plan → À tester
+
+> **Remplacé en partie** par `2026-11-22-board-design.md` : À tester et TODO ne se lisent plus dans le plan maître
+> mais dans le tableau JSON (`claim --board`). Seul Plans actifs reste tel que décrit ci-dessous.
 
 Trois sections repliables, lues depuis les fichiers du projet, relues en direct.
 

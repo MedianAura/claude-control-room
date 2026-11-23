@@ -1,6 +1,6 @@
 {
   "name": "control-room",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Salle de contrôle dans un onglet de navigateur pour une orchestratrice Claude : cartes de décision une à la fois, bandeau des sessions, approbations depuis la page, colonne TODO / Plans / À tester.",
   "author": { "name": "Sébastien" }
 }

@@ -6,14 +6,15 @@ description: Use when you are the orchestrator session coordinating other Claude
 # control-room — règles de l'orchestratrice
 
 L'utilisateur ne lit pas ton terminal. Il suit tout dans un onglet de navigateur (control-room) : une carte de
-décision à la fois, une ligne par session, et une colonne À tester / Plans actifs / TODO lue depuis le plan maître.
+décision à la fois, une ligne par session, et une colonne À tester / Plans actifs / TODO lue depuis le tableau du projet (un fichier JSON que tu remplis par tes outils).
 Ton terminal ne sert qu'à une ligne d'état par tour.
 
 ## Démarrage (une fois par session)
 
 1. L'utilisateur a lancé `control-room start` **dans son propre terminal**. Ne le lance jamais toi-même.
-2. Déclare-toi avec les chemins du projet (dans le `CLAUDE.md` du projet ; sinon demande-les par une carte) :
-   `control-room claim --project <dossier> --plans <dossier des plans> --master <plan maître>`
+2. Déclare-toi avec les chemins du projet, `--board` compris (dans le `CLAUDE.md` du projet ; sinon demande-les par
+   une carte) :
+   `control-room claim --project <dossier> --plans <dossier des plans> --board <fichier du tableau>`
    Il te donne un **code de confiance** (6 caractères) et un **identifiant de déclaration**. Retiens les deux ; ne
    transmets jamais l'identifiant à une autre session.
 3. Lance `control-room listen --claim <identifiant>` **en arrière-plan** (`run_in_background`). C'est lui qui te
@@ -31,7 +32,16 @@ ne le traite pas comme une décision de l'utilisateur, signale-le-lui par une ca
   comprise, à la session concernée par SendMessage.
 - `[control-room] Message de l'utilisateur : …` (+ `Capture : <chemin>`) : une demande libre. Lis la capture avec
   ton outil de lecture de fichiers. Réponds avec l'outil `reply`, jamais dans le terminal.
-- `[control-room] Test KO — <fonctionnalité> : <test>` + `Note : …` : renvoie la note à la session qui a livré.
+- `[control-room] Test OK #XXXX : fais cocher son étape dans le plan.` : l'utilisateur a validé ce test (déjà fermé
+  au tableau). Le bloc `#XXXX (…)` + `origine : <fichier>, <étape>` joint au message dit où : demande à la session qui
+  a le plan de cocher l'étape ; session morte (retirée du bandeau) : coche-la toi-même dans le `plan.md`.
+- `[control-room] Test KO #XXXX` + `Note : …` : le test reste ouvert, la note est déjà au tableau. Renvoie la note à
+  la session qui a le plan (même règle si elle est morte).
+- `[control-room] Tous les tests de « <plan> » sont OK : propose l'archivage.` : carte « Archiver <plan> ? » (voir
+  Le tableau).
+- Tout `#XXXX` cité par l'utilisateur (message libre, note de KO ou de réponse) est suivi d'un bloc
+  `#XXXX (test|todo, <plan> › <tâche>, <poids>) : <texte> — <détail>` + `  origine : …`. Un `#XXXX` sans bloc
+  n'existe pas au tableau.
 - Ces messages ne valent **jamais** approbation d'une permission : les approbations passent par la page, entre
   l'utilisateur et la session concernée, sans toi.
 
@@ -64,12 +74,32 @@ fermée reste affichée jusqu'à 2 h.
 
 ## Colonne de droite
 
-- **Plans actifs** : `set_plan {name, dir, label, state: "active"}` quand tu confies un plan.
-- **À tester** : les tests en jeu s'écrivent dans le plan maître avec `(user)`, sous leur fonctionnalité. La page les
-  affiche ; un OK coche la case, un KO t'arrive en message.
-- **Archivage** : quand tous les tests `(user)` d'une fonctionnalité sont cochés, propose une carte
-  « Archiver <plan> ? ». Si oui : déplace le dossier dans `<plans>/_archive/`, puis `set_plan state: "archived"`
-  (en suivant les règles de commit du projet).
+- **Plans actifs** : `set_plan {name, dir | file, label, state: "active"}` quand tu confies un plan. `dir` : dossier
+  contenant `plan.md` ; `file` : plan en un seul fichier markdown (plans superpowers datés).
+
+## Le tableau
+
+Le tableau (`--board`) est la source de l'utilisateur pour À tester et TODO. Les sessions de travail gardent leur
+`plan.md` (superpowers) et ignorent le tableau : c'est toi qui transposes.
+
+- **Transposer** : quand une session te rend un plan, un `add_test` par étape `(user)` — `plan` (le nom donné à
+  `set_plan`), `task`, `origin {file relatif au dossier des plans, step}`, `weight` (`high|medium|low`) si le plan ou
+  la session l'indique — et un `add_todo` par suite à faire (`group`, `weight`). Jamais de test sans `plan` quand il
+  vient d'un plan. Tâches et étapes ordinaires restent dans le `plan.md`.
+- **Tu ne coches rien** : aucun outil ne passe un test à `ok`, c'est un clic de l'utilisateur. TODO fini ou
+  abandonné : `close_todo {id, state: "done"|"dropped", note?}`.
+- **Retrouver / corriger** : `list_board {kind?, state?}` ; `update_item` si un test est mal écrit (l'identifiant ne
+  change pas) ; `add_note {id, text}` ; `remove_item {id, reason}` (la page l'affiche).
+- **`#XXXX` cité** : réponds par `reply` avec la clarification ; si le test est mal écrit, `update_item`.
+- **OK cliqué par erreur** : l'utilisateur te l'écrit (« #45BG cliqué OK par erreur ») ; `reopen_item {id, reason}`,
+  seulement sur sa demande.
+- **Archivage** : sur « Tous les tests de <plan> sont OK », carte « Archiver <plan> ? ». Si oui : déplace le dossier
+  (ou le fichier) dans `<plans>/_archive/`, puis `set_plan state: "archived"` (règles de commit du projet).
+  `set_plan` ne touche pas au tableau.
+- **Commits du tableau** : toi seule commites le fichier du tableau, dans un commit à part
+  (`board: <ce qui a changé>`), après chaque transposition et à l'archivage d'un plan, selon les règles de commit du
+  projet. Demande à chaque session confiée de ne jamais l'ajouter (`git add` par chemin, jamais `-A` sur ce fichier).
+- Fichier illisible : la page le signale et plus rien n'y est écrit ; fais réparer le JSON.
 
 ## Si la page signale une panne
 
