@@ -21,8 +21,21 @@
   section.left { display: grid; gap: 14px; }
   aside { position: sticky; top: 20px; display: grid; gap: 14px; max-height: calc(100vh - 40px); overflow: auto; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; }
-  .panel h2 { margin: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); display: flex; justify-content: space-between; cursor: pointer; user-select: none; }
+  .panel h2 { margin: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; }
+  /* Titres repliables (colonne de droite) : un vrai bouton, atteignable au clavier. */
+  .panel h2 .cap { all: unset; flex: 1; display: flex; justify-content: space-between; cursor: pointer; user-select: none; }
+  .panel h2 .cap::before { content: '▾'; width: 1.3em; letter-spacing: 0; }
+  .panel.closed h2 .cap::before { content: '▸'; }
+  .panel h2 .cap > :first-child { margin-right: auto; }
   .panel.closed .body { display: none; }
+  /* Focus clavier : un seul contour, thémé. !important parce que les boutons sont en all: unset, déclaré plus
+     bas et souvent plus spécifique : sans lui, le contour disparaît partout. */
+  :focus-visible { outline: 2px solid var(--text) !important; outline-offset: 2px !important; }
+  textarea:focus-visible, input:focus-visible { outline-offset: 0 !important; border-color: var(--muted); }
+  /* Connexion perdue : dit dans l'en-tête du bandeau, voyants éteints, rien ne se décale. */
+  #conn { color: var(--ko); text-transform: none; letter-spacing: 0; font-size: 12px; }
+  #conn:empty { display: none; }
+  #sessionsPanel.lost .row { opacity: .45; }
   .panel .body { margin-top: 8px; }
   code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
   .none { color: var(--muted); font-size: 13px; }
@@ -56,6 +69,10 @@
   .queue .pill.approval { border-color: var(--ko); }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
   .card.k-approval { border-color: var(--ko); }
+  /* Armement (400 / 800 ms) : les choix sont visiblement inertes tant qu'une touche ne peut pas répondre. */
+  .card.arming .opts, .card.arming .actions { opacity: .45; }
+  .sent { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .sent b { color: var(--text); font-weight: 600; }
   .agent { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); background: var(--accent-bg); padding: 3px 9px; border-radius: 6px; }
   .kind { margin-left: 6px; font-size: 12px; font-weight: 600; color: var(--ko); }
   .summary { font-size: 19px; font-weight: 600; line-height: 1.35; margin: 12px 0 4px; }
@@ -104,7 +121,7 @@
   .tb input { flex: 1; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font: inherit; font-size: 12px; }
   .bar { height: 4px; background: var(--line); border-radius: 3px; margin: 6px 0 2px; overflow: hidden; }
   .bar i { display: block; height: 100%; background: var(--accent); }
-  .phead, .task { cursor: pointer; user-select: none; }
+  .phead, .task { all: unset; display: block; width: 100%; box-sizing: border-box; cursor: pointer; user-select: none; }
   .chev { color: var(--muted); display: inline-block; width: 1.1em; }
   .tasks { margin: 4px 0 2px 1.1em; font-size: 12.5px; }
   .task { padding: 2px 0; color: var(--muted); }
@@ -118,12 +135,12 @@
 <body>
 <main>
   <section class="left">
-    <div class="panel" id="sessionsPanel"><h2><span>Sessions</span><span id="scount"></span></h2><div class="body" id="sessions"></div></div>
+    <div class="panel" id="sessionsPanel"><h2><span>Sessions</span><span id="conn" role="status"></span><span id="scount"></span></h2><div class="body" id="sessions"></div></div>
     <div id="alerts"></div>
     <div id="away"></div>
     <div class="queue" id="queue"></div>
     <div id="notice"></div>
-    <div id="view"></div>
+    <div id="view" aria-live="polite"></div>
     <div class="composer">
       <textarea id="msg" placeholder="Écrire à l'orchestratrice… (Ctrl+Entrée pour envoyer, Ctrl+V pour une capture)"></textarea>
       <button class="btn primary" id="sendMsg">Envoyer</button>
@@ -133,9 +150,9 @@
     <div class="panel" id="histPanel"><h2><span>Historique</span></h2><div class="body"><ul id="hist"></ul></div></div>
   </section>
   <aside>
-    <div class="panel" data-sec="tests"><h2><span>À tester par toi</span><span id="tcount"></span></h2><div class="body" id="tests"></div></div>
-    <div class="panel" data-sec="plans"><h2><span>Plans actifs</span><span id="pcount"></span></h2><div class="body" id="plans"></div></div>
-    <div class="panel" data-sec="todos"><h2><span>TODO</span><span id="dcount"></span></h2><div class="body" id="todos"></div></div>
+    <div class="panel" data-sec="tests"><h2><button class="cap" aria-expanded="true"><span>À tester par toi</span><span id="tcount"></span></button></h2><div class="body" id="tests"></div></div>
+    <div class="panel" data-sec="plans"><h2><button class="cap" aria-expanded="true"><span>Plans actifs</span><span id="pcount"></span></button></h2><div class="body" id="plans"></div></div>
+    <div class="panel" data-sec="todos"><h2><button class="cap" aria-expanded="true"><span>TODO</span><span id="dcount"></span></button></h2><div class="body" id="todos"></div></div>
   </aside>
 </main>
 <script>
@@ -162,7 +179,7 @@ async function post(url, body) {
 }
 
 let state = { pending: [], recent: [], sessions: [], right: { tests: [], plans: [], todos: [] }, events: [], alerts: [] };
-let currentId = null, noteOpen = false, pendingChoice = null;
+let currentId = null, noteOpen = false, pendingChoice = null, lastSent = null;
 // Cartes répondues depuis cette page : masquées dès le clic, même si un /api/state parti avant la réponse
 // les liste encore. Retirées du Set seulement si l'envoi échoue (la carte revient).
 const answered = new Set();
@@ -182,13 +199,16 @@ function renderCard() {
   if (gone) notice = `Carte « ${esc(gone.summary)} » annulée par l'orchestratrice${gone.reason ? ` : ${esc(gone.reason)}` : '.'}`;
   const next = state.pending[0];
   noteOpen = false; pendingChoice = null;
+  // Trace de la dernière réponse, posée avec la carte suivante (jamais ajoutée sous une carte en lecture).
+  const sent = lastSent ? `<div class="sent">✓ Envoyé à ${esc(lastSent.agent)} : <b>${esc(lastSent.label)}</b> · ${hhmm(lastSent.at)}</div>` : '';
   if (!next) {
     currentId = null;
-    $('#view').innerHTML = `<div class="empty"><b>Rien à trancher</b>Les prochaines cartes de l'orchestratrice apparaîtront ici.</div>`;
+    $('#view').innerHTML = `${sent}<div class="empty"><b>Rien à trancher</b>Les prochaines cartes de l'orchestratrice apparaîtront ici.</div>`;
     return;
   }
   currentId = next.id;
   shownAt = Date.now();
+  const armMs = next.kind === 'approval' ? APPROVAL_ARM_MS : CARD_ARM_MS;
   const opts = optionsOf(next);
   const optHtml = opts.map((o, i) => `
     <button class="opt ${next.recommended === o.id ? 'rec' : ''} ${o.cls || ''}" data-choice="${esc(o.id)}">
@@ -199,8 +219,8 @@ function renderCard() {
   const kindTag = next.kind === 'approval' ? '<span class="kind">● approbation</span>' : next.kind === 'error' ? '<span class="kind">● erreur</span>' : next.urgent ? '<span class="kind">● urgent</span>' : '';
   const tool = next.tool ? `<div class="label">Commande</div><pre class="cmd">${esc(next.tool.input && next.tool.input.command ? next.tool.input.command : JSON.stringify(next.tool.input, null, 2))}</pre>` : '';
   const readOnly = next.kind === 'reply' || next.kind === 'error';
-  $('#view').innerHTML = `
-    <div class="card k-${esc(next.kind)}">
+  $('#view').innerHTML = `${sent}
+    <div class="card k-${esc(next.kind)} arming">
       <span class="agent">${esc(next.agent)}</span>${kindTag}
       <div class="summary">${esc(next.summary)}</div>
       ${tool}
@@ -217,13 +237,22 @@ function renderCard() {
     </div>`;
   $('#view').querySelectorAll('[data-choice]').forEach(b => b.onclick = () => answer(b.dataset.choice));
   $('#noteBtn').onclick = toggleNote;
+  const card = $('#view .card'), id = next.id;
+  setTimeout(() => { if (currentId === id) card.classList.remove('arming'); }, armMs);
+}
+
+// Libellé lisible d'une réponse, pour la trace « Envoyé ».
+function choiceLabel(c, choice, note) {
+  const o = c && optionsOf(c).find(x => x.id === choice);
+  const base = o ? o.label : choice === 'proposition' ? 'la proposition' : choice === 'read' ? 'Lu' : choice === 'note' ? 'ta note' : choice;
+  return note && choice !== 'note' ? `${base} + note` : base;
 }
 
 // Pastilles : ce qui vient après la carte affichée, dans l'ordre de passage. Pas de compteur cumulé.
 const QUEUE_PILLS = 5;
 function renderQueue() {
   const n = state.pending.length;
-  document.title = n ? `(${n}) control-room` : 'control-room';
+  document.title = (lostSince !== null ? '⚠ ' : '') + (n ? `(${n}) control-room` : 'control-room');
   const others = state.pending.filter(c => c.id !== currentId);
   if (!others.length) { $('#queue').innerHTML = ''; return; }
   const pill = c => `<span class="pill ${c.kind === 'approval' ? 'approval' : c.urgent ? 'urgent' : ''}" title="${esc(c.agent)} — ${esc(c.summary)}">${esc(c.summary || c.agent)}</span>`;
@@ -250,11 +279,12 @@ async function answer(choice) {
   if (choice === 'note' && !note) return;
   const id = currentId;
   answered.add(id); notice = '';
+  lastSent = { agent: c ? c.agent : '', label: choiceLabel(c, choice, note), at: Date.now() };
   state.pending = state.pending.filter(x => x.id !== id);
   currentId = null; renderCard(); renderQueue(); renderNotice();
   const r = await post('/api/answer', { id, choice, note });
   if (r.status !== 200 && r.status !== 409 && r.status !== 404) {
-    answered.delete(id);
+    answered.delete(id); lastSent = null;
     notice = `Réponse à « ${esc(c ? c.summary : id)} » non envoyée (${r.status ? `erreur ${r.status}` : 'serveur injoignable'}) : la carte revient dans la file.`;
     // Remise locale : si le serveur est tombé, load() échoue aussi et ne la ramènerait pas.
     if (c && !state.pending.some(x => x.id === id)) state.pending.unshift(c);
@@ -279,8 +309,11 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') toggleNote();
     return;
   }
+  // Entrée / Espace sur un bouton focalisé : c'est ce bouton qui répond (activation native), pas la proposition.
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.closest?.('button')) return;
   const opts = optionsOf(c);
-  const digit = e.code && e.code.startsWith('Digit') ? parseInt(e.code.slice(5), 10) : NaN;
+  const m = /^(?:Digit|Numpad)([1-9])$/.exec(e.code || '');
+  const digit = m ? +m[1] : NaN;
   if (digit >= 1 && digit <= opts.length) {
     const ch = opts[digit - 1].id;
     if (e.shiftKey) { pendingChoice = ch; if (!noteOpen) toggleNote(); } else answer(ch);
@@ -374,8 +407,11 @@ $('#msg').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlK
 // ---------- colonne de droite ----------
 const closed = new Set(JSON.parse(localStorage.getItem('cr-closed') || '[]'));
 document.querySelectorAll('aside .panel').forEach(p => {
+  const cap = p.querySelector('.cap');
+  const sync = () => cap.setAttribute('aria-expanded', String(!p.classList.contains('closed')));
   if (closed.has(p.dataset.sec)) p.classList.add('closed');
-  p.querySelector('h2').onclick = () => { p.classList.toggle('closed'); closed[p.classList.contains('closed') ? 'add' : 'delete'](p.dataset.sec); localStorage.setItem('cr-closed', JSON.stringify([...closed])); };
+  sync();
+  cap.onclick = () => { p.classList.toggle('closed'); sync(); closed[p.classList.contains('closed') ? 'add' : 'delete'](p.dataset.sec); localStorage.setItem('cr-closed', JSON.stringify([...closed])); };
 });
 let lastSide = '', hovering = false;
 $('aside').addEventListener('mouseenter', () => { hovering = true; });
@@ -391,7 +427,7 @@ const flip = (set, k) => set.has(k) ? set.delete(k) : set.add(k);
 function planHtml(p) {
   const pct = p.total ? Math.round(100 * p.done / p.total) : 0;
   const open = openPlans.has(p.name);
-  const head = `<div class="phead" data-plan="${esc(p.name)}"><span class="pct">${p.done}/${p.total}</span><span class="chev">${open ? '▾' : '▸'}</span>${esc(p.label || p.name)}</div><div class="bar"><i style="width:${pct}%"></i></div>`;
+  const head = `<button class="phead" data-plan="${esc(p.name)}" data-fk="plan:${esc(p.name)}" aria-expanded="${open}"><span class="pct">${p.done}/${p.total}</span><span class="chev">${open ? '▾' : '▸'}</span>${esc(p.label || p.name)}</button><div class="bar"><i style="width:${pct}%"></i></div>`;
   if (!open) return `<div class="item">${head}</div>`;
   const tasks = p.tasks || [];
   const cur = tasks.findIndex(t => t.done < t.total);
@@ -400,7 +436,7 @@ function planHtml(p) {
     const shown = (i === cur) !== flippedTasks.has(k);
     const mark = t.total && t.done === t.total ? '✓' : i === cur ? '●' : '○';
     const steps = shown && t.steps.length ? `<div class="steps">${t.steps.map(s => `<div class="${s.done ? 'sdone' : ''}">${s.done ? '✓' : '○'} ${inline(s.text)}</div>`).join('')}</div>` : '';
-    return `<div class="task ${i === cur ? 'cur' : ''} ${mark === '✓' ? 'tdone' : ''}" data-task="${esc(k)}"><span class="pct">${t.done}/${t.total}</span>${mark} ${inline(t.title)}</div>${steps}`;
+    return `<button class="task ${i === cur ? 'cur' : ''} ${mark === '✓' ? 'tdone' : ''}" data-task="${esc(k)}" data-fk="task:${esc(k)}" aria-expanded="${!!shown}"><span class="pct">${t.done}/${t.total}</span>${mark} ${inline(t.title)}</button>${steps}`;
   }).join('') : '<div class="none">Pas de tâches « ### » dans ce plan.</div>';
   return `<div class="item">${head}<div class="tasks">${body}</div></div>`;
 }
@@ -408,14 +444,18 @@ function planHtml(p) {
 function renderSide(force) {
   const r = state.right || { tests: [], plans: [], todos: [] };
   const key = JSON.stringify(r);
-  if (!force && (key === lastSide || hovering || document.activeElement?.closest?.('aside'))) return;
+  // Gelée sous la souris et pendant une saisie (note KO). Un bouton focalisé ne gèle pas la colonne : il est
+  // retrouvé par sa clé data-fk après le rendu, pour qu'on puisse la parcourir au clavier.
+  const f = document.activeElement;
+  if (!force && (key === lastSide || hovering || f?.matches?.('aside input'))) return;
+  const fk = f?.closest?.('aside') && f.dataset.fk;
   lastSide = key;
   const groups = new Map();
   for (const t of r.tests) { if (!groups.has(t.parent)) groups.set(t.parent, []); groups.get(t.parent).push(t); }
   $('#tcount').textContent = r.tests.length || '';
   $('#tests').innerHTML = r.tests.length ? [...groups].map(([g, items]) => `<div class="grp">${esc(g)}</div>` + items.map(t => `
     <div class="item" data-test="${esc(t.text)}"><div>${md(t.text)}${t.detail ? ` <span class="tdetail">${md(t.detail)}</span>` : ''}</div>
-      <div class="tb"><button class="okb">OK</button><button class="ko">Problème</button></div></div>`).join('')).join('')
+      <div class="tb"><button class="okb" data-fk="ok:${esc(t.text)}">OK</button><button class="ko" data-fk="ko:${esc(t.text)}">Problème</button></div></div>`).join('')).join('')
     : '<div class="none">Rien à tester.</div>';
   $('#tests').querySelectorAll('.item').forEach(el => {
     const text = el.dataset.test;
@@ -436,15 +476,30 @@ function renderSide(force) {
   $('#dcount').textContent = r.todos.length || '';
   $('#todos').innerHTML = r.todos.length ? r.todos.map(t => `<div class="item">${esc(t.name)}${t.planDir ? ' <span class="none">· plan</span>' : ''}</div>`).join('')
     : '<div class="none">Rien en attente.</div>';
+  if (fk) [...document.querySelectorAll('aside [data-fk]')].find(el => el.dataset.fk === fk)?.focus();
 }
 
 // ---------- boucle ----------
+// Deux sondages ratés de suite (3 s) : la page dit qu'elle n'est plus à jour au lieu d'afficher un état périmé.
+const LOST_AFTER = 2;
+let fails = 0, lostSince = null;
+function setLink(status) {
+  if (status === 200) { fails = 0; lostSince = null; }
+  else if (++fails >= LOST_AFTER && lostSince === null) lostSince = Date.now() - 1500 * (fails - 1);
+  const lost = lostSince !== null;
+  $('#sessionsPanel').classList.toggle('lost', lost);
+  $('#conn').textContent = !lost ? ''
+    : status === 401 || status === 403 ? 'onglet plus autorisé : utilise celui ouvert par control-room start'
+    : `control-room ne répond plus depuis ${hhmm(lostSince)}`;
+  const n = state.pending.length;
+  document.title = (lost ? '⚠ ' : '') + (n ? `(${n}) control-room` : 'control-room');
+}
 async function load() {
-  try {
-    const r = await fetch('/api/state');
-    if (r.status !== 200) return;
-    state = await r.json();
-  } catch { return; }
+  let r;
+  try { r = await fetch('/api/state'); } catch { setLink(0); return; }
+  if (r.status !== 200) { setLink(r.status); return; }
+  try { state = await r.json(); } catch { setLink(0); return; }
+  setLink(200);
   state.pending = state.pending.filter(c => !answered.has(c.id));
   renderCard(); renderQueue(); renderNotice(); renderSessions(); renderAlerts(); renderHistory(); renderSide();
 }
