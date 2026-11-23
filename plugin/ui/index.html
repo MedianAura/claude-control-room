@@ -6,172 +6,191 @@
 <title>control-room</title>
 <link rel="icon" href="data:,">
 <style>
-  /* Thème et carte forkés de decision-inbox (ui.html). */
+  /* La régie : coulisses noires, panneaux à la lumière de service bleue, feux de cue aux couleurs fixes
+     (vert = go / OK, ambre = ta décision, rouge = approbation et panne). Sombre seulement : la page vit sur un
+     second écran, dans une pièce sombre. */
   :root {
-    --bg: #111214; --panel: #1a1c20; --line: #2a2d33; --text: #e7e7ea; --muted: #9a9ca3;
-    --accent: #e0a84f; --accent-bg: #2b2418; --ok: #6cc28b; --ko: #e0645b; --info: #5b8def;
-    /* Encres : texte posé sur un fond ambre ou rouge teinté (AA dans les deux thèmes). */
-    --accent-ink: #e0a84f; --ko-ink: #f08a80;
-  }
-  @media (prefers-color-scheme: light) {
-    :root { --bg: #f5f4f1; --panel: #fff; --line: #e3e1dc; --text: #1c1c1e; --muted: #6b6b70; --accent: #b4741a; --accent-bg: #fbf2e2; --ok: #2f8a52; --ko: #c0453c; --info: #2f63c9;
-      --accent-ink: #8a560c; --ko-ink: #a5352d; }
+    color-scheme: dark;
+    --bg: #0c0d10; --panel: #131929; --well: #0f1422; --line: #232d47; --line-soft: #1a2236;
+    --text: #e9e6df; --muted: #8a90a3;
+    --accent: #f2a93b; --ok: #35d07f; --ko: #ff4d42; --info: #6f8cff;
+    /* Encres : texte coloré posé sur un panneau (contraste AA sur --panel). */
+    --accent-ink: #f2a93b; --ko-ink: #ff7a70;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14.5px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif; }
   /* Surfaces du navigateur, thémées depuis la palette au lieu des valeurs par défaut. */
   ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); color: var(--text); }
   ::placeholder { color: var(--muted); opacity: 1; }
   textarea, input { caret-color: var(--text); }
-  aside { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
-  main { max-width: 1280px; margin: 0 auto; padding: 22px 20px 60px; display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 26px; align-items: start; }
-  /* Colonne de gauche : la carte d'abord, « Ensuite » et les alertes collés dessous (8px), puis un seul grand
-     intervalle (26px) avant ce qui parle à l'orchestratrice. Le bandeau des sessions est en tête de la colonne de
-     droite : rien n'est au-dessus de la carte. */
-  section.left { display: grid; gap: 8px; }
-  section.left > .composer { margin-top: 18px; }
-  aside { position: sticky; top: 20px; display: grid; gap: 14px; max-height: calc(100vh - 40px); overflow: auto; }
-  /* Une colonne : la colonne de droite suit la page, sans défilement imbriqué. */
-  @media (max-width: 980px) { main { grid-template-columns: 1fr; } aside { position: static; max-height: none; overflow: visible; } }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; }
-  .panel h2 { margin: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; }
-  /* Titres repliables (colonne de droite) : un vrai bouton, atteignable au clavier. */
-  .panel h2 .cap { all: unset; flex: 1; display: flex; justify-content: space-between; cursor: pointer; user-select: none; }
-  .panel h2 .cap::before { content: '▾'; width: 1.3em; letter-spacing: 0; }
-  .panel.closed h2 .cap::before { content: '▸'; }
-  .panel h2 .cap > :first-child { margin-right: auto; }
-  .panel.closed .body { display: none; }
-  /* Focus clavier : un seul contour, thémé. !important parce que les boutons sont en all: unset, déclaré plus
-     bas et souvent plus spécifique : sans lui, le contour disparaît partout. */
   :focus-visible { outline: 2px solid var(--text) !important; outline-offset: 2px !important; }
   textarea:focus-visible, input:focus-visible { outline-offset: 0 !important; border-color: var(--muted); }
-  /* Connexion perdue : dit dans l'en-tête du bandeau, voyants éteints, rien ne se décale. */
-  /* line-height sous celle du titre (11px × 1,55) : afficher un message ne doit pas grandir l'en-tête. */
-  #conn { color: var(--ko); text-transform: none; letter-spacing: 0; font-size: 12px; line-height: 1.4;
-    min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #conn:empty { display: none; }
-  #sessionsPanel.lost .row { opacity: .45; }
-  .panel .body { margin-top: 8px; }
-  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+  code { font: 12.5px Consolas, ui-monospace, monospace; background: var(--well); padding: 1px 5px; border-radius: 3px; }
   .none { color: var(--muted); font-size: 13px; }
+  .thin { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
 
-  /* Bandeau des sessions : une ligne par session, mise à jour sur place. */
-  /* Hauteur figée tant que la souris est sur la colonne de droite (renderSessions) : une session de plus défile
-     ici au lieu de pousser « À tester » sous le pointeur. */
-  #sessions { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
-  #sessions .row { display: grid; grid-template-columns: 12px clamp(100px, 22%, 190px) minmax(0, 1fr) 40px; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 6px; font-size: 13.5px; }
-  #sessions .row:nth-child(odd) { background: color-mix(in srgb, var(--line) 35%, transparent); }
-  /* Voyants : la couleur est réservée à « ça attend après toi ». Rond = la session vit sa vie (gris plein :
-     travaille, anneau : inactive, vert : terminé). Carré + ligne teintée + mot d'état = à toi (ambre : décision,
-     rouge : approbation, la session est bloquée). Forme et texte doublent la couleur. */
-  #sessions .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
-  #sessions .st-idle .dot { background: transparent; box-shadow: inset 0 0 0 1.5px var(--muted); }
-  #sessions .st-done .dot { background: var(--ok); }
-  #sessions .st-decision .dot, #sessions .st-approval .dot { width: 10px; height: 10px; border-radius: 2px; }
-  #sessions .st-decision .dot { background: var(--accent); }
-  #sessions .st-approval .dot { background: var(--ko); }
-  #sessions .row.st-decision { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); }
-  #sessions .row.st-approval { background: color-mix(in srgb, var(--ko) 10%, var(--panel)); }
-  #sessions .sw { font-weight: 600; }
-  #sessions .st-decision .sw { color: var(--accent-ink); } #sessions .st-approval .sw { color: var(--ko-ink); }
-  #scount .mine { color: var(--accent-ink); font-weight: 600; } #scount .mine.blocked { color: var(--ko-ink); }
-  #sessions .lab { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #sessions .act { color: var(--muted); white-space: nowrap; display: flex; min-width: 0; }
-  #sessions .sw { flex: none; }
-  #sessions .ext { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  #sessions .at { color: var(--muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+  /* Deux colonnes : à gauche le travail (la décision, puis la discussion), à droite le reste, dans l'ordre
+     d'importance (tests, plans, à builder, connectés). */
+  main { max-width: 1360px; margin: 0 auto; padding: 24px 40px 60px; display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; align-items: start; }
+  section.left { display: grid; gap: 12px; }
+  aside { position: sticky; top: 20px; display: grid; gap: 14px; max-height: calc(100vh - 40px); overflow: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+  @media (max-width: 1180px) { main { padding: 20px 20px 60px; grid-template-columns: minmax(0, 1fr) 360px; } }
+  /* Une colonne : la colonne de droite suit la page, sans défilement imbriqué. */
+  /* Connectés : épinglé au bas de la colonne de droite, toujours visible même quand tests et plans la font défiler.
+     Une bande de fond au-dessus : ce qui défile disparaît dans l'interligne au lieu d'être coupé contre le cadre.
+     Seulement en deux colonnes (sinon, épinglé au bas de l'écran, il passerait devant les tests). */
+  @media (min-width: 861px) {
+    #sessionsPanel { position: sticky; bottom: 0; }
+    #sessionsPanel::before { content: ''; position: absolute; left: -1px; right: -1px; top: -15px; height: 14px; background: var(--bg); }
+  }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } aside { position: static; max-height: none; overflow: visible; } }
 
-  /* Bandeaux d'alerte et résumé au retour. */
-  .banner { border-radius: 10px; padding: 9px 14px; display: flex; gap: 10px; align-items: baseline; }
-  .banner.away { background: color-mix(in srgb, var(--info) 14%, var(--panel)); border: 1px solid color-mix(in srgb, var(--info) 40%, transparent); }
-  .banner.alert { background: color-mix(in srgb, var(--ko) 14%, var(--panel)); border: 1px solid var(--ko); }
-  #alerts:empty, #away:empty { display: none; }
-  #view > .banner { margin-bottom: 10px; }
-  #alerts { display: grid; gap: 8px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; }
+  .panel h2 { margin: 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .panel .body { margin-top: 8px; }
+  /* Titres repliables (colonne de droite) : un vrai bouton, atteignable au clavier. */
+  .panel h2 .cap { all: unset; flex: 1; display: flex; justify-content: space-between; cursor: pointer; user-select: none; }
+  /* Chevron dessiné en CSS (deux côtés d'un carré), vers le bas ouvert, vers la droite fermé. */
+  .panel h2 .cap::before, .chev::before { content: ''; display: inline-block; width: 5px; height: 5px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-3px) rotate(45deg); }
+  .panel h2 .cap::before { margin: 0 10px 0 2px; align-self: center; }
+  .panel.closed h2 .cap::before, .chev::before { transform: translateY(-1px) rotate(-45deg); }
+  .chev.open::before { transform: translateY(-3px) rotate(45deg); }
+  .ic { display: inline-block; vertical-align: -1px; flex: none; }
+  .banner .ic { align-self: center; }
+  .panel h2 .cap > :first-child { margin-right: auto; }
+  .panel.closed .body { display: none; }
+
+  /* Bandeaux : résumé au retour, alertes du serveur, échec d'envoi. */
+  .banner { border-radius: 6px; padding: 9px 14px; display: flex; gap: 10px; align-items: baseline; }
+  .banner.away { background: color-mix(in srgb, var(--info) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--info) 40%, transparent); }
+  .banner.alert { background: color-mix(in srgb, var(--ko) 12%, var(--panel)); border: 1px solid var(--ko); }
   /* Réponse non envoyée : une panne, donc rouge ; bord teinté (pas plein) pour rester sous l'alerte du serveur. */
   .banner.notice { background: color-mix(in srgb, var(--ko) 10%, var(--panel)); border: 1px solid color-mix(in srgb, var(--ko) 45%, transparent); }
   .banner .x { all: unset; cursor: pointer; margin-left: auto; color: var(--muted); }
+  #alerts { display: grid; gap: 8px; }
+  #alerts:empty, #away:empty { display: none; }
+  #view > .banner { margin-bottom: 10px; }
 
-  /* File et carte. */
-  .queue { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .queue:empty { display: none; }
-  .queue .pill { max-width: 26ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 2px 10px;
-    border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--text); }
-  .queue .pill.urgent { border-color: var(--accent); }
-  .queue .pill.approval { border-color: var(--ko); }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
+  /* ---------- 1. La décision ---------- */
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 18px 24px; }
   .card.k-approval { border-color: var(--ko); }
-  /* Armement (400 / 800 ms) : les choix sont visiblement inertes tant qu'une touche ne peut pas répondre. */
-  .card.arming .opts, .card.arming .actions { opacity: .45; }
-  /* Serveur perdu : la carte reste lisible mais ne répond plus ; la ligne rouge remplace l'aide. */
-  .card.held .opts, .card.held .actions { opacity: .45; }
-  .held-msg { display: none; color: var(--ko); font-size: 12px; margin-top: 12px; }
-  .card.held .held-msg { display: block; } .card.held .hint { display: none; }
-  /* Pierre tombale : la carte lue a disparu sans réponse d'ici ; elle reste en place jusqu'à « Continuer ». */
-  .card.gone { border-style: dashed; }
+  /* Le feu de cue : éteint pendant l'armement (400 / 800 ms, aucune touche ne répond), vert quand les touches
+     répondent, rouge quand la carte est suspendue (serveur perdu). */
+  /* Tête de carte : le feu à gauche de la première ligne du titre, la session et la nature en dessous (pas de
+     sur-titre au-dessus du titre). */
+  .head { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 14px; align-items: start; }
+  .head .cue { margin-top: 8px; }
+  .cue { width: 14px; height: 14px; border-radius: 50%; flex: none; background: var(--ok); outline: 1px solid var(--ok); outline-offset: 3px;
+    transition: background-color .32s cubic-bezier(.16, 1, .3, 1), outline-color .32s cubic-bezier(.16, 1, .3, 1); }
+  @media (prefers-reduced-motion: reduce) { .cue { transition: none; } }
+  .card.arming .cue, .card.gone .cue { background: transparent; box-shadow: inset 0 0 0 1.5px var(--muted); outline-color: var(--line); }
+  .card.held .cue { background: var(--ko); outline-color: var(--ko); }
+  .meta { font-size: 13px; font-weight: 600; color: var(--accent-ink); margin-top: 3px; }
+  .k-approval .meta, .k-error .meta { color: var(--ko-ink); }
+  .card.gone .meta { color: var(--muted); }
+  .summary { font-size: 22px; font-weight: 600; line-height: 1.3; margin: 0; max-width: 46ch; }
   .card.gone .summary { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
-  .sent { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
-  .sent b { color: var(--text); font-weight: 600; }
-  .agent { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text); background: color-mix(in srgb, var(--line) 70%, var(--panel)); padding: 3px 9px; border-radius: 6px; }
-  .kind { margin-left: 6px; font-size: 12px; font-weight: 600; color: var(--ko); }
-  /* Urgent n'est ni un refus ni une panne : ambre, comme sa pastille dans « Ensuite » (règle des voyants). */
-  .kind.urgent { color: var(--accent-ink); }
-  .summary { font-size: 19px; font-weight: 600; line-height: 1.35; margin: 12px 0 4px; }
-  .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 18px 0 6px; }
+  .card.gone { border-style: dashed; }
+  .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); margin: 16px 0 6px; }
+  .recap { margin-top: 10px; max-width: 72ch; }
   .recap ul { margin: 4px 0; padding-left: 20px; }
   /* Une commande longue défile dans son cadre (10 lignes) : Autoriser / Refuser restent près d'elle. */
-  pre.cmd { white-space: pre-wrap; word-break: break-all; font: 13px/1.45 ui-monospace, monospace; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin: 0;
+  pre.cmd { white-space: pre-wrap; word-break: break-all; font: 13px/1.45 Consolas, ui-monospace, monospace; background: var(--well); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; margin: 0;
     max-height: calc(10lh + 20px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
-  .opts { display: grid; gap: 8px; }
-  button.opt { all: unset; cursor: pointer; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; padding: 10px 13px; border: 1px solid var(--line); border-radius: 9px; }
+  .opts { display: grid; gap: 6px; margin-top: 16px; }
+  button.opt { all: unset; cursor: pointer; display: grid; grid-template-columns: 34px 1fr; align-items: baseline; padding: 9px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--well); }
   button.opt:hover, button.opt:focus-visible { border-color: var(--muted); }
-  button.opt.rec { border-color: var(--accent); background: var(--accent-bg); }
-  button.opt.allow { border-color: var(--ok); } button.opt.deny { border-color: var(--ko); }
+  button.opt.rec { border-color: var(--accent); }
+  button.opt.allow { border-color: color-mix(in srgb, var(--ok) 70%, transparent); } button.opt.deny { border-color: color-mix(in srgb, var(--ko) 70%, transparent); }
+  .k { font: 600 14px Consolas, ui-monospace, monospace; color: var(--muted); justify-self: start; padding: 0 5px; border-radius: 3px; }
+  button.opt.rec .k { color: var(--accent); }
   /* Choix retenu par Maj+chiffre, en attente de la note : la touche s'allume, le cadre passe au texte. */
   button.opt.picked { border-color: var(--text); }
-  button.opt.picked .k { background: var(--text); border-color: var(--text); color: var(--bg); }
-  .k { font: 12px ui-monospace, monospace; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; text-align: center; padding: 1px 0; height: fit-content; }
-  .opt .d { color: var(--muted); font-size: 13.5px; }
-  .tag { font-size: 11px; color: var(--accent-ink); font-weight: 600; margin-left: 6px; }
-  .prop { border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); padding: 8px 14px; background: var(--accent-bg); border-radius: 8px; }
-  .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
-  .btn { all: unset; cursor: pointer; padding: 8px 15px; border-radius: 8px; font-weight: 600; font-size: 14px; }
-  .btn.primary { background: var(--accent); color: #111; }
-  .btn.ghost { border: 1px solid var(--line); color: var(--muted); }
-  .btn.ghost:hover { border-color: var(--muted); color: var(--text); }
-  .btn.icon svg { display: block; }
-  /* Boutons du composeur : même hauteur, texte ou icône (sinon la bordure du fantôme les décale). */
-  .composer .btn { box-sizing: border-box; height: 38px; display: grid; place-items: center; }
-  .composer .btn.icon { width: 38px; padding: 0; }
-  textarea { width: 100%; resize: vertical; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: inherit; }
-  #note { margin-top: 12px; min-height: 64px; display: none; } #note.show { display: block; }
+  button.opt.picked .k { background: var(--text); color: var(--bg); }
+  .opt b { font-weight: 600; }
+  .opt .d { color: var(--muted); font-size: 13.5px; margin-left: 8px; }
+  .tag { font-size: 11px; color: var(--accent-ink); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-left: 8px; }
+  /* La proposition : une ligne courante sous un filet, légende ambre à gauche ; pas une boîte dans la carte. */
+  .prop { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: baseline; }
+  .prop .pcap { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-ink); }
+  .actions { display: flex; gap: 10px; margin-top: 14px; align-items: center; flex-wrap: wrap; }
+  .btn { all: unset; cursor: pointer; padding: 8px 16px; border-radius: 4px; font-weight: 600; font-size: 14px; }
+  .btn.primary { background: var(--ok); color: var(--bg); font-weight: 800; letter-spacing: .06em; }
+  .btn.ghost { border: 1px solid var(--line); color: var(--text); padding: 7px 15px; }
+  .btn.ghost:hover { border-color: var(--muted); }
+  /* « Ensuite » : la file, en une ligne au pied de la carte. */
+  .next { margin-left: auto; font-size: 13px; color: var(--muted); display: flex; gap: 12px; align-items: baseline; white-space: nowrap; overflow: hidden; min-width: 0; }
+  .next b { color: var(--text); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+  .next b.app { color: var(--ko-ink); } .next b.urg { color: var(--accent-ink); }
+  /* Armement et serveur perdu : les choix sont visiblement inertes ; perdu, la ligne rouge remplace l'aide. */
+  .card.arming .opts, .card.arming .actions > .btn, .card.held .opts, .card.held .actions > .btn { opacity: .45; }
+  .held-msg { display: none; color: var(--ko-ink); font-size: 12px; margin-top: 12px; }
+  .card.held .held-msg { display: block; } .card.held .hint { display: none; }
   .hint { color: var(--muted); font-size: 12px; margin-top: 12px; }
-  .empty { text-align: center; color: var(--muted); padding: 56px 20px; border: 1px dashed var(--line); border-radius: 12px; }
-  .empty b { display: block; color: var(--text); font-size: 17px; margin-bottom: 4px; }
+  .sent { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .sent b { color: var(--text); font-weight: 600; }
+  textarea { width: 100%; resize: vertical; background: var(--well); color: var(--text); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; font: inherit; }
+  #note { margin-top: 12px; min-height: 64px; display: none; } #note.show { display: block; }
+  .empty { text-align: center; color: var(--muted); padding: 28px 20px; border: 1px dashed var(--line); border-radius: 6px; }
+  .empty b { display: block; color: var(--text); font-size: 16px; margin-bottom: 2px; }
 
-  /* Zone de saisie vers l'orchestratrice. */
-  .composer { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: end; }
-  #msg { min-height: 44px; max-height: 200px; }
+  /* ---------- 2. La discussion avec l'orchestratrice ---------- */
+  #talk h2 .right { display: flex; gap: 14px; align-items: baseline; }
+  #unread { color: var(--accent-ink); text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 600; }
+  #unread:empty { display: none; }
+  /* Connexion perdue : dite dans l'en-tête de la discussion, sur une ligne (phrase complète en title). */
+  #conn { color: var(--ko-ink); text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 32ch; }
+  #conn:empty { display: none; }
+  .link { all: unset; cursor: pointer; color: var(--muted); }
+  .link:hover { color: var(--text); }
+  #thread { max-height: 260px; overflow-y: auto; margin-top: 6px; }
+  .msg { display: grid; grid-template-columns: 104px minmax(0, 1fr) 46px; gap: 12px; padding: 7px 0; border-top: 1px solid var(--line-soft); font-size: 13.5px; }
+  .msg:first-child { border-top: 0; }
+  .msg .from { color: var(--muted); } .msg.user .from { color: var(--text); font-weight: 600; }
+  .msg .t { color: var(--muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+  .msg .txt ul { margin: 2px 0; padding-left: 18px; }
+  .composer { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; margin-top: 10px; }
+  .composer .hint { grid-column: 1 / -1; margin-top: -4px; }
+  #msg { min-height: 60px; max-height: 200px; }
+  .btn.send { background: var(--text); color: var(--bg); }
   #shot { display: none; font-size: 12px; color: var(--muted); grid-column: 1 / -1; }
   #shot .thumb { position: relative; display: inline-block; margin: 0 8px 6px 0; vertical-align: middle; }
-  #shot .thumb img { max-height: 80px; border-radius: 6px; display: block; border: 1px solid var(--line); }
+  #shot .thumb img { max-height: 80px; border-radius: 4px; display: block; border: 1px solid var(--line); }
   #shot .thumb .x { all: unset; position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; line-height: 18px; text-align: center;
     font-size: 11px; border-radius: 50%; background: var(--panel); border: 1px solid var(--line); color: var(--text); cursor: pointer; }
-  #shot .err { color: var(--ko); margin-top: 4px; }
+  #shot .err { color: var(--ko-ink); margin-top: 4px; }
   #histPanel { display: none; } #histPanel.show { display: block; }
+  #hist { margin: 0; padding-left: 18px; }
   #hist li { margin: 4px 0; font-size: 13px; color: var(--muted); }
 
-  /* Colonne de droite. */
+  /* ---------- Colonne de droite ---------- */
   .grp { font-size: 12px; font-weight: 600; color: var(--muted); margin: 10px 0 2px; }
   .grp:first-child { margin-top: 0; }
-  .item { padding: 5px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
-  .grp + .item { border-top: 0; }
-  .tb { display: flex; gap: 6px; margin-top: 4px; }
-  .tb button { all: unset; cursor: pointer; font-size: 12px; padding: 1px 9px; border: 1px solid var(--line); border-radius: 6px; }
-  .tb .okb:hover { border-color: var(--ok); color: var(--ok); } .tb .ko:hover { border-color: var(--ko); color: var(--ko); }
-  .tb input { flex: 1; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font: inherit; font-size: 12px; }
-  .bar { height: 4px; background: var(--line); border-radius: 2px; margin: 6px 0 2px; overflow: hidden; }
-  .bar i { display: block; height: 100%; background: var(--muted); }
+  .item { padding: 8px 0; border-top: 1px solid var(--line-soft); font-size: 13.5px; }
+  .grp + .item, .tgrp + .item { border-top: 0; }
+  .tgrp { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  /* 3. Tests : OK, Pas OK, Clarifier (cite le test dans la discussion). */
+  .tb { display: flex; gap: 6px; margin-top: 6px; }
+  .tb button { all: unset; cursor: pointer; font-size: 12px; padding: 2px 10px; border: 1px solid var(--line); border-radius: 4px; }
+  /* Au doigt, les réponses aux tests prennent une vraie cible (40px). */
+  @media (pointer: coarse) { .tb button { padding: 10px 14px; min-height: 40px; box-sizing: border-box; display: inline-flex; align-items: center; } }
+  .tb .okb { border-color: color-mix(in srgb, var(--ok) 55%, transparent); color: var(--ok); }
+  .tb .ko { border-color: color-mix(in srgb, var(--ko) 55%, transparent); color: var(--ko-ink); }
+  .tb button:hover { border-color: var(--muted); }
+  .tb input { flex: 1; min-width: 0; background: var(--well); color: var(--text); border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; font: inherit; font-size: 12px; }
+  .ref { all: unset; cursor: pointer; font: 12px Consolas, ui-monospace, monospace; color: var(--muted); margin-right: 6px; }
+  .ref:hover { color: var(--text); }
+  .wt { display: inline-block; width: 1.1em; font-size: 11px; }
+  .wt.high { color: var(--text); } .wt.low { color: var(--muted); }
+  .more { all: unset; cursor: pointer; display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .more:hover { color: var(--text); }
+  .fold { font-size: 12.5px; color: var(--muted); margin: 2px 0 0 1.1em; }
+  .fold .nt { margin-top: 3px; } .fold .nt span { font-variant-numeric: tabular-nums; }
+  #boardErr:empty { display: none; }
+  /* 4. Plans en cours : barre verte, tâche en cours sous le plan replié. */
+  .bar { height: 4px; background: var(--line); border-radius: 2px; margin: 6px 0 3px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--ok); }
+  .pcur { color: var(--muted); font-size: 12.5px; }
   .phead, .task { all: unset; display: block; width: 100%; box-sizing: border-box; cursor: pointer; user-select: none; }
   .chev { color: var(--muted); display: inline-block; width: 1.1em; }
   .tasks { margin: 4px 0 2px 1.1em; font-size: 12.5px; }
@@ -181,45 +200,45 @@
   .steps { margin: 0 0 4px 1.2em; font-size: 12px; color: var(--text); }
   .steps .sdone { color: var(--muted); }
   .pct { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; float: right; }
-  /* Tableau : tâche sous son plan, #id qui se cite, poids en forme (▲ haut, ▽ bas, rien pour moyen), détail et
-     notes repliés sous l'élément. */
-  #boardErr:empty { display: none; }
-  .tgrp { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
-  .tgrp + .item { border-top: 0; }
-  .ref { all: unset; cursor: pointer; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); margin-right: 5px; }
-  .ref:hover { color: var(--text); }
-  .wt { display: inline-block; width: 1.1em; font-size: 11px; }
-  .wt.high { color: var(--text); } .wt.low { color: var(--muted); }
-  .more { all: unset; cursor: pointer; display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .more:hover { color: var(--text); }
-  .fold { font-size: 12.5px; color: var(--muted); margin: 2px 0 0 1.1em; }
-  .fold .nt { margin-top: 3px; } .fold .nt span { font-variant-numeric: tabular-nums; }
+  /* 6. Connectés : en dernier, une ligne de pastilles. Rond = la session vit sa vie (gris : travaille, anneau :
+     inactive, vert : terminé) ; carré + nom coloré = elle attend après toi (ambre : décision, rouge : approbation). */
+  #sessions { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--muted); }
+  .chip { display: inline-flex; align-items: center; gap: 6px; }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+  .chip.st-idle .dot { background: transparent; box-shadow: inset 0 0 0 1.5px var(--muted); }
+  .chip.st-done .dot { background: var(--ok); }
+  .chip.st-decision .dot, .chip.st-approval .dot { width: 9px; height: 9px; border-radius: 2px; }
+  .chip.st-decision .dot { background: var(--accent); } .chip.st-decision { color: var(--accent-ink); font-weight: 600; }
+  .chip.st-approval .dot { background: var(--ko); } .chip.st-approval { color: var(--ko-ink); font-weight: 600; }
+  #scount .mine { color: var(--accent-ink); } #scount .mine.blocked { color: var(--ko-ink); }
+  #sessionsPanel.lost .chip { opacity: .45; }
 </style>
 </head>
 <body>
 <main>
   <section class="left">
-    <!-- Au-dessus de la carte : seulement le résumé au retour, posé quand on n'était pas là. Ce qui arrive en cours
-         de lecture (cartes suivantes, alertes) se range dessous ; l'alerte est en plus signalée dans l'en-tête du
-         bandeau. -->
+    <!-- Au-dessus de la carte : seulement le résumé au retour, posé quand on n'était pas là. -->
     <div id="away"></div>
     <div id="view" aria-live="polite"><div class="empty"><b>En attente de control-room</b>La page se remplit dès que le serveur répond.</div></div>
-    <div class="queue" id="queue"></div>
     <div id="alerts"></div>
-    <div class="composer">
-      <textarea id="msg" placeholder="Écrire à l'orchestratrice… (Ctrl+Entrée pour envoyer, Ctrl+V pour une capture)"></textarea>
-      <button class="btn primary" id="sendMsg">Envoyer</button>
-      <button class="btn ghost icon" id="histBtn" title="Historique" aria-label="Historique" aria-expanded="false"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.75V8l2.25 1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <div id="shot"></div>
+    <div class="panel" id="talk">
+      <h2><span>Orchestratrice</span><span class="right"><span id="unread" role="status"></span><span id="conn" role="status"></span><button class="link" id="histBtn" aria-expanded="false">Historique</button></span></h2>
+      <div id="thread" class="thin"></div>
+      <div class="composer">
+        <textarea id="msg" placeholder="Écrire à l'orchestratrice…" aria-describedby="msgHint"></textarea>
+        <button class="btn send" id="sendMsg">Envoyer</button>
+        <div id="shot"></div>
+        <div class="hint" id="msgHint">Ctrl+Entrée envoie · Ctrl+V colle une capture</div>
+      </div>
     </div>
-    <div class="panel" id="histPanel"><h2><span>Historique</span></h2><div class="body"><ul id="hist"></ul></div></div>
+    <div class="panel" id="histPanel"><h2><span>Historique des réponses</span></h2><div class="body"><ul id="hist"></ul></div></div>
   </section>
   <aside>
-    <div class="panel" id="sessionsPanel"><h2><span>Sessions</span><span id="conn" role="status"></span><span id="scount"></span></h2><div class="body" id="sessions"></div></div>
     <div id="boardErr" role="status"></div>
     <div class="panel" data-sec="tests"><h2><button class="cap" aria-expanded="true"><span>À tester par toi</span><span id="tcount"></span></button></h2><div class="body" id="tests"></div></div>
-    <div class="panel" data-sec="plans"><h2><button class="cap" aria-expanded="true"><span>Plans actifs</span><span id="pcount"></span></button></h2><div class="body" id="plans"></div></div>
-    <div class="panel" data-sec="todos"><h2><button class="cap" aria-expanded="true"><span>TODO</span><span id="dcount"></span></button></h2><div class="body" id="todos"></div></div>
+    <div class="panel" data-sec="plans"><h2><button class="cap" aria-expanded="true"><span>Plans en cours</span><span id="pcount"></span></button></h2><div class="body" id="plans"></div></div>
+    <div class="panel" data-sec="todos"><h2><button class="cap" aria-expanded="true"><span>À builder ensuite</span><span id="dcount"></span></button></h2><div class="body" id="todos"></div></div>
+    <div class="panel" id="sessionsPanel"><h2><span>Connectés</span><span id="scount"></span></h2><div class="body" id="sessions"></div></div>
   </aside>
 </main>
 <script>
@@ -235,6 +254,17 @@ function md(s) {
   }
   return out + (inList ? '</ul>' : '');
 }
+// Icônes dessinées (16×16, trait 1,5, couleur du texte) : aucune icône n'est un glyphe Unicode.
+const ICON = {
+  x: '<path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/>',
+  check: '<path d="M3.5 8.5l3 3 6-7"/>',
+  warn: '<path d="M8 2.75l5.75 10.5H2.25z"/><path d="M8 6.75v3M8 11.75v.01"/>',
+  dot: '<circle cx="8" cy="8" r="3" fill="currentColor" stroke="none"/>',
+  ring: '<circle cx="8" cy="8" r="3"/>',
+  up: '<path d="M8 4.5l4 7H4z" fill="currentColor"/>',
+  down: '<path d="M8 11.5l-4-7h8z"/>',
+};
+const icon = (n) => `<svg class="ic" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 const hhmm = (t) => new Date(t).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
 // Erreur réseau (serveur arrêté, connexion coupée) : status 0, jamais d'exception silencieuse.
 async function post(url, body) {
@@ -271,8 +301,8 @@ function goneWhy(c) {
 // En tête de #view, rendus avec la carte : l'échec d'envoi, puis la trace de la dernière réponse. Jamais ajoutés
 // au-dessus d'une carte déjà affichée.
 function viewHead() {
-  const n = notice ? `<div class="banner notice" role="alert">${notice}<button class="x" title="Fermer" aria-label="Fermer">✕</button></div>` : '';
-  const sent = lastSent ? `<div class="sent">✓ Envoyé à ${esc(lastSent.agent)} : <b>${esc(lastSent.label)}</b> · ${hhmm(lastSent.at)}</div>` : '';
+  const n = notice ? `<div class="banner notice" role="alert">${notice}<button class="x" title="Fermer" aria-label="Fermer">${icon('x')}</button></div>` : '';
+  const sent = lastSent ? `<div class="sent">${icon('check')} Envoyé à ${esc(lastSent.agent)} : <b>${esc(lastSent.label)}</b> · ${hhmm(lastSent.at)}</div>` : '';
   return n + sent;
 }
 function wireHead() {
@@ -290,11 +320,10 @@ function renderCard() {
     // sur la carte suivante tant qu'on n'a pas continué. Un échec d'envoi sur cette carte ne veut plus rien dire.
     tomb = shown; notice = '';
     $('#view').innerHTML = `${viewHead()}
-      <div class="card gone">
-        <span class="agent">${esc(tomb.agent)}</span>
-        <div class="summary">${esc(tomb.summary)}</div>
-        <div>${goneWhy(tomb)}</div>
-        <div class="actions"><button class="btn primary" id="goOn">Continuer ↵</button></div>
+      <div class="card gone k-${esc(tomb.kind)}">
+        <div class="head"><span class="cue" aria-hidden="true"></span><div><div class="summary">${esc(tomb.summary)}</div><div class="meta">${esc(tomb.agent)}</div></div></div>
+        <div class="recap">${goneWhy(tomb)}</div>
+        <div class="actions"><button class="btn primary" id="goOn">Continuer ↵</button><span class="next" id="next"></span></div>
       </div>`;
     wireHead();
     $('#goOn').onclick = leaveTomb;
@@ -314,13 +343,13 @@ function renderCard() {
   const optHtml = opts.map((o, i) => `
     <button class="opt ${next.recommended === o.id ? 'rec' : ''} ${o.cls || ''}" data-choice="${esc(o.id)}">
       <span class="k">${i + 1}</span>
-      <span><span>${esc(o.label)}</span>${next.recommended === o.id ? '<span class="tag">recommandé</span>' : ''}
-      ${o.detail ? `<div class="d">${esc(o.detail)}</div>` : ''}</span>
+      <span><b>${esc(o.label)}</b>${next.recommended === o.id ? '<span class="tag">recommandé</span>' : ''}${o.detail ? `<span class="d">${esc(o.detail)}</span>` : ''}</span>
     </button>`).join('');
-  const kindTag = next.kind === 'approval' ? '<span class="kind">● approbation</span>' : next.kind === 'error' ? '<span class="kind">● erreur</span>' : next.urgent ? '<span class="kind urgent">● urgent</span>' : '';
+  // Légende du feu : qui demande, et de quelle nature (la couleur suit : ambre ta décision, rouge approbation / erreur).
+  const kindWord = next.kind === 'approval' ? 'approbation' : next.kind === 'error' ? 'erreur' : next.urgent ? 'urgent' : 'ta décision';
   const cmd = next.tool && next.tool.input && next.tool.input.command;
   const toolName = next.tool && next.tool.name ? ` ${esc(next.tool.name)}` : '';
-  const tool = next.tool ? `<div class="label">${cmd ? 'Commande' : 'Outil'}${toolName}</div><pre class="cmd">${esc(cmd || JSON.stringify(next.tool.input, null, 2))}</pre>` : '';
+  const tool = next.tool ? `<div class="label">${cmd ? 'Commande' : 'Outil'}${toolName}</div><pre class="cmd" tabindex="0">${esc(cmd || JSON.stringify(next.tool.input, null, 2))}</pre>` : '';
   const readOnly = next.kind === 'reply' || next.kind === 'error';
   // Une note seule sur une approbation est un refus (hooks.js) ; sans option ni proposition, « Autre » n'a pas
   // de quoi être autre.
@@ -329,16 +358,16 @@ function renderCard() {
   const hint = next.kind !== 'approval' && opts.length ? '<div class="hint">Maj+chiffre : choisir avec une note</div>' : '';
   $('#view').innerHTML = `${viewHead()}
     <div class="card k-${esc(next.kind)} arming">
-      <span class="agent">${esc(next.agent)}</span>${kindTag}
-      <div class="summary">${esc(next.summary)}</div>
+      <div class="head"><span class="cue" aria-hidden="true"></span><div><div class="summary">${esc(next.summary)}</div><div class="meta">${esc(next.agent)} · ${kindWord}</div></div></div>
       ${tool}
-      ${next.recap ? `<div class="label">${readOnly ? 'Message' : 'Résumé'}</div><div class="recap">${md(next.recap)}</div>` : ''}
-      ${opts.length ? `<div class="label">Options</div><div class="opts">${optHtml}</div>` : ''}
-      ${next.proposition ? `<div class="label">Proposition</div><div class="prop">${md(next.proposition)}</div>` : ''}
+      ${next.recap ? `<div class="recap">${md(next.recap)}</div>` : ''}
+      ${opts.length ? `<div class="opts">${optHtml}</div>` : ''}
+      ${next.proposition ? `<div class="prop"><span class="pcap">Proposition</span>${md(next.proposition)}</div>` : ''}
       <div class="actions">
         ${readOnly ? `<button class="btn primary" data-choice="read">Lu ↵</button>` : ''}
-        ${next.proposition ? `<button class="btn primary" data-choice="proposition">Go avec la proposition ↵</button>` : ''}
+        ${next.proposition ? `<button class="btn primary" data-choice="proposition" aria-label="Go avec la proposition">GO ↵</button>` : ''}
         <button class="btn ghost" id="noteBtn">${noteLabel} (N)</button>
+        <span class="next" id="next"></span>
       </div>
       <textarea id="note" placeholder="${notePh(next)}"></textarea>
       <div class="held-msg">Réponses suspendues : control-room ne répond plus. La carte attend le retour du serveur.</div>
@@ -366,15 +395,16 @@ function choiceLabel(c, choice, note) {
   return note && choice !== 'note' ? `${base} + note` : base;
 }
 
-// Pastilles : ce qui vient après la carte affichée, dans l'ordre de passage. Pas de compteur cumulé.
-const QUEUE_PILLS = 5;
+// « Ensuite » : ce qui vient après la carte affichée, dans l'ordre de passage, en une ligne au pied de la carte
+// (nom de la session, le résumé en title). Mis à jour sur place, aligné à droite : rien d'autre ne bouge.
+const QUEUE_NAMES = 4;
 function renderQueue() {
   renderStatus();
+  const el = $('#next'); if (!el) return;
   const others = state.pending.filter(c => c.id !== currentId);
-  if (!others.length) { $('#queue').innerHTML = ''; return; }
-  const pill = c => `<span class="pill ${c.kind === 'approval' ? 'approval' : c.urgent ? 'urgent' : ''}" title="${esc(c.agent)} — ${esc(c.summary)}">${esc(c.summary || c.agent)}</span>`;
-  $('#queue').innerHTML = 'Ensuite' + others.slice(0, QUEUE_PILLS).map(pill).join('') +
-    (others.length > QUEUE_PILLS ? `<span>+${others.length - QUEUE_PILLS}</span>` : '');
+  const name = c => `<b class="${c.kind === 'approval' ? 'app' : c.urgent ? 'urg' : ''}" title="${esc(c.agent)} — ${esc(c.summary)}">${esc(c.agent)}${c.kind === 'approval' ? ' · approbation' : ''}</b>`;
+  el.innerHTML = !others.length ? '' : 'Ensuite' + others.slice(0, QUEUE_NAMES).map(name).join('') +
+    (others.length > QUEUE_NAMES ? `<span>+${others.length - QUEUE_NAMES}</span>` : '');
 }
 
 // Note : fermer la note abandonne aussi le choix retenu par Maj+chiffre (sinon Échap puis N puis Ctrl+Entrée
@@ -475,28 +505,14 @@ function renderSessions() {
   const s = state.sessions || [];
   const mine = s.filter(x => WAITS.has(x.status)), blocked = mine.some(x => x.status === 'approval');
   $('#scount').innerHTML = !s.length ? '' : mine.length ? `<span class="mine ${blocked ? 'blocked' : ''}">${mine.length} à toi</span> · ${s.length}` : String(s.length);
-  // Ce qui attend après toi affiche toujours son mot d'état, l'activité vient après.
-  // Le mot d'état ne rétrécit jamais ; seule l'activité qui le suit se coupe (sinon l'ellipse mange la fin du mot).
-  const act = (x) => {
-    if (!WAITS.has(x.status)) return `<span class="ext">${esc(x.activity || STATE_LABEL[x.status] || '')}</span>`;
-    const extra = x.activity && x.activity !== STATE_LABEL[x.status] ? `<span class="ext">&nbsp;· ${esc(x.activity)}</span>` : '';
-    return `<span class="sw">${STATE_LABEL[x.status]}</span>${extra}`;
-  };
-  const el = $('#sessions');
-  el.innerHTML = s.length ? s.map(x => `
-    <div class="row st-${esc(x.status)}"><span class="dot"></span><span class="lab" title="${esc(x.label)}">${esc(x.label)}</span>
-      <span class="act">${act(x)}</span><span class="at">${x.at ? hhmm(x.at) : ''}</span></div>`).join('')
-    : '<div class="none">Aucune session de l\'équipe : l\'orchestratrice et les sessions inscrites (control-room label) apparaissent ici.</div>';
-  // Le bandeau est en tête de la colonne de droite : souris dessus, sa hauteur est figée (une session qui arrive
-  // défile dans le bandeau, une qui part laisse un vide) pour que « À tester » ne glisse pas sous le pointeur ;
-  // souris ailleurs, il suit le nombre de sessions.
-  if (!hovering) stripH = null;
-  if (stripH === null) { el.style.height = ''; stripH = el.offsetHeight; }
-  el.style.height = `${stripH}px`;
+  // En dernier dans la colonne : une pastille par session, le détail (état, activité, heure) en title. Ce qui attend
+  // après toi garde sa forme carrée et son nom coloré ; le mot d'état est dans le title et dans l'aria-label.
+  const tip = (x) => [STATE_LABEL[x.status], x.activity && x.activity !== STATE_LABEL[x.status] ? x.activity : '', x.at ? hhmm(x.at) : ''].filter(Boolean).join(' · ');
+  $('#sessions').innerHTML = s.length ? s.map(x =>
+    `<span class="chip st-${esc(x.status)}" title="${esc(tip(x))}" aria-label="${esc(x.label)} : ${esc(tip(x))}"><span class="dot"></span>${esc(x.label)}</span>`).join('')
+    : '<div class="none">Aucune session inscrite (control-room label).</div>';
   setFavicon(blocked ? 'approval' : mine.length ? 'decision' : '');
 }
-let stripH = null;
-window.addEventListener('resize', () => { stripH = null; });
 
 // Favicon : un carré rouge (approbation) ou ambre (décision) quand quelque chose attend, pour le voir depuis un
 // autre onglet ; rien sinon.
@@ -510,7 +526,7 @@ function setFavicon(kind) {
 }
 
 function renderAlerts() {
-  $('#alerts').innerHTML = (state.alerts || []).map(a => `<div class="banner alert">⚠ ${esc(a)}</div>`).join('');
+  $('#alerts').innerHTML = (state.alerts || []).map(a => `<div class="banner alert">${icon('warn')}<span>${esc(a)}</span></div>`).join('');
   renderStatus();
 }
 
@@ -520,10 +536,10 @@ function renderStatus() {
   const lost = lostSince !== null, nAlerts = lost ? 0 : (state.alerts || []).length;
   $('#sessionsPanel').classList.toggle('lost', lost);
   const card = $('#view .card:not(.gone)'); if (card) card.classList.toggle('held', lost);
-  // En-tête du bandeau dans la colonne de droite : ~190px pour ce message. Le texte court tient sur une ligne,
-  // la phrase complète est dans le title (et l'ellipse coupe au pire, l'en-tête ne grandit jamais).
+  // En-tête de la discussion : le texte court tient sur une ligne, la phrase complète est dans le title (et
+  // l'ellipse coupe au pire, l'en-tête ne grandit jamais).
   const unauth = lostStatus === 401 || lostStatus === 403;
-  const [short, full] = !lost ? (nAlerts ? [`⚠ ${nAlerts > 1 ? `${nAlerts} alertes` : 'alerte'} · détail sous la carte`, ''] : ['', ''])
+  const [short, full] = !lost ? (nAlerts ? [`${nAlerts > 1 ? `${nAlerts} alertes` : 'alerte'} · détail sous la carte`, ''] : ['', ''])
     : unauth ? ['onglet plus autorisé', 'Onglet plus autorisé : utilise celui ouvert par control-room start.']
     : [`hors ligne depuis ${hhmm(lostSince)}`, `control-room ne répond plus depuis ${hhmm(lostSince)}.`];
   $('#conn').textContent = short;
@@ -545,7 +561,7 @@ function markBack() {
     if (!ev.length) return;
     const mins = Math.round(away / 60000);
     const text = ev.map(e => esc(e.text)).join(' · ');
-    $('#away').innerHTML = `<div class="banner away"><b>Pendant ton absence (${mins} min) :</b> <span>${text}</span><button class="x" title="Fermer" aria-label="Fermer le résumé">✕</button></div>`;
+    $('#away').innerHTML = `<div class="banner away"><b>Pendant ton absence (${mins} min) :</b> <span>${text}</span><button class="x" title="Fermer" aria-label="Fermer le résumé">${icon('x')}</button></div>`;
     $('#away .x').onclick = () => { $('#away').innerHTML = ''; };
   });
 }
@@ -553,11 +569,45 @@ document.addEventListener('visibilitychange', () => document.hidden ? markLeft()
 window.addEventListener('blur', markLeft);
 window.addEventListener('focus', markBack);
 
-// ---------- historique ----------
+// ---------- discussion avec l'orchestratrice ----------
+// Ses réponses (outil reply) et tes messages, du plus ancien au plus récent. Gelée sous la souris : un message qui
+// arrive pendant que tu lis le fil attend que tu en sortes. Non lus : ses messages plus récents que le dernier
+// moment où tu as regardé le fil (survol, ou focus dans la zone de saisie).
+let lastTalk = null, talkHover = false;
+let seenAt = +(localStorage.getItem('cr-seen') || 0);
+const lastFromHer = () => (state.conversation || []).filter(m => m.by === 'orchestrator').at(-1);
+function markSeen() {
+  const m = lastFromHer(); if (!m || m.at <= seenAt) return;
+  seenAt = m.at; localStorage.setItem('cr-seen', String(seenAt)); renderUnread();
+}
+function renderUnread() {
+  const n = (state.conversation || []).filter(m => m.by === 'orchestrator' && m.at > seenAt).length;
+  $('#unread').innerHTML = n ? `${icon('dot')}${n > 1 ? `${n} non lus` : 'non lu'}` : '';
+}
+function renderTalk() {
+  const conv = state.conversation || [];
+  // Premier chargement de cette page : l'existant est déjà vu, seuls les messages qui arrivent ensuite comptent.
+  if (!localStorage.getItem('cr-seen')) { seenAt = lastFromHer()?.at || Date.now(); localStorage.setItem('cr-seen', String(seenAt)); }
+  renderUnread();
+  const key = conv.length ? conv.at(-1).id : '';
+  if (key === lastTalk || talkHover) return;
+  lastTalk = key;
+  const who = (m) => m.by === 'user' ? 'toi' : esc(m.agent || 'orchestratrice');
+  const caps = (m) => m.captures ? ` <span class="none">· ${m.captures} capture${m.captures > 1 ? 's' : ''}</span>` : '';
+  const el = $('#thread');
+  el.innerHTML = conv.length ? conv.map(m => `<div class="msg ${m.by === 'user' ? 'user' : 'her'}"><span class="from">${who(m)}</span><div class="txt">${md(m.text)}${caps(m)}</div><span class="t">${hhmm(m.at)}</span></div>`).join('')
+    : '<div class="none">Pas encore d\'échange : écris-lui ci-dessous, ses réponses arrivent ici.</div>';
+  el.scrollTop = el.scrollHeight;
+}
+$('#thread').addEventListener('mouseenter', () => { talkHover = true; markSeen(); });
+$('#thread').addEventListener('mouseleave', () => { talkHover = false; renderTalk(); });
+$('#msg').addEventListener('focus', markSeen);
+
+// ---------- historique des réponses ----------
 $('#histBtn').onclick = () => {
   const open = $('#histPanel').classList.toggle('show');
   $('#histBtn').setAttribute('aria-expanded', String(open));
-  // Le panneau s'ouvre sous le composeur, souvent hors écran : l'amener dans la vue.
+  // Le panneau s'ouvre sous la discussion, souvent hors écran : l'amener dans la vue.
   if (open) $('#histPanel').scrollIntoView({ block: 'nearest' });
 };
 function renderHistory() {
@@ -570,7 +620,7 @@ let shots = [], shotMsg = '';
 function renderShots() {
   const el = $('#shot');
   el.style.display = shots.length || shotMsg ? 'block' : 'none';
-  el.innerHTML = shots.map((s, i) => !s ? '' : `<span class="thumb"><img src="${s}" alt=""><button class="x" data-i="${i}" title="Retirer" aria-label="Retirer la capture ${i + 1}">✕</button></span>`).join('')
+  el.innerHTML = shots.map((s, i) => !s ? '' : `<span class="thumb"><img src="${s}" alt=""><button class="x" data-i="${i}" title="Retirer" aria-label="Retirer la capture ${i + 1}">${icon('x')}</button></span>`).join('')
     + (shots.length ? `<span>${shots.length} capture${shots.length > 1 ? 's' : ''} jointe${shots.length > 1 ? 's' : ''}</span>` : '')
     + (shotMsg ? `<div class="err">${esc(shotMsg)}</div>` : '');
   el.querySelectorAll('.x').forEach(b => b.onclick = () => { shots.splice(+b.dataset.i, 1); shotMsg = ''; renderShots(); });
@@ -626,27 +676,30 @@ $('aside').addEventListener('mouseleave', () => { hovering = false; });
 const openPlans = new Set(JSON.parse(localStorage.getItem('cr-open-plans') || '[]'));
 const saveOpenPlans = () => localStorage.setItem('cr-open-plans', JSON.stringify([...openPlans]));
 const flippedTasks = new Set();
-const inline = (t) => esc(t).replace(/`([^`]+)`/g, '<code>$1</code>');
+const inline = (t) => esc(t).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
 const flip = (set, k) => set.has(k) ? set.delete(k) : set.add(k);
+const chev = (open) => `<span class="chev ${open ? 'open' : ''}" aria-hidden="true"></span>`;
 function planHtml(p) {
   const pct = p.total ? Math.round(100 * p.done / p.total) : 0;
   const open = openPlans.has(p.name);
-  const head = `<button class="phead" data-plan="${esc(p.name)}" data-fk="plan:${esc(p.name)}" aria-expanded="${open}"><span class="pct">${p.done}/${p.total}</span><span class="chev">${open ? '▾' : '▸'}</span>${esc(p.label || p.name)}</button><div class="bar"><i style="width:${pct}%"></i></div>`;
-  if (!open) return `<div class="item">${head}</div>`;
+  const head = `<button class="phead" data-plan="${esc(p.name)}" data-fk="plan:${esc(p.name)}" aria-expanded="${open}"><span class="pct">${p.done}/${p.total}</span>${chev(open)}${esc(p.label || p.name)}</button><div class="bar"><i style="width:${pct}%"></i></div>`;
   const tasks = p.tasks || [];
   const cur = tasks.findIndex(t => t.done < t.total);
+  // Replié, le plan dit quand même où il en est : sa tâche en cours.
+  if (!open) return `<div class="item">${head}${cur >= 0 ? `<div class="pcur">${icon('dot')} ${inline(tasks[cur].title)} — ${tasks[cur].done}/${tasks[cur].total}</div>` : ''}</div>`;
   const body = tasks.length ? tasks.map((t, i) => {
     const k = `${p.name}::${t.title}`;
     const shown = (i === cur) !== flippedTasks.has(k);
-    const mark = t.total && t.done === t.total ? '✓' : i === cur ? '●' : '○';
-    const steps = shown && t.steps.length ? `<div class="steps">${t.steps.map(s => `<div class="${s.done ? 'sdone' : ''}">${s.done ? '✓' : '○'} ${inline(s.text)}</div>`).join('')}</div>` : '';
-    return `<button class="task ${i === cur ? 'cur' : ''} ${mark === '✓' ? 'tdone' : ''}" data-task="${esc(k)}" data-fk="task:${esc(k)}" aria-expanded="${!!shown}"><span class="pct">${t.done}/${t.total}</span>${mark} ${inline(t.title)}</button>${steps}`;
+    const done = t.total && t.done === t.total;
+    const mark = icon(done ? 'check' : i === cur ? 'dot' : 'ring');
+    const steps = shown && t.steps.length ? `<div class="steps">${t.steps.map(s => `<div class="${s.done ? 'sdone' : ''}">${icon(s.done ? 'check' : 'ring')} ${inline(s.text)}</div>`).join('')}</div>` : '';
+    return `<button class="task ${i === cur ? 'cur' : ''} ${done ? 'tdone' : ''}" data-task="${esc(k)}" data-fk="task:${esc(k)}" aria-expanded="${!!shown}"><span class="pct">${t.done}/${t.total}</span>${mark} ${inline(t.title)}</button>${steps}`;
   }).join('') : '<div class="none">Pas de tâches « ### » dans ce plan.</div>';
   return `<div class="item">${head}<div class="tasks">${body}</div></div>`;
 }
 
 // Élément du tableau (test ou TODO) : #id qui se cite, poids, texte ; détail et notes repliés.
-const WEIGHT_MARK = { high: ['▲', 'haut'], low: ['▽', 'bas'] };
+const WEIGHT_MARK = { high: [icon('up'), 'haut'], low: [icon('down'), 'bas'] };
 const BY = { user: 'toi', orchestrator: 'orchestratrice' };
 const openItems = new Set();
 const stamp = (t) => new Date(t).toLocaleString('fr-CA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -656,10 +709,10 @@ function boardItem(t, isTest) {
   const notes = t.notes || [];
   const what = [t.detail ? 'détail' : '', notes.length ? `${notes.length} note${notes.length > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ');
   const open = openItems.has(t.id);
-  const more = what ? `<button class="more" data-more="${esc(t.id)}" data-fk="fold:${esc(t.id)}" aria-expanded="${open}"><span class="chev">${open ? '▾' : '▸'}</span>${what}</button>` : '';
+  const more = what ? `<button class="more" data-more="${esc(t.id)}" data-fk="fold:${esc(t.id)}" aria-expanded="${open}">${chev(open)}${what}</button>` : '';
   const fold = open && what ? `<div class="fold">${t.detail ? md(t.detail) : ''}${notes.map(n => `<div class="nt"><span>${stamp(n.at)}</span> · ${esc(BY[n.by] || n.by)} : ${inline(n.text)}</div>`).join('')}</div>` : '';
   const plan = !isTest && t.plan ? ` <span class="none">· ${esc(t.plan)}</span>` : '';
-  const tb = isTest ? `<div class="tb"><button class="okb" data-fk="ok:${esc(t.id)}">OK</button><button class="ko" data-fk="ko:${esc(t.id)}">Problème</button></div>` : '';
+  const tb = isTest ? `<div class="tb"><button class="okb" data-fk="ok:${esc(t.id)}">OK</button><button class="ko" data-fk="ko:${esc(t.id)}">Pas OK</button><button class="clar" data-fk="clar:${esc(t.id)}" title="Citer #${esc(t.id)} dans la discussion avec l'orchestratrice">Clarifier</button></div>` : '';
   return `<div class="item" data-id="${esc(t.id)}"><div><button class="ref" data-ref="${esc(t.id)}" data-fk="ref:${esc(t.id)}" title="Citer #${esc(t.id)} dans le message">#${esc(t.id)}</button>${mark}${inline(t.text)}${plan}</div>${more}${fold}${tb}</div>`;
 }
 
@@ -687,7 +740,7 @@ function renderSide(force) {
   const fk = f?.closest?.('aside') && f.dataset.fk;
   lastSide = key;
   const unreadable = r.board && r.board.error;
-  $('#boardErr').innerHTML = unreadable ? `<div class="banner alert">⚠ Tableau illisible : ${esc(r.board.error)}</div>` : '';
+  $('#boardErr').innerHTML = unreadable ? `<div class="banner alert">${icon('warn')}<span>Tableau illisible : ${esc(r.board.error)}</span></div>` : '';
   const nTests = r.tests.reduce((n, g) => n + g.tasks.reduce((m, k) => m + k.items.length, 0), 0);
   $('#tcount').textContent = nTests || '';
   $('#tests').innerHTML = nTests ? r.tests.map(g => `<div class="grp">${esc(g.label)}</div>` + g.tasks.map(k =>
@@ -702,6 +755,8 @@ function renderSide(force) {
       if (res.status === 200) submitted.set(id, 'sent'); else submitted.delete(id);
       await load(); renderSide(true);
     };
+    // Clarifier : le test est cité dans la discussion, le curseur y attend la question.
+    el.querySelector('.clar').onclick = () => cite(id);
     el.querySelector('.ko').onclick = () => {
       const tb = el.querySelector('.tb');
       tb.innerHTML = `<input placeholder="Qu'est-ce qui ne marche pas ? (Entrée)"><button class="ko">Envoyer</button>`;
@@ -748,7 +803,7 @@ async function load() {
   try { state = await r.json(); } catch { setLink(0); return; }
   setLink(200);
   state.pending = state.pending.filter(c => !answered.has(c.id));
-  renderCard(); renderQueue(); renderSessions(); renderAlerts(); renderHistory(); renderSide();
+  renderCard(); renderQueue(); renderTalk(); renderSessions(); renderAlerts(); renderHistory(); renderSide();
 }
 load();
 setInterval(load, 1500);
