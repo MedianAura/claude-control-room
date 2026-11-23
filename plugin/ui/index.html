@@ -25,9 +25,14 @@
   textarea, input { caret-color: var(--text); }
   aside { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
   main { max-width: 1280px; margin: 0 auto; padding: 22px 20px 60px; display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 26px; align-items: start; }
-  @media (max-width: 980px) { main { grid-template-columns: 1fr; } }
-  section.left { display: grid; gap: 14px; }
+  /* Colonne de gauche : la carte d'abord, « Ensuite » et les alertes collés dessous (8px), puis un seul grand
+     intervalle (26px) avant ce qui parle à l'orchestratrice. Le bandeau des sessions est en tête de la colonne de
+     droite : rien n'est au-dessus de la carte. */
+  section.left { display: grid; gap: 8px; }
+  section.left > .composer { margin-top: 18px; }
   aside { position: sticky; top: 20px; display: grid; gap: 14px; max-height: calc(100vh - 40px); overflow: auto; }
+  /* Une colonne : la colonne de droite suit la page, sans défilement imbriqué. */
+  @media (max-width: 980px) { main { grid-template-columns: 1fr; } aside { position: static; max-height: none; overflow: visible; } }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; }
   .panel h2 { margin: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; }
   /* Titres repliables (colonne de droite) : un vrai bouton, atteignable au clavier. */
@@ -42,7 +47,8 @@
   textarea:focus-visible, input:focus-visible { outline-offset: 0 !important; border-color: var(--muted); }
   /* Connexion perdue : dit dans l'en-tête du bandeau, voyants éteints, rien ne se décale. */
   /* line-height sous celle du titre (11px × 1,55) : afficher un message ne doit pas grandir l'en-tête. */
-  #conn { color: var(--ko); text-transform: none; letter-spacing: 0; font-size: 12px; line-height: 1.4; }
+  #conn { color: var(--ko); text-transform: none; letter-spacing: 0; font-size: 12px; line-height: 1.4;
+    min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #conn:empty { display: none; }
   #sessionsPanel.lost .row { opacity: .45; }
   .panel .body { margin-top: 8px; }
@@ -50,9 +56,10 @@
   .none { color: var(--muted); font-size: 13px; }
 
   /* Bandeau des sessions : une ligne par session, mise à jour sur place. */
-  /* Hauteur figée pendant la lecture d'une carte (renderSessions) : une session de plus défile ici. */
+  /* Hauteur figée tant que la souris est sur la colonne de droite (renderSessions) : une session de plus défile
+     ici au lieu de pousser « À tester » sous le pointeur. */
   #sessions { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
-  #sessions .row { display: grid; grid-template-columns: 12px minmax(120px, 190px) 1fr 46px; gap: 10px; align-items: center; padding: 4px 6px; border-radius: 6px; font-size: 13.5px; }
+  #sessions .row { display: grid; grid-template-columns: 12px clamp(100px, 22%, 190px) minmax(0, 1fr) 40px; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 6px; font-size: 13.5px; }
   #sessions .row:nth-child(odd) { background: color-mix(in srgb, var(--line) 35%, transparent); }
   /* Voyants : la couleur est réservée à « ça attend après toi ». Rond = la session vit sa vie (gris plein :
      travaille, anneau : inactive, vert : terminé). Carré + ligne teintée + mot d'état = à toi (ambre : décision,
@@ -69,7 +76,9 @@
   #sessions .st-decision .sw { color: var(--accent-ink); } #sessions .st-approval .sw { color: var(--ko-ink); }
   #scount .mine { color: var(--accent-ink); font-weight: 600; } #scount .mine.blocked { color: var(--ko-ink); }
   #sessions .lab { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #sessions .act { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #sessions .act { color: var(--muted); white-space: nowrap; display: flex; min-width: 0; }
+  #sessions .sw { flex: none; }
+  #sessions .ext { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   #sessions .at { color: var(--muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
 
   /* Bandeaux d'alerte et résumé au retour. */
@@ -107,7 +116,9 @@
   .summary { font-size: 19px; font-weight: 600; line-height: 1.35; margin: 12px 0 4px; }
   .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 18px 0 6px; }
   .recap ul { margin: 4px 0; padding-left: 20px; }
-  pre.cmd { white-space: pre-wrap; word-break: break-all; font: 13px ui-monospace, monospace; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin: 0; }
+  /* Une commande longue défile dans son cadre (10 lignes) : Autoriser / Refuser restent près d'elle. */
+  pre.cmd { white-space: pre-wrap; word-break: break-all; font: 13px/1.45 ui-monospace, monospace; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin: 0;
+    max-height: calc(10lh + 20px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
   .opts { display: grid; gap: 8px; }
   button.opt { all: unset; cursor: pointer; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; padding: 10px 13px; border: 1px solid var(--line); border-radius: 9px; }
   button.opt:hover, button.opt:focus-visible { border-color: var(--muted); }
@@ -185,9 +196,9 @@
 <body>
 <main>
   <section class="left">
-    <div class="panel" id="sessionsPanel"><h2><span>Sessions</span><span id="conn" role="status"></span><span id="scount"></span></h2><div class="body" id="sessions"></div></div>
-    <!-- Au-dessus de la carte : seulement ce qui ne change pas pendant qu'on la lit. Ce qui arrive en cours de
-         lecture (cartes suivantes, alertes) se range dessous ; l'alerte est en plus signalée dans l'en-tête. -->
+    <!-- Au-dessus de la carte : seulement le résumé au retour, posé quand on n'était pas là. Ce qui arrive en cours
+         de lecture (cartes suivantes, alertes) se range dessous ; l'alerte est en plus signalée dans l'en-tête du
+         bandeau. -->
     <div id="away"></div>
     <div id="view" aria-live="polite"></div>
     <div class="queue" id="queue"></div>
@@ -201,6 +212,7 @@
     <div class="panel" id="histPanel"><h2><span>Historique</span></h2><div class="body"><ul id="hist"></ul></div></div>
   </section>
   <aside>
+    <div class="panel" id="sessionsPanel"><h2><span>Sessions</span><span id="conn" role="status"></span><span id="scount"></span></h2><div class="body" id="sessions"></div></div>
     <div id="boardErr" role="status"></div>
     <div class="panel" data-sec="tests"><h2><button class="cap" aria-expanded="true"><span>À tester par toi</span><span id="tcount"></span></button></h2><div class="body" id="tests"></div></div>
     <div class="panel" data-sec="plans"><h2><button class="cap" aria-expanded="true"><span>Plans actifs</span><span id="pcount"></span></button></h2><div class="body" id="plans"></div></div>
@@ -272,8 +284,7 @@ function renderCard() {
   noteOpen = false; pendingChoice = null;
   if (currentId && shown && shown.id === currentId) {
     // Disparue sans réponse d'ici : elle reste à sa place, barrée, avec la raison. Aucune touche ne peut tomber
-    // sur la carte suivante tant qu'on n'a pas continué. Le bandeau reste figé (même place de lecture) ; un
-    // échec d'envoi sur cette carte ne veut plus rien dire.
+    // sur la carte suivante tant qu'on n'a pas continué. Un échec d'envoi sur cette carte ne veut plus rien dire.
     tomb = shown; notice = '';
     $('#view').innerHTML = `${viewHead()}
       <div class="card gone">
@@ -286,7 +297,6 @@ function renderCard() {
     $('#goOn').onclick = leaveTomb;
     return;
   }
-  stripH = null; // ce qu'on lit change : le bandeau peut reprendre sa hauteur
   const next = state.pending[0];
   if (!next) {
     currentId = null; shown = null;
@@ -463,18 +473,21 @@ function renderSessions() {
   const mine = s.filter(x => WAITS.has(x.status)), blocked = mine.some(x => x.status === 'approval');
   $('#scount').innerHTML = !s.length ? '' : mine.length ? `<span class="mine ${blocked ? 'blocked' : ''}">${mine.length} à toi</span> · ${s.length}` : String(s.length);
   // Ce qui attend après toi affiche toujours son mot d'état, l'activité vient après.
+  // Le mot d'état ne rétrécit jamais ; seule l'activité qui le suit se coupe (sinon l'ellipse mange la fin du mot).
   const act = (x) => {
-    if (!WAITS.has(x.status)) return esc(x.activity || STATE_LABEL[x.status] || '');
-    const extra = x.activity && x.activity !== STATE_LABEL[x.status] ? ` · ${esc(x.activity)}` : '';
+    if (!WAITS.has(x.status)) return `<span class="ext">${esc(x.activity || STATE_LABEL[x.status] || '')}</span>`;
+    const extra = x.activity && x.activity !== STATE_LABEL[x.status] ? `<span class="ext">&nbsp;· ${esc(x.activity)}</span>` : '';
     return `<span class="sw">${STATE_LABEL[x.status]}</span>${extra}`;
   };
   const el = $('#sessions');
   el.innerHTML = s.length ? s.map(x => `
-    <div class="row st-${esc(x.status)}"><span class="dot"></span><span class="lab">${esc(x.label)}</span>
+    <div class="row st-${esc(x.status)}"><span class="dot"></span><span class="lab" title="${esc(x.label)}">${esc(x.label)}</span>
       <span class="act">${act(x)}</span><span class="at">${x.at ? hhmm(x.at) : ''}</span></div>`).join('')
     : '<div class="none">Aucune session de l\'équipe : l\'orchestratrice et les sessions inscrites (control-room label) apparaissent ici.</div>';
-  // Le bandeau est au-dessus de la carte : sa hauteur est figée tant que la même carte est lue (une session qui
-  // arrive défile dans le bandeau, une qui part laisse un vide), mesurée de nouveau quand la carte change.
+  // Le bandeau est en tête de la colonne de droite : souris dessus, sa hauteur est figée (une session qui arrive
+  // défile dans le bandeau, une qui part laisse un vide) pour que « À tester » ne glisse pas sous le pointeur ;
+  // souris ailleurs, il suit le nombre de sessions.
+  if (!hovering) stripH = null;
   if (stripH === null) { el.style.height = ''; stripH = el.offsetHeight; }
   el.style.height = `${stripH}px`;
   setFavicon(blocked ? 'approval' : mine.length ? 'decision' : '');
@@ -504,9 +517,14 @@ function renderStatus() {
   const lost = lostSince !== null, nAlerts = lost ? 0 : (state.alerts || []).length;
   $('#sessionsPanel').classList.toggle('lost', lost);
   const card = $('#view .card:not(.gone)'); if (card) card.classList.toggle('held', lost);
-  $('#conn').textContent = lost
-    ? (lostStatus === 401 || lostStatus === 403 ? 'onglet plus autorisé : utilise celui ouvert par control-room start' : `control-room ne répond plus depuis ${hhmm(lostSince)}`)
-    : nAlerts ? `⚠ ${nAlerts > 1 ? `${nAlerts} alertes` : 'alerte'} · détail sous la carte` : '';
+  // En-tête du bandeau dans la colonne de droite : ~190px pour ce message. Le texte court tient sur une ligne,
+  // la phrase complète est dans le title (et l'ellipse coupe au pire, l'en-tête ne grandit jamais).
+  const unauth = lostStatus === 401 || lostStatus === 403;
+  const [short, full] = !lost ? (nAlerts ? [`⚠ ${nAlerts > 1 ? `${nAlerts} alertes` : 'alerte'} · détail sous la carte`, ''] : ['', ''])
+    : unauth ? ['onglet plus autorisé', 'Onglet plus autorisé : utilise celui ouvert par control-room start.']
+    : [`hors ligne depuis ${hhmm(lostSince)}`, `control-room ne répond plus depuis ${hhmm(lostSince)}.`];
+  $('#conn').textContent = short;
+  $('#conn').title = full;
   const n = state.pending.length;
   document.title = (lost || nAlerts ? '⚠ ' : '') + (n ? `(${n}) control-room` : 'control-room');
 }
@@ -585,7 +603,7 @@ $('#msg').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlK
 
 // ---------- colonne de droite ----------
 const closed = new Set(JSON.parse(localStorage.getItem('cr-closed') || '[]'));
-document.querySelectorAll('aside .panel').forEach(p => {
+document.querySelectorAll('aside .panel[data-sec]').forEach(p => {
   const cap = p.querySelector('.cap');
   const sync = () => cap.setAttribute('aria-expanded', String(!p.classList.contains('closed')));
   if (closed.has(p.dataset.sec)) p.classList.add('closed');
