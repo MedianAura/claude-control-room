@@ -28,13 +28,15 @@ const routes = [
   { method: 'POST', match: p => p === '/api/message', auth: 'page', handle: handleMessage },
   { method: 'GET', match: p => p === '/api/pending', auth: 'client', handle: async (req, res, url, { send }) =>
     send(res, 200, cards.pendingCards().filter(c => c.owner === 'orchestrator').map(({ id, kind, agent, summary }) => ({ id, kind, agent, summary }))) },
-  { method: 'POST', match: p => /^\/api\/cards\/[\w-]+\/cancel$/.test(p), auth: 'client', handle: async (req, res, url, { send }) => {
+  { method: 'POST', match: p => /^\/api\/cards\/[\w-]+\/cancel$/.test(p), auth: 'client', handle: async (req, res, url, { readBody, send }) => {
     const id = url.pathname.split('/')[3];
     const c = cards.readCard(id);
     if (!c) return send(res, 404, { error: 'carte introuvable' });
     if (c.owner !== 'orchestrator') return send(res, 403, { error: 'seules les cartes de l\'orchestratrice peuvent être retirées' });
     if (c.status !== 'pending') return send(res, 409, { error: 'carte déjà traitée' });
-    cards.cancelCard(id);
+    const { reason = '' } = await readBody(req);
+    cards.cancelCard(id, String(reason).trim());
+    addEvent(`carte annulée par l'orchestratrice : « ${c.summary} »${reason ? ` (${reason})` : ''}`);
     return send(res, 200, { ok: true });
   } },
 ];

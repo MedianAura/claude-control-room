@@ -95,7 +95,7 @@ function createServer({ pageSecret, bootstrapKey, clientSecret, deliver, state =
       if (req.method === 'GET' && url.pathname === '/api/state') {
         if (!page(false)) return send(res, 403, 'Interdit.');
         expireStaleApprovals();
-        return send(res, 200, { pending: cards.pendingCards(), recent: readHistory(30), sessions: [], right: { tests: [], plans: [], todos: [] }, events: [], ...state() });
+        return send(res, 200, { pending: cards.pendingCards(), cancelled: cards.recentCancelled(), recent: readHistory(30), sessions: [], right: { tests: [], plans: [], todos: [] }, events: [], ...state() });
       }
 
       if (req.method === 'POST' && url.pathname === '/api/answer') {

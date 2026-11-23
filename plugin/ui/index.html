@@ -43,6 +43,8 @@
   .banner { border-radius: 10px; padding: 9px 14px; display: flex; gap: 10px; align-items: baseline; }
   .banner.away { background: color-mix(in srgb, var(--info) 14%, var(--panel)); border: 1px solid color-mix(in srgb, var(--info) 40%, transparent); }
   .banner.alert { background: color-mix(in srgb, var(--ko) 14%, var(--panel)); border: 1px solid var(--ko); }
+  #notice:empty { display: none; }
+  .banner.notice { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
   .banner .x { all: unset; cursor: pointer; margin-left: auto; color: var(--muted); }
 
   /* File et carte. */
@@ -104,6 +106,7 @@
     <div id="alerts"></div>
     <div id="away"></div>
     <div class="queue" id="queue"></div>
+    <div id="notice"></div>
     <div id="view"></div>
     <div class="composer">
       <textarea id="msg" placeholder="Écrire à l'orchestratrice… (Ctrl+Entrée pour envoyer, Ctrl+V pour une capture)"></textarea>
@@ -144,6 +147,10 @@ async function post(url, body) {
 
 let state = { pending: [], recent: [], sessions: [], right: { tests: [], plans: [], todos: [] }, events: [], alerts: [] };
 let currentId = null, noteOpen = false, pendingChoice = null, answeredTotal = 0;
+// Cartes répondues depuis cette page : masquées dès le clic, même si un /api/state parti avant la réponse
+// les liste encore. Retirées du Set seulement si l'envoi échoue (la carte revient).
+const answered = new Set();
+let notice = '';
 
 // ---------- la carte : jamais remplacée tant qu'elle n'a pas de réponse ----------
 function optionsOf(c) {
@@ -155,6 +162,8 @@ function optionsOf(c) {
 function renderCard() {
   const c = currentId && state.pending.find(x => x.id === currentId);
   if (c) return; // la carte affichée reste telle quelle
+  const gone = currentId && (state.cancelled || []).find(x => x.id === currentId);
+  if (gone) notice = `Carte « ${esc(gone.summary)} » annulée par l'orchestratrice${gone.reason ? ` : ${esc(gone.reason)}` : '.'}`;
   const next = state.pending[0];
   noteOpen = false; pendingChoice = null;
   if (!next) {
@@ -203,24 +212,42 @@ function renderQueue() {
     (others.length ? ` · ensuite : ${others.slice(0, 3).map(x => `<b>${esc(x.agent)}</b>`).join(', ')}${others.length > 3 ? '…' : ''}` : '');
 }
 
+let shownNotice = null;
+function renderNotice() {
+  if (notice === shownNotice) return;
+  shownNotice = notice;
+  $('#notice').innerHTML = notice ? `<div class="banner notice">${notice}<button class="x" title="Fermer">✕</button></div>` : '';
+  const x = $('#notice .x'); if (x) x.onclick = () => { notice = ''; renderNotice(); };
+}
+
 function toggleNote() { noteOpen = !noteOpen; const t = $('#note'); t.classList.toggle('show', noteOpen); if (noteOpen) t.focus(); }
 
 async function answer(choice) {
   if (!currentId) return;
+  const c = state.pending.find(x => x.id === currentId);
+  // Armement : un double clic ou une touche répétée ne doit pas répondre à la carte qui vient d'apparaître.
+  if (Date.now() - shownAt < (c && c.kind === 'approval' ? APPROVAL_ARM_MS : CARD_ARM_MS)) return;
   const t = $('#note'); const note = t && t.value.trim();
   if (choice === 'note' && !note) return;
   const id = currentId;
+  answered.add(id); notice = '';
+  state.pending = state.pending.filter(x => x.id !== id);
+  currentId = null; renderCard(); renderQueue(); renderNotice();
   const r = await post('/api/answer', { id, choice, note });
-  if (r.status === 200 || r.status === 409 || r.status === 404) {
-    answeredTotal += r.status === 200 ? 1 : 0;
-    state.pending = state.pending.filter(c => c.id !== id);
-    currentId = null; renderCard(); renderQueue(); load();
+  if (r.status === 200) answeredTotal += 1;
+  else if (r.status !== 409 && r.status !== 404) {
+    answered.delete(id);
+    notice = `Réponse à « ${esc(c ? c.summary : id)} » non envoyée (${r.status ? `erreur ${r.status}` : 'serveur injoignable'}) : la carte revient dans la file.`;
+    // Remise locale : si le serveur est tombé, load() échoue aussi et ne la ramènerait pas.
+    if (c && !state.pending.some(x => x.id === id)) state.pending.unshift(c);
+    renderCard(); renderQueue(); renderNotice();
   }
+  load();
 }
 
 // Une approbation n'accepte de raccourci qu'après ce délai : une touche répétée ou un double appui sur la carte
 // précédente ne doit jamais tomber sur « Autoriser » (revue #10).
-const APPROVAL_ARM_MS = 800;
+const APPROVAL_ARM_MS = 800, CARD_ARM_MS = 400;
 let shownAt = 0;
 
 document.addEventListener('keydown', (e) => {
@@ -360,7 +387,8 @@ async function load() {
     if (r.status !== 200) return;
     state = await r.json();
   } catch { return; }
-  renderCard(); renderQueue(); renderSessions(); renderAlerts(); renderHistory(); renderSide();
+  state.pending = state.pending.filter(c => !answered.has(c.id));
+  renderCard(); renderQueue(); renderNotice(); renderSessions(); renderAlerts(); renderHistory(); renderSide();
 }
 load();
 setInterval(load, 1500);

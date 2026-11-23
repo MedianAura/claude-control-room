@@ -35,7 +35,10 @@ const TOOLS = [
       state: { type: 'string', enum: ['active', 'archived'] },
     } },
   },
-  { name: 'cancel_decision', description: "Retire une de tes cartes en attente devenue inutile.", inputSchema: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } } },
+  { name: 'cancel_decision', description: "Retire une de tes cartes en attente devenue inutile. La page affiche la raison à l'utilisateur, qui a peut-être la carte sous les yeux.", inputSchema: { type: 'object', required: ['id', 'reason'], properties: {
+    id: { type: 'string' },
+    reason: { type: 'string', description: "Pourquoi tu la retires, en une phrase, ex. « remplacée par une question plus précise »." },
+  } } },
   { name: 'list_pending', description: 'Liste tes cartes encore en attente de réponse.', inputSchema: { type: 'object', properties: {} } },
   {
     name: 'wait_answers',
@@ -70,7 +73,7 @@ async function callTool(name, a = {}) {
       return text({ shown: r.id });
     }
     case 'set_plan': await http('POST', '/api/plans', a); return text({ ok: true });
-    case 'cancel_decision': await http('POST', `/api/cards/${encodeURIComponent(a.id)}/cancel`); return text('Retirée.');
+    case 'cancel_decision': await http('POST', `/api/cards/${encodeURIComponent(a.id)}/cancel`, { reason: a.reason || '' }); return text('Retirée.');
     case 'list_pending': return text(await http('GET', '/api/pending'));
     case 'wait_answers': {
       const wait = Math.max(1, Math.min(a.timeout_seconds || 240, 600));

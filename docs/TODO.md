@@ -4,12 +4,12 @@ Format lu par `plugin/lib/plan-file.js` : entrées `- [ ] **Nom**` de premier ni
 
 ## To do
 
-- [ ] **Annulation visible** : quand l'orchestratrice annule la carte affichée, la page passe à la suivante sans
+- [x] **Annulation visible** : quand l'orchestratrice annule la carte affichée, la page passe à la suivante sans
   rien dire et ça ressemble à un bug. Afficher « Carte <titre> annulée par l'orchestratrice : <raison> » ;
   `cancel_decision` n'a pas de paramètre de raison aujourd'hui, à ajouter (MCP, route, `cards.js`).
 - [ ] **Plusieurs images par message** : la zone de saisie n'en garde qu'une (`shot` unique dans
   `ui/index.html`, champ `image` unique dans `POST /api/message`) ; en accepter plusieurs.
-- [ ] **Carte masquée au clic** : masquer la carte dès qu'on répond, la remettre si l'orchestratrice la repose.
+- [x] **Carte masquée au clic** : masquer la carte dès qu'on répond, la remettre si l'orchestratrice la repose.
   Évite le double clic quand on croit que ça n'a pas marché.
 - [ ] **Sessions déconnectées** : détecter et afficher les sessions qui ne répondent plus.
 - [ ] **TODO priorisé** : priorité par entrée, tri sur la page.

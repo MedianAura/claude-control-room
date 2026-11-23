@@ -69,12 +69,21 @@ function expireCard(id) {
   return true;
 }
 
-function cancelCard(id) {
+function cancelCard(id, reason) {
   const card = readCard(id);
   if (!card || card.status !== 'pending') return false;
   card.status = 'cancelled';
+  card.cancel = { reason: reason || '', at: Date.now() };
   writeCard(card);
   return true;
+}
+
+// Annulations récentes : la page dit pourquoi la carte affichée a disparu.
+const CANCEL_WINDOW_MS = 30 * 60 * 1000;
+function recentCancelled() {
+  const since = Date.now() - CANCEL_WINDOW_MS;
+  return allCards().filter(c => c.status === 'cancelled' && c.cancel && c.cancel.at > since)
+    .map(c => ({ id: c.id, agent: c.agent, summary: c.summary, reason: c.cancel.reason, at: c.cancel.at }));
 }
 
 function takeUndelivered(owner) {
@@ -115,4 +124,4 @@ function historyLine(card) {
   return `${card.agent} — « ${card.summary} » → ${choiceLabel(card)}${note}`;
 }
 
-module.exports = { createCard, readCard, pendingCards, answerCard, cancelCard, expireCard, takeUndelivered, formatAnswer, historyLine, allCards };
+module.exports = { createCard, readCard, pendingCards, answerCard, cancelCard, recentCancelled, expireCard, takeUndelivered, formatAnswer, historyLine, allCards };

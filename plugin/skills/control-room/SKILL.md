@@ -48,7 +48,8 @@ Quand une session te remonte quelque chose :
    - `session` : le libellé de la session qui attend (sa ligne passe en « attend ta décision ») ;
    - `urgent` seulement si une session est bloquée et que rien d'autre n'avance.
 3. Une décision par carte. Mets-les toutes en file ; l'utilisateur les prend une à une.
-4. Une carte devenue inutile : `cancel_decision`.
+4. Une carte devenue inutile : `cancel_decision` avec une `reason` d'une phrase. La page l'affiche, car
+   l'utilisateur a peut-être cette carte sous les yeux.
 
 ## Déléguer à une session
 

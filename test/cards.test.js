@@ -61,3 +61,11 @@ test('cards survive in files, written atomically', () => {
   const dir = path.join(process.env.CONTROL_ROOM_DIR, 'cards');
   assert.deepEqual(fs.readdirSync(dir), [`${c.id}.json`]);
 });
+
+test('a cancelled card keeps its reason and shows in recentCancelled', () => {
+  const { cancelCard, recentCancelled } = require('../plugin/lib/cards');
+  const c = createCard({ kind: 'decision', agent: 'A', summary: 'Test X ?', options: ['x'] });
+  cancelCard(c.id, 'remplacée par une question plus précise');
+  assert.deepEqual(recentCancelled().map(({ id, summary, reason }) => ({ id, summary, reason })),
+    [{ id: c.id, summary: 'Test X ?', reason: 'remplacée par une question plus précise' }]);
+});

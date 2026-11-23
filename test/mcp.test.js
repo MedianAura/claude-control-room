@@ -65,6 +65,14 @@ test('list_pending and cancel_decision manage the orchestrator cards', async () 
   assert.equal(pendingCards().length, 0);
 });
 
+test('cancel_decision passes its reason to the page', async () => {
+  await mcp.call('queue_decision', { agent: 'A', summary: 'Test X ?', options: ['x'] });
+  const id = pendingCards()[0].id;
+  await mcp.call('cancel_decision', { id, reason: 'remplacée' });
+  const s = await request(t.port, 'GET', '/api/state', { headers: { cookie: `cr_page=${t.pageSecret}` } });
+  assert.deepEqual(s.json.cancelled.map(c => [c.id, c.reason]), [[id, 'remplacée']]);
+});
+
 test('cancel_decision cannot touch an approval card', async () => {
   const r = await request(t.port, 'POST', '/api/cards', { body: { kind: 'approval', agent: 'B', summary: 'rm', session: 's1' }, headers: clientHeaders(t) });
   const c = await mcp.call('cancel_decision', { id: r.json.id });
