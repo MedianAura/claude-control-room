@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-23T03:49:50.991Z",
+  "generatedAt": "2026-11-23T03:54:48.000Z",
   "title": "Design System: control-room",
   "extensions": {
     "colorMeta": {
@@ -201,6 +201,10 @@
       "mono": {
         "displayName": "Mono",
         "purpose": "Commands, inline code, key caps."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Timestamps, hints, counts, key caps, kind tags."
       }
     },
     "shadows": [],
@@ -243,7 +247,7 @@
       "refersTo": "card",
       "description": "One decision at a time: agent badge, headline summary, captioned sections, proposition.",
       "html": "<div class=\"ds-card\"><span class=\"ds-agent\">⚔️ Quick Up. · c9</span><div class=\"ds-summary\">Le palier « All to 80 » doit-il retirer seul les réactifs ?</div><div class=\"ds-label\">Proposition</div><div class=\"ds-prop\">2, garde le contrôle sur le coffre.</div></div>",
-      "css": ".ds-card { background: var(--panel, #1a1c20); border: 1px solid var(--line, #2a2d33); border-radius: 12px; padding: 20px 22px; color: var(--text, #e7e7ea); font: 15px/1.55 ui-sans-serif, system-ui, 'Segoe UI', sans-serif; } .ds-agent { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text, #e7e7ea); background: color-mix(in srgb, var(--line, #2a2d33) 70%, var(--panel, #1a1c20)); padding: 3px 9px; border-radius: 6px; } .ds-summary { font-size: 19px; font-weight: 600; line-height: 1.35; margin: 12px 0 4px; } .ds-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted, #9a9ca3); margin: 18px 0 6px; } .ds-prop { border-left: 3px solid var(--accent, #e0a84f); padding: 8px 14px; background: var(--accent-bg, #2b2418); border-radius: 0 8px 8px 0; }"
+      "css": ".ds-card { background: var(--panel, #1a1c20); border: 1px solid var(--line, #2a2d33); border-radius: 12px; padding: 20px 22px; color: var(--text, #e7e7ea); font: 15px/1.55 ui-sans-serif, system-ui, 'Segoe UI', sans-serif; } .ds-agent { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text, #e7e7ea); background: color-mix(in srgb, var(--line, #2a2d33) 70%, var(--panel, #1a1c20)); padding: 3px 9px; border-radius: 6px; } .ds-summary { font-size: 19px; font-weight: 600; line-height: 1.35; margin: 12px 0 4px; } .ds-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted, #9a9ca3); margin: 18px 0 6px; } .ds-prop { border: 1px solid color-mix(in srgb, var(--accent, #e0a84f) 55%, transparent); padding: 8px 14px; background: var(--accent-bg, #2b2418); border-radius: 8px; }"
     },
     {
       "name": "Session Strip",

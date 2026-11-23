@@ -14,6 +14,18 @@ colors:
   radar-blue: "#5b8def"
   amber-ink: "#e0a84f"
   red-ink: "#f08a80"
+  tower-night-light: "#f5f4f1"
+  console-slate-light: "#ffffff"
+  graphite-rule-light: "#e3e1dc"
+  screen-white-light: "#1c1c1e"
+  instrument-grey-light: "#6b6b70"
+  runway-amber-light: "#b4741a"
+  amber-wash-light: "#fbf2e2"
+  clearance-green-light: "#2f8a52"
+  hold-red-light: "#c0453c"
+  radar-blue-light: "#2f63c9"
+  amber-ink-light: "#8a560c"
+  red-ink-light: "#a5352d"
 typography:
   headline:
     fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
@@ -29,6 +41,10 @@ typography:
     fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.55
+  caption:
+    fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
+    fontSize: "12px"
+    fontWeight: 400
   body-dense:
     fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
     fontSize: "13.5px"
@@ -123,7 +139,7 @@ Rejected by construction (see PRODUCT.md principles): anything that scrolls by i
 A near-black graphite base with a single runway amber and three signal lamps.
 
 ### Primary
-- **Runway Amber** (light theme `#b4741a`): the "your move" colour. It marks a session waiting for your decision (square lamp, row tint, state word), the recommended option and its tag, the proposition's left rule, the primary button and urgent queue pills. Text on amber grounds uses Amber Ink (`--accent-ink`, light `#8a560c`).
+- **Runway Amber** (light theme `#b4741a`): the "your move" colour. It marks a session waiting for your decision (square lamp, row tint, state word), the recommended option and its tag, the proposition block's border, the primary button and urgent queue pills. Text on amber grounds uses Amber Ink (`--accent-ink`, light `#8a560c`).
 - **Amber Wash** (light `#fbf2e2`): the tinted ground behind amber content: recommended option, proposition block.
 
 ### Tertiary (signal lamps)
@@ -156,6 +172,7 @@ A near-black graphite base with a single runway amber and three signal lamps.
 - **Body** (400, 15px, 1.55): card recap, options, composer text.
 - **Body dense** (400, 13.5px): session rows, right-column items, option details, queue pills (13px).
 - **Label** (600, 11px, 0.1em, uppercase, Instrument Grey): panel headings and card section captions (Résumé, Options, Proposition). The agent badge is its 12px / 0.08em sibling on a neutral chip.
+- **Caption** (400, 12px, Instrument Grey): timestamps, hint line, counts, key caps, kind tag, test buttons.
 - **Mono** (13px; 12px for key caps): commands under approval, inline `code`, the `1`–`9` key caps.
 - Timestamps and counts use `font-variant-numeric: tabular-nums` so they don't jitter as they update.
 
@@ -180,7 +197,7 @@ Flat. Depth is tonal: Tower Night ground, Console Slate surfaces, Tower Night ag
 
 ## Shapes
 
-Softly rounded rectangles stepping down with size: 12px for panels, the card and the empty state; 10px for banners; 9px for options; 8px for buttons, text fields and command blocks; 6px for session rows, the agent badge and test buttons; 4–5px for inline code and key caps. Queue pills are full capsules. Session lamps are 9px circles; lamps that wait on the user are 10px squares (2px radius). The proposition block is square on its left edge, where its 3px amber rule sits. The empty state uses a dashed border, the only dashed line in the system.
+Softly rounded rectangles stepping down with size: 12px for panels, the card and the empty state; 10px for banners; 9px for options; 8px for buttons, text fields and command blocks; 6px for session rows, the agent badge and test buttons; 4–5px for inline code and key caps. Queue pills are full capsules. Session lamps are 9px circles; lamps that wait on the user are 10px squares (2px radius). The empty state uses a dashed border, the only dashed line in the system.
 
 ## Components
 
@@ -195,7 +212,7 @@ Softly rounded rectangles stepping down with size: 12px for panels, the card and
 - Top: neutral agent badge, then an optional red kind tag ("● approbation", "● erreur", "● urgent").
 - Headline summary, then captioned sections: Commande (mono well), Résumé (bullets), Options, Proposition.
 - **Options:** full-width rows, 9px radius, 1px border, a mono key cap column (26px) then label and grey detail. Hover/focus brightens the border to Instrument Grey. Recommended: amber border, Amber Wash ground, amber "recommandé" tag. Approval options: Allow has a green border, Deny a red one.
-- **Proposition:** 3px amber left rule on Amber Wash, radius 0 8px 8px 0.
+- **Proposition:** Amber Wash ground with a full 1px amber border (accent at 55%), 8px radius. No one-sided rule.
 - Footer: action buttons, a hidden note textarea (N), and a grey hint line listing the shortcuts.
 
 ### Session Strip (signature)

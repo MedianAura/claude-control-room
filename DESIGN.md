@@ -14,6 +14,18 @@ colors:
   radar-blue: "#5b8def"
   amber-ink: "#e0a84f"
   red-ink: "#f08a80"
+  tower-night-light: "#f5f4f1"
+  console-slate-light: "#ffffff"
+  graphite-rule-light: "#e3e1dc"
+  screen-white-light: "#1c1c1e"
+  instrument-grey-light: "#6b6b70"
+  runway-amber-light: "#b4741a"
+  amber-wash-light: "#fbf2e2"
+  clearance-green-light: "#2f8a52"
+  hold-red-light: "#c0453c"
+  radar-blue-light: "#2f63c9"
+  amber-ink-light: "#8a560c"
+  red-ink-light: "#a5352d"
 typography:
   headline:
     fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
@@ -29,6 +41,10 @@ typography:
     fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.55
+  caption:
+    fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
+    fontSize: "12px"
+    fontWeight: 400
   body-dense:
     fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
     fontSize: "13.5px"
