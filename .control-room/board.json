@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "KRVH",
+      "kind": "todo",
+      "state": "open",
+      "text": "Page soignée",
+      "detail": "passe de design de la page avec les skills (`frontend-design`).",
+      "group": "Page",
+      "plan": null,
+      "notes": [],
+      "createdAt": "2026-11-23T04:15:52.121Z",
+      "closedAt": null
+    },
+    {
+      "id": "KRUV",
+      "kind": "test",
+      "state": "open",
+      "text": "Une décision complète sans ouvrir de terminal.",
+      "detail": "Demande écrite dans la page → délégation → carte → réponse → la session concernée reçoit la décision.",
+      "plan": "2026-11-21-control-room",
+      "task": "Task 9: Skill de l'orchestratrice, installation et essai réel",
+      "origin": {
+        "file": "2026-11-21-control-room.md",
+        "step": "Step 5"
+      },
+      "notes": [],
+      "createdAt": "2026-11-23T04:15:52.124Z",
+      "closedAt": null
+    },
+    {
+      "id": "JP8U",
+      "kind": "test",
+      "state": "open",
+      "text": "Une approbation depuis la page (par exemple `docker compose build` chez la session des builds).",
+      "detail": "Autoriser fait continuer la session ; Refuser + note lui renvoie la note.",
+      "plan": "2026-11-21-control-room",
+      "task": "Task 9: Skill de l'orchestratrice, installation et essai réel",
+      "origin": {
+        "file": "2026-11-21-control-room.md",
+        "step": "Step 6"
+      },
+      "notes": [],
+      "createdAt": "2026-11-23T04:15:52.126Z",
+      "closedAt": null
+    },
+    {
+      "id": "C5JE",
+      "kind": "test",
+      "state": "open",
+      "text": "Mettre à jour le plugin et relancer le serveur et l'orchestratrice.",
+      "detail": "`claude plugin update control-room@control-room`, relancer `control-room start` et l'orchestratrice ; `diff -rq` entre le cache du plugin et `plugin/` ne montre rien.",
+      "plan": "2026-11-22-board",
+      "task": "Task 6: Essai réel",
+      "origin": {
+        "file": "2026-11-22-board.md",
+        "step": "Step 1"
+      },
+      "notes": [],
+      "createdAt": "2026-11-23T04:15:52.127Z",
+      "closedAt": null
+    },
+    {
+      "id": "9ZQW",
+      "kind": "test",
+      "state": "open",
+      "text": "L'orchestratrice de SoloConquest se déclare avec `--board` et transpose le plan maître `solo-power-creep/plan.md`.",
+      "detail": "Tests ouverts avec plan, tâche, origine ; TODO avec P1 → high, P2 → medium, P3 → low ; notes datées en `notes` ; retire ces sections du markdown et commite le tableau à part. La colonne montre les groupes plan › tâche, le plus important d'abord.",
+      "plan": "2026-11-22-board",
+      "task": "Task 6: Essai réel",
+      "origin": {
+        "file": "2026-11-22-board.md",
+        "step": "Step 2"
+      },
+      "notes": [],
+      "createdAt": "2026-11-23T04:15:52.129Z",
+      "closedAt": null
+    },
+    {
+      "id": "9EET",
+      "kind": "test",
+      "state": "open",
+      "text": "« Clarifie #XXXX » depuis la page : l'orchestratrice répond par une carte qui montre qu'elle a reçu le texte complet du test.",
+      "detail": "OK sur un test : elle fait cocher l'étape dans le `plan.md` de la session.",
+      "plan": "2026-11-22-board",
+      "task": "Task 6: Essai réel",
+      "origin": {
+        "file": "2026-11-22-board.md",
+        "step": "Step 3"
+      },
+      "notes": [],
+      "createdAt": "2026-11-23T04:15:52.131Z",
+      "closedAt": null
+    }
+  ]
+}
