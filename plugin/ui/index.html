@@ -33,7 +33,8 @@
   :focus-visible { outline: 2px solid var(--text) !important; outline-offset: 2px !important; }
   textarea:focus-visible, input:focus-visible { outline-offset: 0 !important; border-color: var(--muted); }
   /* Connexion perdue : dit dans l'en-tête du bandeau, voyants éteints, rien ne se décale. */
-  #conn { color: var(--ko); text-transform: none; letter-spacing: 0; font-size: 12px; }
+  /* line-height sous celle du titre (11px × 1,55) : afficher un message ne doit pas grandir l'en-tête. */
+  #conn { color: var(--ko); text-transform: none; letter-spacing: 0; font-size: 12px; line-height: 1.4; }
   #conn:empty { display: none; }
   #sessionsPanel.lost .row { opacity: .45; }
   .panel .body { margin-top: 8px; }
@@ -56,7 +57,8 @@
   .banner { border-radius: 10px; padding: 9px 14px; display: flex; gap: 10px; align-items: baseline; }
   .banner.away { background: color-mix(in srgb, var(--info) 14%, var(--panel)); border: 1px solid color-mix(in srgb, var(--info) 40%, transparent); }
   .banner.alert { background: color-mix(in srgb, var(--ko) 14%, var(--panel)); border: 1px solid var(--ko); }
-  #notice:empty { display: none; }
+  #notice:empty, #alerts:empty, #away:empty { display: none; }
+  #alerts { display: grid; gap: 8px; }
   .banner.notice { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
   .banner .x { all: unset; cursor: pointer; margin-left: auto; color: var(--muted); }
 
@@ -136,11 +138,13 @@
 <main>
   <section class="left">
     <div class="panel" id="sessionsPanel"><h2><span>Sessions</span><span id="conn" role="status"></span><span id="scount"></span></h2><div class="body" id="sessions"></div></div>
-    <div id="alerts"></div>
+    <!-- Au-dessus de la carte : seulement ce qui ne change pas pendant qu'on la lit. Ce qui arrive en cours de
+         lecture (cartes suivantes, alertes) se range dessous ; l'alerte est en plus signalée dans l'en-tête. -->
     <div id="away"></div>
-    <div class="queue" id="queue"></div>
     <div id="notice"></div>
     <div id="view" aria-live="polite"></div>
+    <div class="queue" id="queue"></div>
+    <div id="alerts"></div>
     <div class="composer">
       <textarea id="msg" placeholder="Écrire à l'orchestratrice… (Ctrl+Entrée pour envoyer, Ctrl+V pour une capture)"></textarea>
       <button class="btn primary" id="sendMsg">Envoyer</button>
@@ -251,8 +255,7 @@ function choiceLabel(c, choice, note) {
 // Pastilles : ce qui vient après la carte affichée, dans l'ordre de passage. Pas de compteur cumulé.
 const QUEUE_PILLS = 5;
 function renderQueue() {
-  const n = state.pending.length;
-  document.title = (lostSince !== null ? '⚠ ' : '') + (n ? `(${n}) control-room` : 'control-room');
+  renderStatus();
   const others = state.pending.filter(c => c.id !== currentId);
   if (!others.length) { $('#queue').innerHTML = ''; return; }
   const pill = c => `<span class="pill ${c.kind === 'approval' ? 'approval' : c.urgent ? 'urgent' : ''}" title="${esc(c.agent)} — ${esc(c.summary)}">${esc(c.summary || c.agent)}</span>`;
@@ -335,6 +338,19 @@ function renderSessions() {
 
 function renderAlerts() {
   $('#alerts').innerHTML = (state.alerts || []).map(a => `<div class="banner alert">⚠ ${esc(a)}</div>`).join('');
+  renderStatus();
+}
+
+// En-tête du bandeau : la ligne fixe où se signale ce qui cloche (connexion d'abord, puis alertes), et le ⚠ du
+// titre de l'onglet. Écrire ici ne décale jamais la carte.
+function renderStatus() {
+  const lost = lostSince !== null, nAlerts = lost ? 0 : (state.alerts || []).length;
+  $('#sessionsPanel').classList.toggle('lost', lost);
+  $('#conn').textContent = lost
+    ? (lostStatus === 401 || lostStatus === 403 ? 'onglet plus autorisé : utilise celui ouvert par control-room start' : `control-room ne répond plus depuis ${hhmm(lostSince)}`)
+    : nAlerts ? `⚠ ${nAlerts > 1 ? `${nAlerts} alertes` : 'alerte'} · détail sous la carte` : '';
+  const n = state.pending.length;
+  document.title = (lost || nAlerts ? '⚠ ' : '') + (n ? `(${n}) control-room` : 'control-room');
 }
 
 // ---------- résumé au retour ----------
@@ -482,17 +498,11 @@ function renderSide(force) {
 // ---------- boucle ----------
 // Deux sondages ratés de suite (3 s) : la page dit qu'elle n'est plus à jour au lieu d'afficher un état périmé.
 const LOST_AFTER = 2;
-let fails = 0, lostSince = null;
+let fails = 0, lostSince = null, lostStatus = 0;
 function setLink(status) {
   if (status === 200) { fails = 0; lostSince = null; }
-  else if (++fails >= LOST_AFTER && lostSince === null) lostSince = Date.now() - 1500 * (fails - 1);
-  const lost = lostSince !== null;
-  $('#sessionsPanel').classList.toggle('lost', lost);
-  $('#conn').textContent = !lost ? ''
-    : status === 401 || status === 403 ? 'onglet plus autorisé : utilise celui ouvert par control-room start'
-    : `control-room ne répond plus depuis ${hhmm(lostSince)}`;
-  const n = state.pending.length;
-  document.title = (lost ? '⚠ ' : '') + (n ? `(${n}) control-room` : 'control-room');
+  else { lostStatus = status; if (++fails >= LOST_AFTER && lostSince === null) lostSince = Date.now() - 1500 * (fails - 1); }
+  renderStatus();
 }
 async function load() {
   let r;
