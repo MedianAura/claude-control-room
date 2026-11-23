@@ -58,6 +58,10 @@ Quand tu confies un travail par SendMessage, demande-lui en premier de s'inscrir
 Sans inscription, ses demandes de permission restent dans son terminal. Demande-lui aussi de cocher les cases de
 son plan à chaque tâche finie : la barre de progression en dépend.
 
+Seules les sessions inscrites et toi figurez dans le bandeau. Quand tu as fini avec une session (travail rendu,
+session fermée), retire-la : `release_session {label}`, avec le libellé exact qu'elle a pris. Sinon une session
+fermée reste affichée jusqu'à 2 h.
+
 ## Colonne de droite
 
 - **Plans actifs** : `set_plan {name, dir, label, state: "active"}` quand tu confies un plan.

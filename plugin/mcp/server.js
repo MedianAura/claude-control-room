@@ -39,6 +39,9 @@ const TOOLS = [
     id: { type: 'string' },
     reason: { type: 'string', description: "Pourquoi tu la retires, en une phrase, ex. « remplacée par une question plus précise »." },
   } } },
+  { name: 'release_session', description: "Retire du bandeau une session de travail dont tu as fini (travail terminé, session fermée). Elle n'est plus de l'équipe : ses demandes de permission restent dans son terminal.", inputSchema: { type: 'object', required: ['label'], properties: {
+    label: { type: 'string', description: 'Le libellé exact donné à control-room label, ex. 🔨 Builds · b2.' },
+  } } },
   { name: 'list_pending', description: 'Liste tes cartes encore en attente de réponse.', inputSchema: { type: 'object', properties: {} } },
   {
     name: 'wait_answers',
@@ -74,6 +77,7 @@ async function callTool(name, a = {}) {
     }
     case 'set_plan': await http('POST', '/api/plans', a); return text({ ok: true });
     case 'cancel_decision': await http('POST', `/api/cards/${encodeURIComponent(a.id)}/cancel`, { reason: a.reason || '' }); return text('Retirée.');
+    case 'release_session': return text(await http('POST', '/api/sessions/release', { label: a.label || '' }));
     case 'list_pending': return text(await http('GET', '/api/pending'));
     case 'wait_answers': {
       const wait = Math.max(1, Math.min(a.timeout_seconds || 240, 600));

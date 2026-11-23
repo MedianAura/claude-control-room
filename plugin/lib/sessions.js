@@ -78,6 +78,17 @@ function routes(delivery) {
       addEvent(`session inscrite : ${s.label}`);
       return send(res, 200, { ok: true });
     } },
+    // L'orchestratrice a fini avec un worker : il quitte l'équipe (bandeau, interception des permissions).
+    { method: 'POST', match: p => p === '/api/sessions/release', auth: 'client', handle: async (req, res, url, { readBody, send }) => {
+      const { label } = await readBody(req);
+      const dir = path.join(stateDir(), 'sessions');
+      const hit = fs.readdirSync(dir).filter(f => f.endsWith('.json')).map(f => readJson(path.join(dir, f)))
+        .filter(s => s && s.enrolled && s.label === label);
+      if (!hit.length) return send(res, 404, { error: `aucune session inscrite sous « ${label} »` });
+      for (const s of hit) write({ ...s, enrolled: false });
+      addEvent(`session libérée : ${label}`);
+      return send(res, 200, { released: hit.length });
+    } },
     { method: 'GET', match: p => p === '/api/sessions/enrolled', auth: 'client', handle: async (req, res, url, { send }) => {
       const s = read(url.searchParams.get('key'));
       return send(res, 200, { enrolled: !!(s && s.enrolled), label: s ? s.label : null });

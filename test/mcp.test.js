@@ -7,6 +7,7 @@ const { tempStateDir, startTestServer, request, pageHeaders, clientHeaders, clai
 const { createDelivery } = require('../plugin/lib/delivery');
 const orchRoutes = require('../plugin/lib/orchestrator-routes');
 const { pendingCards } = require('../plugin/lib/cards');
+const sessions = require('../plugin/lib/sessions');
 
 const MCP = path.join(__dirname, '..', 'plugin', 'mcp', 'server.js');
 
@@ -25,15 +26,15 @@ let t, dir, delivery, mcp;
 test.beforeEach(async () => {
   dir = tempStateDir('cr-mcp-');
   delivery = createDelivery({ ackTimeoutMs: 300 });
-  t = await startTestServer({ deliver: delivery.deliver, routes: [...delivery.routes, ...orchRoutes.routes] });
+  t = await startTestServer({ deliver: delivery.deliver, routes: [...delivery.routes, ...orchRoutes.routes, ...sessions.routes(delivery)], state: () => ({ sessions: sessions.list() }) });
   mcp = mcpClient({ CONTROL_ROOM_DIR: dir });
   await mcp.rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '0' } });
 });
 test.afterEach(async () => { mcp.close(); await t.close(); });
 
-test('the six orchestrator tools are listed', async () => {
+test('the seven orchestrator tools are listed', async () => {
   const r = await mcp.rpc('tools/list', {});
-  assert.deepEqual(r.result.tools.map(x => x.name).sort(), ['cancel_decision', 'list_pending', 'queue_decision', 'reply', 'set_plan', 'wait_answers']);
+  assert.deepEqual(r.result.tools.map(x => x.name).sort(), ['cancel_decision', 'list_pending', 'queue_decision', 'release_session', 'reply', 'set_plan', 'wait_answers']);
 });
 
 test('queue_decision creates a card the page can see', async () => {
@@ -71,6 +72,21 @@ test('cancel_decision passes its reason to the page', async () => {
   await mcp.call('cancel_decision', { id, reason: 'remplacée' });
   const s = await request(t.port, 'GET', '/api/state', { headers: { cookie: `cr_page=${t.pageSecret}` } });
   assert.deepEqual(s.json.cancelled.map(c => [c.id, c.reason]), [[id, 'remplacée']]);
+});
+
+test('release_session takes a worker off the strip by its label', async () => {
+  for (const [key, label] of [['W1', '🔨 Builds · b2'], ['W2', '🧪 Tests · t1']])
+    await request(t.port, 'POST', '/api/sessions/label', { body: { key, label }, headers: clientHeaders(t) });
+  const r = await mcp.call('release_session', { label: '🔨 Builds · b2' });
+  assert.ok(!r.result.isError);
+  const s = await request(t.port, 'GET', '/api/state', { headers: { cookie: `cr_page=${t.pageSecret}` } });
+  assert.deepEqual(s.json.sessions.map(x => x.label), ['🧪 Tests · t1']);
+});
+
+test('release_session with an unknown label is an error', async () => {
+  const r = await mcp.call('release_session', { label: 'personne' });
+  assert.ok(r.result.isError);
+  assert.match(r.result.content[0].text, /aucune session inscrite/);
 });
 
 test('cancel_decision cannot touch an approval card', async () => {
