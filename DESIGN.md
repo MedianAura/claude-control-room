@@ -1,143 +1,153 @@
 ---
 name: control-room
-description: A still, glanceable control tower in one browser tab for an orchestrator and its Claude sessions.
+description: The stage manager's call desk in one dark browser tab, one cue in standby at a time, called with a single GO.
 colors:
-  tower-night: "#111214"
-  console-slate: "#1a1c20"
-  graphite-rule: "#2a2d33"
-  screen-white: "#e7e7ea"
-  instrument-grey: "#9a9ca3"
-  runway-amber: "#e0a84f"
-  amber-wash: "#2b2418"
-  clearance-green: "#6cc28b"
-  hold-red: "#e0645b"
-  radar-blue: "#5b8def"
-  amber-ink: "#e0a84f"
-  red-ink: "#f08a80"
-  tower-night-light: "#f5f4f1"
-  console-slate-light: "#ffffff"
-  graphite-rule-light: "#e3e1dc"
-  screen-white-light: "#1c1c1e"
-  instrument-grey-light: "#6b6b70"
-  runway-amber-light: "#b4741a"
-  amber-wash-light: "#fbf2e2"
-  clearance-green-light: "#2f8a52"
-  hold-red-light: "#c0453c"
-  radar-blue-light: "#2f63c9"
-  amber-ink-light: "#8a560c"
-  red-ink-light: "#a5352d"
+  blackout: "#0c0d10"
+  worklight-panel: "#131929"
+  well-blue: "#0f1422"
+  rail-line: "#232d47"
+  rail-line-soft: "#1a2236"
+  script-paper: "#e9e6df"
+  house-grey: "#8a90a3"
+  go-green: "#35d07f"
+  standby-amber: "#f2a93b"
+  stop-red: "#ff4d42"
+  away-blue: "#6f8cff"
+  amber-ink: "#f2a93b"
+  red-ink: "#ff7a70"
 typography:
   headline:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
-    fontSize: "19px"
+    fontFamily: "Segoe UI, system-ui, -apple-system, sans-serif"
+    fontSize: "22px"
     fontWeight: 600
-    lineHeight: 1.35
-  title:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
-    fontSize: "17px"
-    fontWeight: 600
+    lineHeight: 1.3
   body:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
-    fontSize: "15px"
+    fontFamily: "Segoe UI, system-ui, -apple-system, sans-serif"
+    fontSize: "14.5px"
     fontWeight: 400
-    lineHeight: 1.55
-  caption:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
-    fontSize: "12px"
-    fontWeight: 400
+    lineHeight: 1.5
   body-dense:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
+    fontFamily: "Segoe UI, system-ui, -apple-system, sans-serif"
     fontSize: "13.5px"
     fontWeight: 400
-  label:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
-    fontSize: "11px"
-    fontWeight: 600
-    letterSpacing: "0.1em"
-  mono:
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace"
+  meta:
+    fontFamily: "Segoe UI, system-ui, -apple-system, sans-serif"
     fontSize: "13px"
+    fontWeight: 600
+  caption:
+    fontFamily: "Segoe UI, system-ui, -apple-system, sans-serif"
+    fontSize: "12px"
+    fontWeight: 400
+  label:
+    fontFamily: "Segoe UI, system-ui, -apple-system, sans-serif"
+    fontSize: "11px"
+    fontWeight: 700
+    letterSpacing: "0.14em"
+  mono:
+    fontFamily: "Consolas, ui-monospace, monospace"
+    fontSize: "12.5px"
+    fontWeight: 400
+  key:
+    fontFamily: "Consolas, ui-monospace, monospace"
+    fontSize: "14px"
+    fontWeight: 600
 rounded:
-  lamp: "2px"
-  xs: "4px"
-  sm: "6px"
-  md: "8px"
-  option: "9px"
-  banner: "10px"
-  lg: "12px"
-  full: "999px"
+  pip: "2px"
+  xs: "3px"
+  sm: "4px"
+  md: "6px"
+  round: "50%"
 spacing:
-  xs: "4px"
-  sm: "8px"
+  xs: "6px"
+  sm: "10px"
   md: "14px"
-  lg: "20px"
-  xl: "26px"
+  lg: "24px"
+  xl: "40px"
 components:
   panel:
-    backgroundColor: "{colors.console-slate}"
-    rounded: "{rounded.lg}"
-    padding: "12px 16px"
+    backgroundColor: "{colors.worklight-panel}"
+    textColor: "{colors.script-paper}"
+    rounded: "{rounded.md}"
+    padding: "14px 16px"
   card:
-    backgroundColor: "{colors.console-slate}"
-    rounded: "{rounded.lg}"
-    padding: "20px 22px"
-  button-primary:
-    backgroundColor: "{colors.runway-amber}"
-    textColor: "#111111"
+    backgroundColor: "{colors.worklight-panel}"
+    textColor: "{colors.script-paper}"
     rounded: "{rounded.md}"
-    padding: "8px 15px"
-  button-ghost:
-    textColor: "{colors.instrument-grey}"
-    rounded: "{rounded.md}"
-    padding: "8px 15px"
+    padding: "18px 24px"
   option:
-    textColor: "{colors.screen-white}"
-    rounded: "{rounded.option}"
-    padding: "10px 13px"
-  option-recommended:
-    backgroundColor: "{colors.amber-wash}"
-    rounded: "{rounded.option}"
-    padding: "10px 13px"
-  agent-badge:
-    backgroundColor: "{colors.graphite-rule}"
-    textColor: "{colors.screen-white}"
+    backgroundColor: "{colors.well-blue}"
+    textColor: "{colors.script-paper}"
     rounded: "{rounded.sm}"
-    padding: "3px 9px"
-  queue-pill:
-    backgroundColor: "{colors.console-slate}"
-    textColor: "{colors.screen-white}"
-    rounded: "{rounded.full}"
+    padding: "9px 12px"
+  button-go:
+    backgroundColor: "{colors.go-green}"
+    textColor: "{colors.blackout}"
+    rounded: "{rounded.sm}"
+    padding: "8px 16px"
+  button-send:
+    backgroundColor: "{colors.script-paper}"
+    textColor: "{colors.blackout}"
+    rounded: "{rounded.sm}"
+    padding: "8px 16px"
+  button-ghost:
+    textColor: "{colors.script-paper}"
+    rounded: "{rounded.sm}"
+    padding: "7px 15px"
+  test-answer:
+    textColor: "{colors.script-paper}"
+    rounded: "{rounded.sm}"
+    padding: "2px 10px"
+  test-answer-ok:
+    textColor: "{colors.go-green}"
+    rounded: "{rounded.sm}"
+    padding: "2px 10px"
+  test-answer-ko:
+    textColor: "{colors.red-ink}"
+    rounded: "{rounded.sm}"
     padding: "2px 10px"
   textarea:
-    backgroundColor: "{colors.tower-night}"
-    textColor: "{colors.screen-white}"
-    rounded: "{rounded.md}"
-    padding: "10px"
+    backgroundColor: "{colors.well-blue}"
+    textColor: "{colors.script-paper}"
+    rounded: "{rounded.sm}"
+    padding: "10px 12px"
+  code-well:
+    backgroundColor: "{colors.well-blue}"
+    textColor: "{colors.script-paper}"
+    typography: "{typography.mono}"
+    rounded: "{rounded.sm}"
+    padding: "10px 12px"
+  cue-light:
+    backgroundColor: "{colors.go-green}"
+    rounded: "{rounded.round}"
+    size: "14px"
 ---
 
 # Design System: control-room
 
 <!-- impeccable:design-map -->
 Name: control-room
-Colors: primary: runway-amber #e0a84f; tertiary: clearance-green #6cc28b; neutral: tower-night #111214; primary: amber-wash #2b2418; tertiary: hold-red #e0645b; tertiary: radar-blue #5b8def (+4 more in the sidecar)
-Fonts: ui-sans-serif (headline, title, body, body-dense, label); ui-monospace (mono)
-Spacing: xs 4px, sm 8px, md 14px, lg 20px, xl 26px
-Radius: xs 4px, sm 6px, md 8px, option 9px, banner 10px, lg 12px, full 999px
-North Star: "La tour de contrôle"
+Colors: primary: go-green #35d07f; secondary: standby-amber #f2a93b; tertiary: stop-red #ff4d42; neutral: blackout #0c0d10; secondary: amber-ink #f2a93b; tertiary: red-ink #ff7a70 (+7 more in the sidecar)
+Fonts: Segoe UI (headline, body, body-dense, meta, caption, label); Consolas (mono, key)
+Spacing: xs 6px, sm 10px, md 14px, lg 24px, xl 40px
+Radius: pip 2px, xs 3px, sm 4px, md 6px, round 50%
+North Star: "La régie"
 Rules:
-- The Lamp Rule. In the session strip, colour means "waits on you": an amber square is your decision, a red square an approval blocking a session; living sessions stay neutral round lamps (grey working, hollow idle, green done). Elsewhere red only marks Deny and breakage, green clears, blue informs. Shape and the state word always double the colour.
-- The Token-Only Rule. Every color comes from the ten `:root` custom properties, redefined once for light mode.
-- The One Voice Rule. Only the card summary is large.
-- The Still Column Rule. Nothing re-renders under the pointer or the focus. Nothing sits above the card; a card gone unanswered stays as a tombstone until "Continuer".
-- The No-Shadow Rule. No drop shadows.
+- The Fixed Jobs Rule. Green is go / OK / done and progress; amber is your decision and the recommendation; red is approval and breakage; blue is the away summary and nothing else.
+- The Ink Rule. Coloured text on a panel uses the ink tokens (Amber Ink, Red Ink); the fill tokens are for borders, dots, bars and filled buttons.
+- The Token-Only Rule. Every colour comes from the `:root` custom properties.
+- The One Loud Line Rule. Only the card summary is large.
+- The Caption Not Eyebrow Rule. Tracked caps name a panel or sit inline beside content (Proposition, recommandé); nothing sits in caps above a title.
+- The Tabular Rule. Times, counts and ratios that update in place use `tabular-nums`.
+- The Priority Order Rule. The page order is the user's order of importance: decision, conversation, tests (OK / Pas OK / Clarifier), plans in progress, what to build next, connected sessions last and pinned.
+- The Still Page Rule. Nothing re-renders under the pointer or the reading eye.
+- The No-Shadow Rule. No drop shadows, glows or blur.
+- The Cue Light Rule. The lamp beside the title tells whether the keys answer: off while arming, green when live, red when the server is lost.
+- The Drawn Icon Rule. Icons are authored inline SVG on a 16x16 grid, 1.5 stroke, round caps, `currentColor`, 12px rendered; chevrons are CSS-drawn.
 Don't:
-- Don't add drop shadows or elevation; separate by tone and 1px borders.
-- Don't animate, auto-scroll or reflow content the user may be reading; the card and the hovered column hold still.
-- Don't add "new" badges or highlight outlines to announce changes; the away banner is the only catch-up.
-Do:
-- Do take every color from the ten `:root` tokens and their light-mode redefinition; derive tints with `color-mix()`.
-- Do keep colour for what waits on you: amber square = your decision, red square = blocked on your approval; everything else in the strip stays neutral.
-- Do print the keyboard shortcut on the control it triggers (key caps, "(N)", "↵"); the hint line only carries what no control shows.
-- Do use `tabular-nums` for any time, count or ratio that updates in place.
-- Do keep section captions at 11px uppercase grey so the card summary stays the only loud text.
+- Don't add drop shadows, glows or elevation; separate by tone and 1px rails.
+- Don't re-render, replace, reflow or auto-scroll anything under the pointer or the reading eye; a vanished card becomes a tombstone, hovered columns freeze.
+- Don't put a caps eyebrow above a title.
+- Don't use a Unicode glyph as an icon; draw it in SVG.
+- Don't add a light theme or "new" badges; the away banner is the only catch-up.
+- Don't move a block above the decision card or out of the priority order.
 Full: .impeccable/design-full.md (read a section when you need its detail)
