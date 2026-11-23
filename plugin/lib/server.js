@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const cards = require('./cards');
+const conversation = require('./conversation');
 const { isClient, isPage, same } = require('./auth');
 const { appendHistory, readHistory } = require('./store');
 
@@ -95,7 +96,7 @@ function createServer({ pageSecret, bootstrapKey, clientSecret, deliver, state =
       if (req.method === 'GET' && url.pathname === '/api/state') {
         if (!page(false)) return send(res, 403, 'Interdit.');
         expireStaleApprovals();
-        return send(res, 200, { pending: cards.pendingCards(), cancelled: cards.recentCancelled(), recent: readHistory(30), sessions: [], right: { board: { error: null }, tests: [], plans: [], todos: [] }, events: [], ...state() });
+        return send(res, 200, { pending: cards.pendingCards(), cancelled: cards.recentCancelled(), recent: readHistory(30), conversation: conversation.readConversation(), sessions: [], right: { board: { error: null }, tests: [], plans: [], todos: [] }, events: [], ...state() });
       }
 
       if (req.method === 'POST' && url.pathname === '/api/answer') {
@@ -117,7 +118,11 @@ function createServer({ pageSecret, bootstrapKey, clientSecret, deliver, state =
 
       if (req.method === 'POST' && url.pathname === '/api/cards') {
         if (!client()) return send(res, 403, 'Interdit.');
-        const card = cards.createCard(await readBody(req));
+        const body = await readBody(req);
+        // Une réponse de l'orchestratrice va dans le fil de discussion : la place de la carte est réservée aux
+        // décisions et aux approbations.
+        if (body && body.kind === 'reply') return send(res, 200, { id: conversation.fromReplyCard(body).id });
+        const card = cards.createCard(body);
         return send(res, 200, { id: card.id });
       }
 

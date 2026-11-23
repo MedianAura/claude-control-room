@@ -44,18 +44,19 @@ test('queue_decision creates a card the page can see', async () => {
   assert.equal(s.json.pending[0].summary, 'Retrait ?');
 });
 
-test('reply makes a read-only card', async () => {
+const conversation = async () => (await request(t.port, 'GET', '/api/state', { headers: { cookie: `cr_page=${t.pageSecret}` } })).json.conversation;
+
+test('reply posts to the conversation thread, not to the cards', async () => {
   await mcp.call('reply', { agent: 'Orchestratrice', text: 'Je confie la vitesse en donjon à bd.' });
-  const c = pendingCards()[0];
-  assert.equal(c.kind, 'reply');
-  assert.equal(c.summary, 'Je confie la vitesse en donjon à bd.');
+  assert.deepEqual(pendingCards(), []);
+  const m = (await conversation()).at(-1);
+  assert.equal(m.by, 'orchestrator');
+  assert.equal(m.text, 'Je confie la vitesse en donjon à bd.');
 });
 
-test('a multi-line reply keeps its first line as title and the rest as body', async () => {
+test('a multi-line reply keeps every line, title first', async () => {
   await mcp.call('reply', { text: 'Build lancé.\n- b2 compile\n- redémarrage après' });
-  const c = pendingCards()[0];
-  assert.equal(c.summary, 'Build lancé.');
-  assert.match(c.recap, /b2 compile/);
+  assert.equal((await conversation()).at(-1).text, 'Build lancé.\n- b2 compile\n- redémarrage après');
 });
 
 test('list_pending and cancel_decision manage the orchestrator cards', async () => {

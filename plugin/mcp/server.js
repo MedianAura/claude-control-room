@@ -27,7 +27,7 @@ const TOOLS = [
   },
   {
     name: 'reply',
-    description: "Répond à un message libre de l'utilisateur sous forme de carte à lire (rien ne défile). Utilise-le au lieu d'écrire ta réponse dans le terminal.",
+    description: "Écrit dans le fil de discussion de la page (sous la carte de décision), en réponse à l'utilisateur ou pour un point d'étape. Utilise-le au lieu d'écrire ta réponse dans le terminal ; l'utilisateur te répond par un message.",
     inputSchema: { type: 'object', required: ['text'], properties: { agent: { type: 'string', description: 'Défaut : Orchestratrice.' }, summary: { type: 'string', description: 'Titre court (défaut : première ligne).' }, text: { type: 'string' } } },
   },
   {

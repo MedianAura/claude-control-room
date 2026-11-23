@@ -60,20 +60,14 @@ test('#4 a capture far over the limit gets 413, not a reset connection', async (
   assert.equal(r.status, 413);
 });
 
-test('#5 clicking Lu on a reply card does not wake the orchestrator', async () => {
+// #5 (réponses lues sans réveiller l'orchestratrice) : les réponses vont désormais dans le fil de discussion,
+// couvert par conversation.test.js ; on y répond par un message, qui, lui, la réveille.
+test('#5 an error card read with Lu does not wake the orchestrator', async () => {
   dir = tempStateDir('cr-review-');
   t = await startTestServer(); // collecteur t.delivered : toute livraison s'y voit
-  const id = await newCard({ kind: 'reply', agent: 'Orchestratrice', summary: 'Build lancé.' });
+  const id = await newCard({ kind: 'error', agent: 'control-room', summary: 'Impossible de traiter ce test' });
   assert.equal((await answer(id, 'read')).status, 200);
   assert.deepEqual(t.delivered, []);
-});
-
-test('#5 a reply card answered with a note does reach the orchestrator', async () => {
-  await boot();
-  await claimAs(t, 'A');
-  const id = await newCard({ kind: 'reply', agent: 'Orchestratrice', summary: 'Build lancé.' });
-  await answer(id, 'note', 'relance-le après le souper');
-  assert.match(delivery.pendingFor()[0].text, /relance-le après le souper/);
 });
 
 test('#6 answers and approvals appear in the history, newest first', async () => {

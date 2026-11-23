@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { stateDir, addEvent } = require('./store');
 const cards = require('./cards');
+const { appendMessage } = require('./conversation');
 
 const MAX_IMAGE = 10 * 1024 * 1024;
 const MAX_IMAGES = 5;
@@ -32,6 +33,7 @@ async function handleMessage(req, res, url, { readBody, send, deliver }) {
   const shots = files.length === 1 ? `\nCapture : ${files[0]}`
     : files.length ? `\nCaptures :\n${files.map(f => `- ${f}`).join('\n')}` : '';
   await deliver(`[control-room] Message de l'utilisateur : ${text.trim()}${shots}`);
+  appendMessage({ by: 'user', text: text.trim(), captures: files.length });
   const what = files.length > 1 ? `message et ${files.length} captures envoyés` : files.length ? 'message et capture envoyés' : 'message envoyé';
   addEvent(`${what} à l'orchestratrice`);
   return send(res, 200, { ok: true });
