@@ -48,8 +48,12 @@
   .banner .x { all: unset; cursor: pointer; margin-left: auto; color: var(--muted); }
 
   /* File et carte. */
-  .queue { color: var(--muted); font-size: 13px; display: flex; gap: 8px; align-items: baseline; }
-  .queue b { color: var(--accent); }
+  .queue { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .queue:empty { display: none; }
+  .queue .pill { max-width: 26ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 2px 10px;
+    border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--text); }
+  .queue .pill.urgent { border-color: var(--accent); }
+  .queue .pill.approval { border-color: var(--ko); }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
   .card.k-approval { border-color: var(--ko); }
   .agent { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); background: var(--accent-bg); padding: 3px 9px; border-radius: 6px; }
@@ -146,7 +150,7 @@ async function post(url, body) {
 }
 
 let state = { pending: [], recent: [], sessions: [], right: { tests: [], plans: [], todos: [] }, events: [], alerts: [] };
-let currentId = null, noteOpen = false, pendingChoice = null, answeredTotal = 0;
+let currentId = null, noteOpen = false, pendingChoice = null;
 // Cartes répondues depuis cette page : masquées dès le clic, même si un /api/state parti avant la réponse
 // les liste encore. Retirées du Set seulement si l'envoi échoue (la carte revient).
 const answered = new Set();
@@ -203,13 +207,16 @@ function renderCard() {
   $('#noteBtn').onclick = toggleNote;
 }
 
+// Pastilles : ce qui vient après la carte affichée, dans l'ordre de passage. Pas de compteur cumulé.
+const QUEUE_PILLS = 5;
 function renderQueue() {
   const n = state.pending.length;
   document.title = n ? `(${n}) control-room` : 'control-room';
-  if (!n) { $('#queue').innerHTML = ''; return; }
   const others = state.pending.filter(c => c.id !== currentId);
-  $('#queue').innerHTML = `À trancher : <b>${answeredTotal + 1}/${answeredTotal + n}</b>` +
-    (others.length ? ` · ensuite : ${others.slice(0, 3).map(x => `<b>${esc(x.agent)}</b>`).join(', ')}${others.length > 3 ? '…' : ''}` : '');
+  if (!others.length) { $('#queue').innerHTML = ''; return; }
+  const pill = c => `<span class="pill ${c.kind === 'approval' ? 'approval' : c.urgent ? 'urgent' : ''}" title="${esc(c.agent)} — ${esc(c.summary)}">${esc(c.summary || c.agent)}</span>`;
+  $('#queue').innerHTML = 'Ensuite' + others.slice(0, QUEUE_PILLS).map(pill).join('') +
+    (others.length > QUEUE_PILLS ? `<span>+${others.length - QUEUE_PILLS}</span>` : '');
 }
 
 let shownNotice = null;
@@ -234,8 +241,7 @@ async function answer(choice) {
   state.pending = state.pending.filter(x => x.id !== id);
   currentId = null; renderCard(); renderQueue(); renderNotice();
   const r = await post('/api/answer', { id, choice, note });
-  if (r.status === 200) answeredTotal += 1;
-  else if (r.status !== 409 && r.status !== 404) {
+  if (r.status !== 200 && r.status !== 409 && r.status !== 404) {
     answered.delete(id);
     notice = `Réponse à « ${esc(c ? c.summary : id)} » non envoyée (${r.status ? `erreur ${r.status}` : 'serveur injoignable'}) : la carte revient dans la file.`;
     // Remise locale : si le serveur est tombé, load() échoue aussi et ne la ramènerait pas.
