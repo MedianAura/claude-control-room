@@ -19,7 +19,7 @@ function rightState() {
   if (!m) return { tests: [], plans: [], todos: [] };
   return {
     tests: m.tests.filter(x => !x.done).map(({ text, parent }) => ({ text, parent })),
-    plans: activePlans().map(p => ({ name: p.name, label: p.label || p.name, ...planOutline(p.file || path.join(p.dir, 'plan.md')) })),
+    plans: activePlans().filter(p => p && (p.file || p.dir)).map(p => ({ name: p.name, label: p.label || p.name, ...planOutline(p.file || path.join(p.dir, 'plan.md')) })),
     todos: m.todos.filter(x => !x.done).map(({ name, planDir }) => ({ name, planDir })),
   };
 }

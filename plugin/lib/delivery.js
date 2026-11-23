@@ -177,7 +177,11 @@ function createDelivery({ ackTimeoutMs = 120000, foreignTtlMs = 10 * 60000 } = {
       return send(res, ack(id) ? 200 : 404, { ok: true });
     } },
     { method: 'POST', match: p => p === '/api/plans', auth: 'client', handle: async (req, res, url, { readBody, send }) => {
-      setPlan(await readBody(req));
+      const b = await readBody(req);
+      const has = (v) => typeof v === 'string' && v.trim();
+      if (!b || typeof b !== 'object' || !has(b.name)) return send(res, 400, { error: 'name requis' });
+      if (b.state !== 'archived' && !has(b.dir) && !has(b.file)) return send(res, 400, { error: 'dir ou file requis pour un plan actif' });
+      setPlan(b);
       return send(res, 200, { ok: true });
     } },
   ];

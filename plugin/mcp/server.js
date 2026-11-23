@@ -54,14 +54,14 @@ const TOOLS = [
     plan: { type: ['string', 'null'] }, task: { type: ['string', 'null'], description: 'Tests seulement.' }, group: { type: ['string', 'null'], description: 'TODO seulement.' },
     origin: { type: ['object', 'null'], description: 'Tests seulement.', properties: { file: { type: 'string' }, step: { type: 'string' } } },
   } } },
-  { name: 'close_todo', description: "Ferme un TODO : fait ou abandonné. Les tests ne se ferment pas ici : seul l'utilisateur les coche." + BOARD_NOTE, inputSchema: { type: 'object', required: ['id', 'result'], properties: {
-    id: ID, result: { type: 'string', enum: ['done', 'dropped'], description: 'done = fait, dropped = abandonné.' }, note: { type: 'string', description: 'Pourquoi, si utile.' },
+  { name: 'close_todo', description: "Ferme un TODO : fait ou abandonné. Les tests ne se ferment pas ici : seul l'utilisateur les coche." + BOARD_NOTE, inputSchema: { type: 'object', required: ['id', 'state'], properties: {
+    id: ID, state: { type: 'string', enum: ['done', 'dropped'], description: 'done = fait, dropped = abandonné.' }, note: { type: 'string', description: 'Pourquoi, si utile.' },
   } } },
   { name: 'add_note', description: "Ajoute une note datée à un test ou un TODO." + BOARD_NOTE, inputSchema: { type: 'object', required: ['id', 'text'], properties: { id: ID, text: { type: 'string' } } } },
   { name: 'remove_item', description: "Retire un test ou un TODO du tableau (il reste dans le fichier, état removed) avec la raison." + BOARD_NOTE, inputSchema: { type: 'object', required: ['id', 'reason'], properties: { id: ID, reason: { type: 'string' } } } },
   { name: 'reopen_item', description: "Rouvre un test coché (par erreur) ou un TODO fermé, avec la raison." + BOARD_NOTE, inputSchema: { type: 'object', required: ['id', 'reason'], properties: { id: ID, reason: { type: 'string' } } } },
   { name: 'list_board', description: "Liste les tests et TODO du tableau, avec leurs notes." + BOARD_NOTE, inputSchema: { type: 'object', properties: {
-    kind: { type: 'string', enum: ['test', 'todo'] }, status: { type: 'string', enum: ['open', 'ok', 'done', 'dropped', 'removed'], description: 'Filtre de lecture.' },
+    kind: { type: 'string', enum: ['test', 'todo'] }, state: { type: 'string', enum: ['open', 'ok', 'done', 'dropped', 'removed'], description: 'Filtre de lecture.' },
   } } },
   { name: 'cancel_decision', description: "Retire une de tes cartes en attente devenue inutile. La page affiche la raison à l'utilisateur, qui a peut-être la carte sous les yeux.", inputSchema: { type: 'object', required: ['id', 'reason'], properties: {
     id: { type: 'string' },
@@ -109,12 +109,12 @@ async function callTool(name, a = {}) {
       return text({ id: r.id });
     }
     case 'update_item': { const { id, ...fields } = a; return text(await http('POST', `/api/board/items/${encodeURIComponent(id || '')}`, fields)); }
-    case 'close_todo': return text(await http('POST', `/api/board/items/${encodeURIComponent(a.id || '')}/close`, { state: a.result, note: a.note }));
+    case 'close_todo': return text(await http('POST', `/api/board/items/${encodeURIComponent(a.id || '')}/close`, { state: a.state, note: a.note }));
     case 'add_note': return text(await http('POST', `/api/board/items/${encodeURIComponent(a.id || '')}/note`, { text: a.text }));
     case 'remove_item': return text(await http('POST', `/api/board/items/${encodeURIComponent(a.id || '')}/remove`, { reason: a.reason }));
     case 'reopen_item': return text(await http('POST', `/api/board/items/${encodeURIComponent(a.id || '')}/reopen`, { reason: a.reason }));
     case 'list_board': {
-      const q = new URLSearchParams(Object.entries({ kind: a.kind, state: a.status }).filter(([, v]) => v));
+      const q = new URLSearchParams(Object.entries({ kind: a.kind, state: a.state }).filter(([, v]) => v));
       return text(await http('GET', `/api/board${q.size ? `?${q}` : ''}`));
     }
     case 'cancel_decision': await http('POST', `/api/cards/${encodeURIComponent(a.id)}/cancel`, { reason: a.reason || '' }); return text('Retirée.');

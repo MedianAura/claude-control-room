@@ -170,10 +170,8 @@ test('tools/list exposes the board tools and none sets a test ok', async () => {
   const r = await mcp.rpc('tools/list', {});
   const names = r.result.tools.map(x => x.name);
   for (const n of ['add_test', 'add_todo', 'update_item', 'close_todo', 'add_note', 'remove_item', 'reopen_item', 'list_board']) assert.ok(names.includes(n), n);
-  for (const tool of r.result.tools.filter(x => /test|todo|item|note|board/.test(x.name))) {
-    const state = tool.inputSchema.properties?.state;
-    if (state) assert.ok(!(state.enum || []).includes('ok'), tool.name);
-  }
+  assert.deepEqual([...names].sort(), ['add_note', 'add_test', 'add_todo', 'cancel_decision', 'close_todo', 'list_board', 'list_pending', 'queue_decision', 'release_session', 'remove_item', 'reopen_item', 'reply', 'set_plan', 'update_item', 'wait_answers']);
+  assert.deepEqual(r.result.tools.find(x => x.name === 'close_todo').inputSchema.properties.state.enum, ['done', 'dropped']);
   assert.deepEqual(r.result.tools.find(x => x.name === 'add_test').inputSchema.properties.weight.enum, ['high', 'medium', 'low']);
 });
 

@@ -206,6 +206,21 @@ test('claim stores the board path', async () => {
   assert.equal(readJson(path.join(dir, 'orchestrator.json')).board, 'F:/p/.control-room/board.json');
 });
 
+test('set_plan without dir or file is refused and active-plans.json stays untouched', async () => {
+  const r = await request(t.port, 'POST', '/api/plans', { body: { name: 'x', label: 'X', state: 'active' }, headers: clientHeaders(t) });
+  assert.equal(r.status, 400);
+  assert.equal(readJson(path.join(dir, 'active-plans.json')), null);
+});
+
+test('rightState skips an active plan entry that has neither dir nor file', () => {
+  const master = path.join(dir, 'master.md');
+  require('fs').writeFileSync(master, '# Plan maître');
+  require('fs').writeFileSync(path.join(dir, 'orchestrator.json'), JSON.stringify({ master }));
+  require('fs').writeFileSync(path.join(dir, 'active-plans.json'), JSON.stringify([{ name: 'bad' }]));
+  const right = require('../plugin/lib/right');
+  assert.doesNotThrow(() => right.rightState());
+});
+
 test('set_plan keeps a plan given as a file', async () => {
   await request(t.port, 'POST', '/api/plans', { body: { name: 'big', file: 'F:/p/plans/big.md', label: 'B', state: 'active' }, headers: clientHeaders(t) });
   assert.deepEqual(readJson(path.join(dir, 'active-plans.json')), [{ name: 'big', file: 'F:/p/plans/big.md', label: 'B' }]);
