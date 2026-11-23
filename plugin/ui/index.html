@@ -88,7 +88,8 @@
   #alerts:empty, #away:empty { display: none; }
   #view > .banner { margin-bottom: 10px; }
   #alerts { display: grid; gap: 8px; }
-  .banner.notice { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+  /* Réponse non envoyée : une panne, donc rouge ; bord teinté (pas plein) pour rester sous l'alerte du serveur. */
+  .banner.notice { background: color-mix(in srgb, var(--ko) 10%, var(--panel)); border: 1px solid color-mix(in srgb, var(--ko) 45%, transparent); }
   .banner .x { all: unset; cursor: pointer; margin-left: auto; color: var(--muted); }
 
   /* File et carte. */
@@ -113,6 +114,8 @@
   .sent b { color: var(--text); font-weight: 600; }
   .agent { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text); background: color-mix(in srgb, var(--line) 70%, var(--panel)); padding: 3px 9px; border-radius: 6px; }
   .kind { margin-left: 6px; font-size: 12px; font-weight: 600; color: var(--ko); }
+  /* Urgent n'est ni un refus ni une panne : ambre, comme sa pastille dans « Ensuite » (règle des voyants). */
+  .kind.urgent { color: var(--accent-ink); }
   .summary { font-size: 19px; font-weight: 600; line-height: 1.35; margin: 12px 0 4px; }
   .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 18px 0 6px; }
   .recap ul { margin: 4px 0; padding-left: 20px; }
@@ -200,7 +203,7 @@
          de lecture (cartes suivantes, alertes) se range dessous ; l'alerte est en plus signalée dans l'en-tête du
          bandeau. -->
     <div id="away"></div>
-    <div id="view" aria-live="polite"></div>
+    <div id="view" aria-live="polite"><div class="empty"><b>En attente de control-room</b>La page se remplit dès que le serveur répond.</div></div>
     <div class="queue" id="queue"></div>
     <div id="alerts"></div>
     <div class="composer">
@@ -314,7 +317,7 @@ function renderCard() {
       <span><span>${esc(o.label)}</span>${next.recommended === o.id ? '<span class="tag">recommandé</span>' : ''}
       ${o.detail ? `<div class="d">${esc(o.detail)}</div>` : ''}</span>
     </button>`).join('');
-  const kindTag = next.kind === 'approval' ? '<span class="kind">● approbation</span>' : next.kind === 'error' ? '<span class="kind">● erreur</span>' : next.urgent ? '<span class="kind">● urgent</span>' : '';
+  const kindTag = next.kind === 'approval' ? '<span class="kind">● approbation</span>' : next.kind === 'error' ? '<span class="kind">● erreur</span>' : next.urgent ? '<span class="kind urgent">● urgent</span>' : '';
   const cmd = next.tool && next.tool.input && next.tool.input.command;
   const toolName = next.tool && next.tool.name ? ` ${esc(next.tool.name)}` : '';
   const tool = next.tool ? `<div class="label">${cmd ? 'Commande' : 'Outil'}${toolName}</div><pre class="cmd">${esc(cmd || JSON.stringify(next.tool.input, null, 2))}</pre>` : '';
@@ -542,7 +545,7 @@ function markBack() {
     if (!ev.length) return;
     const mins = Math.round(away / 60000);
     const text = ev.map(e => esc(e.text)).join(' · ');
-    $('#away').innerHTML = `<div class="banner away"><b>Pendant ton absence (${mins} min) :</b> <span>${text}</span><button class="x" title="Fermer">✕</button></div>`;
+    $('#away').innerHTML = `<div class="banner away"><b>Pendant ton absence (${mins} min) :</b> <span>${text}</span><button class="x" title="Fermer" aria-label="Fermer le résumé">✕</button></div>`;
     $('#away .x').onclick = () => { $('#away').innerHTML = ''; };
   });
 }
@@ -567,7 +570,7 @@ let shots = [], shotMsg = '';
 function renderShots() {
   const el = $('#shot');
   el.style.display = shots.length || shotMsg ? 'block' : 'none';
-  el.innerHTML = shots.map((s, i) => !s ? '' : `<span class="thumb"><img src="${s}" alt=""><button class="x" data-i="${i}" title="Retirer">✕</button></span>`).join('')
+  el.innerHTML = shots.map((s, i) => !s ? '' : `<span class="thumb"><img src="${s}" alt=""><button class="x" data-i="${i}" title="Retirer" aria-label="Retirer la capture ${i + 1}">✕</button></span>`).join('')
     + (shots.length ? `<span>${shots.length} capture${shots.length > 1 ? 's' : ''} jointe${shots.length > 1 ? 's' : ''}</span>` : '')
     + (shotMsg ? `<div class="err">${esc(shotMsg)}</div>` : '');
   el.querySelectorAll('.x').forEach(b => b.onclick = () => { shots.splice(+b.dataset.i, 1); shotMsg = ''; renderShots(); });

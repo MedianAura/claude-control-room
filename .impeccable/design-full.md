@@ -139,11 +139,11 @@ Rejected by construction (see PRODUCT.md principles): anything that scrolls by i
 A near-black graphite base with a single runway amber and three signal lamps.
 
 ### Primary
-- **Runway Amber** (light theme `#b4741a`): the "your move" colour. It marks a session waiting for your decision (square lamp, row tint, state word), the recommended option and its tag, the proposition block's border, the primary button and urgent queue pills. Text on amber grounds uses Amber Ink (`--accent-ink`, light `#8a560c`).
+- **Runway Amber** (light theme `#b4741a`): the "your move" colour. It marks a session waiting for your decision (square lamp, row tint, state word), the recommended option and its tag, the proposition block's border, the primary button, urgent queue pills and the card's "● urgent" tag. Text on amber grounds uses Amber Ink (`--accent-ink`, light `#8a560c`).
 - **Amber Wash** (light `#fbf2e2`): the tinted ground behind amber content: recommended option, proposition block.
 
 ### Tertiary (signal lamps)
-- **Hold Red** (light `#c0453c`): blocked or broken. Session waiting for an approval (square lamp, row tint, state word), approval card border, header status line ("connexion perdue", "⚠ alerte"), approval queue pill, Deny option, alert banners, error text, the "approbation / erreur / urgent" kind tag. Text on red tints uses Red Ink (`--ko-ink`, light `#a5352d`).
+- **Hold Red** (light `#c0453c`): blocked or broken. Session waiting for an approval (square lamp, row tint, state word), approval card border, header status line ("connexion perdue", "⚠ alerte"), approval queue pill, Deny option, alert banners and the failed-send notice, error text, the "approbation / erreur" kind tag. Text on red tints uses Red Ink (`--ko-ink`, light `#a5352d`).
 - **Clearance Green** (light `#2f8a52`): cleared or done. Allow option, "done" session lamp, OK hover on a test.
 - **Radar Blue** (light `#2f63c9`): information only, the "while you were away" banner.
 
@@ -213,7 +213,7 @@ Softly rounded rectangles stepping down with size: 12px for panels, the card and
 
 ### Decision Card (signature)
 - Console Slate, 12px radius, 1px border (Hold Red for an approval), padding 20px 22px.
-- Top: neutral agent badge, then an optional red kind tag ("● approbation", "● erreur", "● urgent").
+- Top: neutral agent badge, then an optional kind tag: red for "● approbation" and "● erreur", Amber Ink for "● urgent" (same colour as its queue pill).
 - Headline summary, then captioned sections: the tool well ("Commande Bash", or "Outil <name>" for non-shell input; mono, capped at 10 lines with its own thin scroll so Allow / Deny stay next to it), Résumé (bullets), Options, Proposition.
 - **Options:** full-width rows, 9px radius, 1px border, a mono key cap column (26px) then label and grey detail. Hover/focus brightens the border to Instrument Grey. Recommended: amber border, Amber Wash ground, amber "recommandé" tag. Approval options: Allow has a green border, Deny a red one. **Picked** (Shift+digit, waiting for its note): Screen White border and an inverted key cap (Screen White ground, Tower Night digit), `aria-pressed`; the note placeholder names the option.
 - **Proposition:** Amber Wash ground with a full 1px amber border (accent at 55%), 8px radius. No one-sided rule.
@@ -229,7 +229,7 @@ Softly rounded rectangles stepping down with size: 12px for panels, the card and
 - "Ensuite" followed by up to five capsules (max 26ch, ellipsis), Console Slate with a Graphite Rule border; amber border if urgent, red if approval; "+N" for the rest.
 
 ### Banners
-- 10px radius, padding 9px 14px, close ✕ pushed right. Away = blue tint, alert = red tint with solid red border, notice = amber tint. The notice (an answer that failed to send) is rendered with the card, inside its slot, never inserted above a card being read.
+- 10px radius, padding 9px 14px, close ✕ pushed right. Away = blue tint, alert = red tint with solid red border, notice = red tint with a 45% red border (a breakage, quieter than the server alert). The notice (an answer that failed to send) is rendered with the card, inside its slot, never inserted above a card being read.
 
 ### Inputs / Fields
 - **Style:** Tower Night well, 1px Graphite Rule border, 8px radius, 10px padding, inherited font.
