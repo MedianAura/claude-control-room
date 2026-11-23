@@ -12,6 +12,8 @@ colors:
   clearance-green: "#6cc28b"
   hold-red: "#e0645b"
   radar-blue: "#5b8def"
+  amber-ink: "#e0a84f"
+  red-ink: "#f08a80"
 typography:
   headline:
     fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
@@ -40,6 +42,7 @@ typography:
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace"
     fontSize: "13px"
 rounded:
+  lamp: "2px"
   xs: "4px"
   sm: "6px"
   md: "8px"
@@ -80,8 +83,8 @@ components:
     rounded: "{rounded.option}"
     padding: "10px 13px"
   agent-badge:
-    backgroundColor: "{colors.amber-wash}"
-    textColor: "{colors.runway-amber}"
+    backgroundColor: "{colors.graphite-rule}"
+    textColor: "{colors.screen-white}"
     rounded: "{rounded.sm}"
     padding: "3px 9px"
   queue-pill:
@@ -106,7 +109,7 @@ Spacing: xs 4px, sm 8px, md 14px, lg 20px, xl 26px
 Radius: xs 4px, sm 6px, md 8px, option 9px, banner 10px, lg 12px, full 999px
 North Star: "La tour de contrôle"
 Rules:
-- The Lamp Rule. Red, green and blue are lamps with one meaning each (holds on you / cleared / for your information); they never decorate.
+- The Lamp Rule. In the session strip, colour means "waits on you": an amber square is your decision, a red square an approval blocking a session; living sessions stay neutral round lamps (grey working, hollow idle, green done). Elsewhere red only marks Deny and breakage, green clears, blue informs. Shape and the state word always double the colour.
 - The Token-Only Rule. Every color comes from the ten `:root` custom properties, redefined once for light mode.
 - The One Voice Rule. Only the card summary is large.
 - The Still Column Rule. Nothing re-renders under the pointer or the focus.
@@ -117,7 +120,7 @@ Don't:
 - Don't add "new" badges or highlight outlines to announce changes; the away banner is the only catch-up.
 Do:
 - Do take every color from the ten `:root` tokens and their light-mode redefinition; derive tints with `color-mix()`.
-- Do keep one meaning per lamp: red holds on the user, green clears, blue informs, amber is attention.
+- Do keep colour for what waits on you: amber square = your decision, red square = blocked on your approval; everything else in the strip stays neutral.
 - Do print the keyboard shortcut next to the control it triggers (key caps, "(N)", "↵", the hint line).
 - Do use `tabular-nums` for any time, count or ratio that updates in place.
 - Do keep section captions at 11px uppercase grey so the card summary stays the only loud text.

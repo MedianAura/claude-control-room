@@ -1,34 +1,215 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-22T22:13:15-05:00",
+  "generatedAt": "2026-11-23T03:49:50.991Z",
   "title": "Design System: control-room",
   "extensions": {
     "colorMeta": {
-      "tower-night": { "role": "neutral", "displayName": "Tower Night", "canonical": "oklch(18.2% 0.004 264)", "light": "#f5f4f1", "tonalRamp": ["#0b0b0c", "#242527", "#414244", "#606164", "#818285", "#a4a5a8", "#c8c9cb", "#eeeeef"] },
-      "console-slate": { "role": "neutral", "displayName": "Console Slate", "canonical": "oklch(22.6% 0.008 264)", "light": "#ffffff", "tonalRamp": ["#0a0b0d", "#232529", "#404247", "#5f6166", "#808287", "#a2a5aa", "#c7c9cd", "#eeeeef"] },
-      "graphite-rule": { "role": "neutral", "displayName": "Graphite Rule", "canonical": "oklch(29.7% 0.012 264)", "light": "#e3e1dc", "tonalRamp": ["#0a0b0d", "#23252a", "#3f4248", "#5e6168", "#7f828a", "#a1a5ad", "#c7c9ce", "#eeeef0"] },
-      "screen-white": { "role": "neutral", "displayName": "Screen White", "canonical": "oklch(92.9% 0.004 286)", "light": "#1c1c1e", "tonalRamp": ["#0b0b0c", "#252527", "#424244", "#616163", "#828285", "#a5a5a7", "#c9c9cb", "#eeeeef"] },
-      "instrument-grey": { "role": "neutral", "displayName": "Instrument Grey", "canonical": "oklch(69.3% 0.010 273)", "light": "#6b6b70", "tonalRamp": ["#0a0b0d", "#23252a", "#404248", "#5f6167", "#808289", "#a3a5ac", "#c7c9ce", "#eeeef0"] },
-      "runway-amber": { "role": "primary", "displayName": "Runway Amber", "canonical": "oklch(76.7% 0.124 76)", "light": "#b4741a", "tonalRamp": ["#130900", "#342101", "#593b02", "#825803", "#ac770c", "#d19a3f", "#e8c38d", "#f8eddd"] },
-      "amber-wash": { "role": "primary", "displayName": "Amber Wash", "canonical": "oklch(26.4% 0.023 80)", "light": "#fbf2e2", "tonalRamp": ["#0d0b07", "#2a241a", "#484134", "#686052", "#8a8173", "#ada495", "#cec8be", "#f0eeeb"] },
-      "clearance-green": { "role": "tertiary", "displayName": "Clearance Green", "canonical": "oklch(74.5% 0.116 154)", "light": "#2f8a52", "tonalRamp": ["#001005", "#002e16", "#01502a", "#137442", "#3f9662", "#64ba84", "#a2d8b3", "#e3f3e8"] },
-      "hold-red": { "role": "tertiary", "displayName": "Hold Red", "canonical": "oklch(65.4% 0.157 26)", "light": "#c0453c", "tonalRamp": ["#1f0001", "#4d0104", "#80020c", "#a8302d", "#d0554d", "#f8796f", "#feb3aa", "#fee9e6"] },
-      "radar-blue": { "role": "tertiary", "displayName": "Radar Blue", "canonical": "oklch(65.5% 0.156 262)", "light": "#2f63c9", "tonalRamp": ["#010825", "#001b61", "#0d3893", "#2d5bb8", "#4d7edf", "#73a3ff", "#adcaff", "#e6efff"] }
+      "tower-night": {
+        "role": "neutral",
+        "displayName": "Tower Night",
+        "canonical": "oklch(18.2% 0.004 264)",
+        "light": "#f5f4f1",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#242527",
+          "#414244",
+          "#606164",
+          "#818285",
+          "#a4a5a8",
+          "#c8c9cb",
+          "#eeeeef"
+        ]
+      },
+      "console-slate": {
+        "role": "neutral",
+        "displayName": "Console Slate",
+        "canonical": "oklch(22.6% 0.008 264)",
+        "light": "#ffffff",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232529",
+          "#404247",
+          "#5f6166",
+          "#808287",
+          "#a2a5aa",
+          "#c7c9cd",
+          "#eeeeef"
+        ]
+      },
+      "graphite-rule": {
+        "role": "neutral",
+        "displayName": "Graphite Rule",
+        "canonical": "oklch(29.7% 0.012 264)",
+        "light": "#e3e1dc",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#23252a",
+          "#3f4248",
+          "#5e6168",
+          "#7f828a",
+          "#a1a5ad",
+          "#c7c9ce",
+          "#eeeef0"
+        ]
+      },
+      "screen-white": {
+        "role": "neutral",
+        "displayName": "Screen White",
+        "canonical": "oklch(92.9% 0.004 286)",
+        "light": "#1c1c1e",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#252527",
+          "#424244",
+          "#616163",
+          "#828285",
+          "#a5a5a7",
+          "#c9c9cb",
+          "#eeeeef"
+        ]
+      },
+      "instrument-grey": {
+        "role": "neutral",
+        "displayName": "Instrument Grey",
+        "canonical": "oklch(69.3% 0.010 273)",
+        "light": "#6b6b70",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#23252a",
+          "#404248",
+          "#5f6167",
+          "#808289",
+          "#a3a5ac",
+          "#c7c9ce",
+          "#eeeef0"
+        ]
+      },
+      "runway-amber": {
+        "role": "primary",
+        "displayName": "Runway Amber",
+        "canonical": "oklch(76.7% 0.124 76)",
+        "light": "#b4741a",
+        "tonalRamp": [
+          "#130900",
+          "#342101",
+          "#593b02",
+          "#825803",
+          "#ac770c",
+          "#d19a3f",
+          "#e8c38d",
+          "#f8eddd"
+        ]
+      },
+      "amber-wash": {
+        "role": "primary",
+        "displayName": "Amber Wash",
+        "canonical": "oklch(26.4% 0.023 80)",
+        "light": "#fbf2e2",
+        "tonalRamp": [
+          "#0d0b07",
+          "#2a241a",
+          "#484134",
+          "#686052",
+          "#8a8173",
+          "#ada495",
+          "#cec8be",
+          "#f0eeeb"
+        ]
+      },
+      "clearance-green": {
+        "role": "tertiary",
+        "displayName": "Clearance Green",
+        "canonical": "oklch(74.5% 0.116 154)",
+        "light": "#2f8a52",
+        "tonalRamp": [
+          "#001005",
+          "#002e16",
+          "#01502a",
+          "#137442",
+          "#3f9662",
+          "#64ba84",
+          "#a2d8b3",
+          "#e3f3e8"
+        ]
+      },
+      "hold-red": {
+        "role": "tertiary",
+        "displayName": "Hold Red",
+        "canonical": "oklch(65.4% 0.157 26)",
+        "light": "#c0453c",
+        "tonalRamp": [
+          "#1f0001",
+          "#4d0104",
+          "#80020c",
+          "#a8302d",
+          "#d0554d",
+          "#f8796f",
+          "#feb3aa",
+          "#fee9e6"
+        ]
+      },
+      "radar-blue": {
+        "role": "tertiary",
+        "displayName": "Radar Blue",
+        "canonical": "oklch(65.5% 0.156 262)",
+        "light": "#2f63c9",
+        "tonalRamp": [
+          "#010825",
+          "#001b61",
+          "#0d3893",
+          "#2d5bb8",
+          "#4d7edf",
+          "#73a3ff",
+          "#adcaff",
+          "#e6efff"
+        ]
+      },
+      "amber-ink": {
+        "role": "primary",
+        "displayName": "Amber Ink",
+        "canonical": "#e0a84f",
+        "light": "#8a560c"
+      },
+      "red-ink": {
+        "role": "tertiary",
+        "displayName": "Red Ink",
+        "canonical": "#f08a80",
+        "light": "#a5352d"
+      }
     },
     "typographyMeta": {
-      "headline": { "displayName": "Headline", "purpose": "The decision card summary; one per screen." },
-      "title": { "displayName": "Title", "purpose": "Empty-state heading." },
-      "body": { "displayName": "Body", "purpose": "Card recap, options, composer." },
-      "body-dense": { "displayName": "Body dense", "purpose": "Session rows, right-column items, option details." },
-      "label": { "displayName": "Label", "purpose": "Uppercase grey captions for panels and card sections." },
-      "mono": { "displayName": "Mono", "purpose": "Commands, inline code, key caps." }
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The decision card summary; one per screen."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Empty-state heading."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Card recap, options, composer."
+      },
+      "body-dense": {
+        "displayName": "Body dense",
+        "purpose": "Session rows, right-column items, option details."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase grey captions for panels and card sections."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Commands, inline code, key caps."
+      }
     },
-    "shadows": [
-      { "name": "approval-halo", "value": "0 0 0 3px color-mix(in srgb, var(--ko) 30%, transparent)", "purpose": "Ring around the session lamp of a session waiting for an approval. A signal, not elevation." }
-    ],
+    "shadows": [],
     "motion": [],
     "breakpoints": [
-      { "name": "stack", "value": "980px" }
+      {
+        "name": "stack",
+        "value": "980px"
+      }
     ]
   },
   "components": [
@@ -62,15 +243,15 @@
       "refersTo": "card",
       "description": "One decision at a time: agent badge, headline summary, captioned sections, proposition.",
       "html": "<div class=\"ds-card\"><span class=\"ds-agent\">⚔️ Quick Up. · c9</span><div class=\"ds-summary\">Le palier « All to 80 » doit-il retirer seul les réactifs ?</div><div class=\"ds-label\">Proposition</div><div class=\"ds-prop\">2, garde le contrôle sur le coffre.</div></div>",
-      "css": ".ds-card { background: var(--panel, #1a1c20); border: 1px solid var(--line, #2a2d33); border-radius: 12px; padding: 20px 22px; color: var(--text, #e7e7ea); font: 15px/1.55 ui-sans-serif, system-ui, 'Segoe UI', sans-serif; } .ds-agent { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--accent, #e0a84f); background: var(--accent-bg, #2b2418); padding: 3px 9px; border-radius: 6px; } .ds-summary { font-size: 19px; font-weight: 600; line-height: 1.35; margin: 12px 0 4px; } .ds-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted, #9a9ca3); margin: 18px 0 6px; } .ds-prop { border-left: 3px solid var(--accent, #e0a84f); padding: 8px 14px; background: var(--accent-bg, #2b2418); border-radius: 0 8px 8px 0; }"
+      "css": ".ds-card { background: var(--panel, #1a1c20); border: 1px solid var(--line, #2a2d33); border-radius: 12px; padding: 20px 22px; color: var(--text, #e7e7ea); font: 15px/1.55 ui-sans-serif, system-ui, 'Segoe UI', sans-serif; } .ds-agent { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text, #e7e7ea); background: color-mix(in srgb, var(--line, #2a2d33) 70%, var(--panel, #1a1c20)); padding: 3px 9px; border-radius: 6px; } .ds-summary { font-size: 19px; font-weight: 600; line-height: 1.35; margin: 12px 0 4px; } .ds-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted, #9a9ca3); margin: 18px 0 6px; } .ds-prop { border-left: 3px solid var(--accent, #e0a84f); padding: 8px 14px; background: var(--accent-bg, #2b2418); border-radius: 0 8px 8px 0; }"
     },
     {
       "name": "Session Strip",
       "kind": "custom",
       "refersTo": "panel",
       "description": "One line per session, updated in place: lamp, label, activity, time.",
-      "html": "<div class=\"ds-sessions\"><div class=\"ds-row ds-working\"><span class=\"ds-dot\"></span><span class=\"ds-lab\">🔨 Builds · b2</span><span class=\"ds-act\">build n°3 en cours… 14 min</span><span class=\"ds-at\">17:37</span></div><div class=\"ds-row ds-approval\"><span class=\"ds-dot\"></span><span class=\"ds-lab\">⚔️ Quick Up. · c9</span><span class=\"ds-act\">attend ton approbation</span><span class=\"ds-at\">17:49</span></div></div>",
-      "css": ".ds-sessions { background: var(--panel, #1a1c20); border: 1px solid var(--line, #2a2d33); border-radius: 12px; padding: 12px 16px; color: var(--text, #e7e7ea); font: 13.5px ui-sans-serif, system-ui, 'Segoe UI', sans-serif; } .ds-row { display: grid; grid-template-columns: 12px minmax(120px, 190px) 1fr 46px; gap: 10px; align-items: center; padding: 4px 6px; border-radius: 6px; } .ds-row:nth-child(odd) { background: color-mix(in srgb, var(--line, #2a2d33) 35%, transparent); } .ds-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted, #9a9ca3); } .ds-working .ds-dot { background: var(--accent, #e0a84f); } .ds-approval .ds-dot { background: var(--ko, #e0645b); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ko, #e0645b) 30%, transparent); } .ds-lab { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-act { color: var(--muted, #9a9ca3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-at { color: var(--muted, #9a9ca3); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }"
+      "html": "<div class=\"ds-sessions\"><div class=\"ds-row ds-working\"><span class=\"ds-dot\"></span><span class=\"ds-lab\">🔨 Builds · b2</span><span class=\"ds-act\">build n°3 en cours… 14 min</span><span class=\"ds-at\">17:37</span></div><div class=\"ds-row ds-approval\"><span class=\"ds-dot\"></span><span class=\"ds-lab\">⚔️ Quick Up. · c9</span><span class=\"ds-act\"><span class=\"ds-sw\">attend ton approbation</span></span><span class=\"ds-at\">17:49</span></div></div>",
+      "css": ".ds-sessions { background: var(--panel, #1a1c20); border: 1px solid var(--line, #2a2d33); border-radius: 12px; padding: 12px 16px; color: var(--text, #e7e7ea); font: 13.5px ui-sans-serif, system-ui, 'Segoe UI', sans-serif; } .ds-row { display: grid; grid-template-columns: 12px minmax(120px, 190px) 1fr 46px; gap: 10px; align-items: center; padding: 4px 6px; border-radius: 6px; } .ds-row:nth-child(odd) { background: color-mix(in srgb, var(--line, #2a2d33) 35%, transparent); } .ds-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted, #9a9ca3); } .ds-working .ds-dot { background: var(--muted, #9a9ca3); } .ds-approval .ds-dot { width: 10px; height: 10px; border-radius: 2px; background: var(--ko, #e0645b); } .ds-row.ds-approval { background: color-mix(in srgb, var(--ko, #e0645b) 10%, var(--panel, #1a1c20)); } .ds-sw { font-weight: 600; color: var(--ko-ink, #f08a80); } .ds-lab { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-act { color: var(--muted, #9a9ca3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-at { color: var(--muted, #9a9ca3); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }"
     },
     {
       "name": "Queue Pills",
@@ -108,15 +289,35 @@
       "Keyboard affordances printed on screen (`1`, `2`… key caps, hint line under the card)."
     ],
     "rules": [
-      { "name": "The Lamp Rule", "body": "Red, green and blue are lamps with one meaning each (holds on you / cleared / for your information); they never decorate. Tints are derived with `color-mix()` against `--panel` at 12–14% for banner grounds and 30–45% for their borders, never new hex values.", "section": "colors" },
-      { "name": "The Token-Only Rule", "body": "Every color comes from the ten `:root` custom properties, redefined once for light mode. The only literal is `#111` text on the amber button.", "section": "colors" },
-      { "name": "The One Voice Rule", "body": "Only the card summary is large. Everything else is body, dense body or caption, so the eye lands on the decision first from across the desk.", "section": "typography" },
-      { "name": "The Still Column Rule", "body": "Nothing re-renders under the pointer or the focus. The right column skips updates while hovered or focused, and the displayed card is never replaced until it is answered; later cards wait as pills in \"Ensuite\".", "section": "layout" },
-      { "name": "The No-Shadow Rule", "body": "No drop shadows. Emphasis comes from border color (amber, red, green) and the Amber Wash ground, never from lifting a surface.", "section": "elevation" }
+      {
+        "name": "The Lamp Rule",
+        "body": "In the session strip, colour means \"waits on you\": an amber square is your decision, a red square an approval blocking a session; living sessions stay neutral round lamps (grey working, hollow idle, green done). Elsewhere red only marks Deny and breakage, green clears, blue informs. Shape and the state word always double the colour. Tints are derived with `color-mix()` against `--panel` at 12–14% for banner grounds and 30–45% for their borders, never new hex values.",
+        "section": "colors"
+      },
+      {
+        "name": "The Token-Only Rule",
+        "body": "Every color comes from the ten `:root` custom properties, redefined once for light mode. The only literal is `#111` text on the amber button.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Voice Rule",
+        "body": "Only the card summary is large. Everything else is body, dense body or caption, so the eye lands on the decision first from across the desk.",
+        "section": "typography"
+      },
+      {
+        "name": "The Still Column Rule",
+        "body": "Nothing re-renders under the pointer or the focus. The right column skips updates while hovered or focused, and the displayed card is never replaced until it is answered; later cards wait as pills in \"Ensuite\".",
+        "section": "layout"
+      },
+      {
+        "name": "The No-Shadow Rule",
+        "body": "No drop shadows. Emphasis comes from border color (amber, red, green) and the Amber Wash ground, never from lifting a surface.",
+        "section": "elevation"
+      }
     ],
     "dos": [
       "Do take every color from the ten `:root` tokens and their light-mode redefinition; derive tints with `color-mix()`.",
-      "Do keep one meaning per lamp: red holds on the user, green clears, blue informs, amber is attention.",
+      "Do keep colour for what waits on you: amber square = your decision, red square = blocked on your approval; everything else in the strip stays neutral.",
       "Do print the keyboard shortcut next to the control it triggers (key caps, \"(N)\", \"↵\", the hint line).",
       "Do use `tabular-nums` for any time, count or ratio that updates in place.",
       "Do keep section captions at 11px uppercase grey so the card summary stays the only loud text."

@@ -10,9 +10,12 @@
   :root {
     --bg: #111214; --panel: #1a1c20; --line: #2a2d33; --text: #e7e7ea; --muted: #9a9ca3;
     --accent: #e0a84f; --accent-bg: #2b2418; --ok: #6cc28b; --ko: #e0645b; --info: #5b8def;
+    /* Encres : texte posé sur un fond ambre ou rouge teinté (AA dans les deux thèmes). */
+    --accent-ink: #e0a84f; --ko-ink: #f08a80;
   }
   @media (prefers-color-scheme: light) {
-    :root { --bg: #f5f4f1; --panel: #fff; --line: #e3e1dc; --text: #1c1c1e; --muted: #6b6b70; --accent: #b4741a; --accent-bg: #fbf2e2; --ok: #2f8a52; --ko: #c0453c; --info: #2f63c9; }
+    :root { --bg: #f5f4f1; --panel: #fff; --line: #e3e1dc; --text: #1c1c1e; --muted: #6b6b70; --accent: #b4741a; --accent-bg: #fbf2e2; --ok: #2f8a52; --ko: #c0453c; --info: #2f63c9;
+      --accent-ink: #8a560c; --ko-ink: #a5352d; }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -45,10 +48,20 @@
   /* Bandeau des sessions : une ligne par session, mise à jour sur place. */
   #sessions .row { display: grid; grid-template-columns: 12px minmax(120px, 190px) 1fr 46px; gap: 10px; align-items: center; padding: 4px 6px; border-radius: 6px; font-size: 13.5px; }
   #sessions .row:nth-child(odd) { background: color-mix(in srgb, var(--line) 35%, transparent); }
+  /* Voyants : la couleur est réservée à « ça attend après toi ». Rond = la session vit sa vie (gris plein :
+     travaille, anneau : inactive, vert : terminé). Carré + ligne teintée + mot d'état = à toi (ambre : décision,
+     rouge : approbation, la session est bloquée). Forme et texte doublent la couleur. */
   #sessions .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
-  #sessions .st-working .dot { background: var(--accent); } #sessions .st-decision .dot { background: var(--ko); }
-  #sessions .st-approval .dot { background: var(--ko); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ko) 30%, transparent); }
-  #sessions .st-idle .dot { background: var(--muted); } #sessions .st-done .dot { background: var(--ok); }
+  #sessions .st-idle .dot { background: transparent; box-shadow: inset 0 0 0 1.5px var(--muted); }
+  #sessions .st-done .dot { background: var(--ok); }
+  #sessions .st-decision .dot, #sessions .st-approval .dot { width: 10px; height: 10px; border-radius: 2px; }
+  #sessions .st-decision .dot { background: var(--accent); }
+  #sessions .st-approval .dot { background: var(--ko); }
+  #sessions .row.st-decision { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); }
+  #sessions .row.st-approval { background: color-mix(in srgb, var(--ko) 10%, var(--panel)); }
+  #sessions .sw { font-weight: 600; }
+  #sessions .st-decision .sw { color: var(--accent-ink); } #sessions .st-approval .sw { color: var(--ko-ink); }
+  #scount .mine { color: var(--accent-ink); font-weight: 600; } #scount .mine.blocked { color: var(--ko-ink); }
   #sessions .lab { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #sessions .act { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #sessions .at { color: var(--muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
@@ -75,7 +88,7 @@
   .card.arming .opts, .card.arming .actions { opacity: .45; }
   .sent { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
   .sent b { color: var(--text); font-weight: 600; }
-  .agent { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); background: var(--accent-bg); padding: 3px 9px; border-radius: 6px; }
+  .agent { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text); background: color-mix(in srgb, var(--line) 70%, var(--panel)); padding: 3px 9px; border-radius: 6px; }
   .kind { margin-left: 6px; font-size: 12px; font-weight: 600; color: var(--ko); }
   .summary { font-size: 19px; font-weight: 600; line-height: 1.35; margin: 12px 0 4px; }
   .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 18px 0 6px; }
@@ -88,7 +101,7 @@
   button.opt.allow { border-color: var(--ok); } button.opt.deny { border-color: var(--ko); }
   .k { font: 12px ui-monospace, monospace; color: var(--muted); border: 1px solid var(--line); border-radius: 5px; text-align: center; padding: 1px 0; height: fit-content; }
   .opt .d { color: var(--muted); font-size: 13.5px; }
-  .tag { font-size: 11px; color: var(--accent); font-weight: 600; margin-left: 6px; }
+  .tag { font-size: 11px; color: var(--accent-ink); font-weight: 600; margin-left: 6px; }
   .prop { border-left: 3px solid var(--accent); padding: 8px 14px; background: var(--accent-bg); border-radius: 0 8px 8px 0; }
   .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
   .btn { all: unset; cursor: pointer; padding: 8px 15px; border-radius: 8px; font-weight: 600; font-size: 14px; }
@@ -122,7 +135,7 @@
   .tb .okb:hover { border-color: var(--ok); color: var(--ok); } .tb .ko:hover { border-color: var(--ko); color: var(--ko); }
   .tb input { flex: 1; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font: inherit; font-size: 12px; }
   .bar { height: 4px; background: var(--line); border-radius: 3px; margin: 6px 0 2px; overflow: hidden; }
-  .bar i { display: block; height: 100%; background: var(--accent); }
+  .bar i { display: block; height: 100%; background: var(--muted); }
   .phead, .task { all: unset; display: block; width: 100%; box-sizing: border-box; cursor: pointer; user-select: none; }
   .chev { color: var(--muted); display: inline-block; width: 1.1em; }
   .tasks { margin: 4px 0 2px 1.1em; font-size: 12.5px; }
@@ -327,13 +340,33 @@ document.addEventListener('keydown', (e) => {
 
 // ---------- bandeau des sessions ----------
 const STATE_LABEL = { working: 'travaille', decision: 'attend ta décision', approval: 'attend ton approbation', idle: 'inactive', done: 'terminé' };
+const WAITS = new Set(['decision', 'approval']);
 function renderSessions() {
   const s = state.sessions || [];
-  $('#scount').textContent = s.length || '';
+  const mine = s.filter(x => WAITS.has(x.status)), blocked = mine.some(x => x.status === 'approval');
+  $('#scount').innerHTML = !s.length ? '' : mine.length ? `<span class="mine ${blocked ? 'blocked' : ''}">${mine.length} à toi</span> · ${s.length}` : String(s.length);
+  // Ce qui attend après toi affiche toujours son mot d'état, l'activité vient après.
+  const act = (x) => {
+    if (!WAITS.has(x.status)) return esc(x.activity || STATE_LABEL[x.status] || '');
+    const extra = x.activity && x.activity !== STATE_LABEL[x.status] ? ` · ${esc(x.activity)}` : '';
+    return `<span class="sw">${STATE_LABEL[x.status]}</span>${extra}`;
+  };
   $('#sessions').innerHTML = s.length ? s.map(x => `
     <div class="row st-${esc(x.status)}"><span class="dot"></span><span class="lab">${esc(x.label)}</span>
-      <span class="act">${esc(x.activity || STATE_LABEL[x.status] || '')}</span><span class="at">${x.at ? hhmm(x.at) : ''}</span></div>`).join('')
+      <span class="act">${act(x)}</span><span class="at">${x.at ? hhmm(x.at) : ''}</span></div>`).join('')
     : '<div class="none">Aucune session de l\'équipe : l\'orchestratrice et les sessions inscrites (control-room label) apparaissent ici.</div>';
+  setFavicon(blocked ? 'approval' : mine.length ? 'decision' : '');
+}
+
+// Favicon : un carré rouge (approbation) ou ambre (décision) quand quelque chose attend, pour le voir depuis un
+// autre onglet ; rien sinon.
+let favKind = null;
+function setFavicon(kind) {
+  if (kind === favKind) return;
+  favKind = kind;
+  const color = kind && getComputedStyle(document.documentElement).getPropertyValue(kind === 'approval' ? '--ko' : '--accent').trim();
+  $('link[rel=icon]').href = !kind ? 'data:,'
+    : 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2.5" fill="${color}"/></svg>`);
 }
 
 function renderAlerts() {

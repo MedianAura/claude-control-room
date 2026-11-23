@@ -12,6 +12,8 @@ colors:
   clearance-green: "#6cc28b"
   hold-red: "#e0645b"
   radar-blue: "#5b8def"
+  amber-ink: "#e0a84f"
+  red-ink: "#f08a80"
 typography:
   headline:
     fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
@@ -40,6 +42,7 @@ typography:
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace"
     fontSize: "13px"
 rounded:
+  lamp: "2px"
   xs: "4px"
   sm: "6px"
   md: "8px"
@@ -80,8 +83,8 @@ components:
     rounded: "{rounded.option}"
     padding: "10px 13px"
   agent-badge:
-    backgroundColor: "{colors.amber-wash}"
-    textColor: "{colors.runway-amber}"
+    backgroundColor: "{colors.graphite-rule}"
+    textColor: "{colors.screen-white}"
     rounded: "{rounded.sm}"
     padding: "3px 9px"
   queue-pill:
@@ -120,11 +123,11 @@ Rejected by construction (see PRODUCT.md principles): anything that scrolls by i
 A near-black graphite base with a single runway amber and three signal lamps.
 
 ### Primary
-- **Runway Amber** (light theme `#b4741a`): the one attention color. It marks the orchestrator agent badge, the recommended option and its tag, the proposition's left rule, the primary button, the "working" session lamp, urgent queue pills and plan progress bars.
-- **Amber Wash** (light `#fbf2e2`): the tinted ground behind amber content: agent badge, recommended option, proposition block.
+- **Runway Amber** (light theme `#b4741a`): the "your move" colour. It marks a session waiting for your decision (square lamp, row tint, state word), the recommended option and its tag, the proposition's left rule, the primary button and urgent queue pills. Text on amber grounds uses Amber Ink (`--accent-ink`, light `#8a560c`).
+- **Amber Wash** (light `#fbf2e2`): the tinted ground behind amber content: recommended option, proposition block.
 
 ### Tertiary (signal lamps)
-- **Hold Red** (light `#c0453c`): something holds on the user or is broken. Session waiting for a decision or an approval (approval adds a 3px halo), approval card border, approval queue pill, Deny option, alert banners, error text, the "approbation / erreur / urgent" kind tag.
+- **Hold Red** (light `#c0453c`): blocked or broken. Session waiting for an approval (square lamp, row tint, state word), approval card border, header status line ("connexion perdue", "⚠ alerte"), approval queue pill, Deny option, alert banners, error text, the "approbation / erreur / urgent" kind tag. Text on red tints uses Red Ink (`--ko-ink`, light `#a5352d`).
 - **Clearance Green** (light `#2f8a52`): cleared or done. Allow option, "done" session lamp, OK hover on a test.
 - **Radar Blue** (light `#2f63c9`): information only, the "while you were away" banner.
 
@@ -136,7 +139,7 @@ A near-black graphite base with a single runway amber and three signal lamps.
 - **Instrument Grey** (light `#6b6b70`): captions, activity text, timestamps, hints, ghost buttons, idle lamp.
 
 ### Named Rules
-**The Lamp Rule.** Red, green and blue are lamps with one meaning each (holds on you / cleared / for your information); they never decorate. Tints are derived with `color-mix()` against `--panel` at 12–14% for banner grounds and 30–45% for their borders, never new hex values.
+**The Lamp Rule.** In the session strip, colour means "waits on you": an amber square is your decision, a red square an approval blocking a session; living sessions stay neutral round lamps (grey working, hollow idle, green done). Elsewhere red only marks Deny and breakage, green clears, blue informs. Shape and the state word always double the colour. Tints are derived with `color-mix()` against `--panel` at 12–14% for banner grounds and 30–45% for their borders, never new hex values.
 
 **The Token-Only Rule.** Every color comes from the ten `:root` custom properties, redefined once for light mode. The only literal is `#111` text on the amber button.
 
@@ -152,7 +155,7 @@ A near-black graphite base with a single runway amber and three signal lamps.
 - **Title** (600, 17px): the empty-state heading ("Rien à trancher").
 - **Body** (400, 15px, 1.55): card recap, options, composer text.
 - **Body dense** (400, 13.5px): session rows, right-column items, option details, queue pills (13px).
-- **Label** (600, 11px, 0.1em, uppercase, Instrument Grey): panel headings and card section captions (Résumé, Options, Proposition). The agent badge is its 12px / 0.08em amber sibling.
+- **Label** (600, 11px, 0.1em, uppercase, Instrument Grey): panel headings and card section captions (Résumé, Options, Proposition). The agent badge is its 12px / 0.08em sibling on a neutral chip.
 - **Mono** (13px; 12px for key caps): commands under approval, inline `code`, the `1`–`9` key caps.
 - Timestamps and counts use `font-variant-numeric: tabular-nums` so they don't jitter as they update.
 
@@ -170,14 +173,14 @@ The right column is `position: sticky` (top 20px) with its own scroll capped at 
 
 ## Elevation & Depth
 
-Flat. Depth is tonal: Tower Night ground, Console Slate surfaces, Tower Night again for recessed wells (inputs, code, command blocks), and a 1px Graphite Rule border on every container. The single exception is the approval lamp's halo, `0 0 0 3px` of Hold Red at 30%, which is a signal rather than elevation.
+Flat. Depth is tonal: Tower Night ground, Console Slate surfaces, Tower Night again for recessed wells (inputs, code, command blocks), and a 1px Graphite Rule border on every container. There is no exception: waiting-on-you lamps differ by shape and row tint, not by a halo.
 
 ### Named Rules
 **The No-Shadow Rule.** No drop shadows. Emphasis comes from border color (amber, red, green) and the Amber Wash ground, never from lifting a surface.
 
 ## Shapes
 
-Softly rounded rectangles stepping down with size: 12px for panels, the card and the empty state; 10px for banners; 9px for options; 8px for buttons, text fields and command blocks; 6px for session rows, the agent badge and test buttons; 4–5px for inline code and key caps. Queue pills are full capsules. Session lamps are 9px circles. The proposition block is square on its left edge, where its 3px amber rule sits. The empty state uses a dashed border, the only dashed line in the system.
+Softly rounded rectangles stepping down with size: 12px for panels, the card and the empty state; 10px for banners; 9px for options; 8px for buttons, text fields and command blocks; 6px for session rows, the agent badge and test buttons; 4–5px for inline code and key caps. Queue pills are full capsules. Session lamps are 9px circles; lamps that wait on the user are 10px squares (2px radius). The proposition block is square on its left edge, where its 3px amber rule sits. The empty state uses a dashed border, the only dashed line in the system.
 
 ## Components
 
@@ -189,7 +192,7 @@ Softly rounded rectangles stepping down with size: 12px for panels, the card and
 
 ### Decision Card (signature)
 - Console Slate, 12px radius, 1px border (Hold Red for an approval), padding 20px 22px.
-- Top: amber agent badge, then an optional red kind tag ("● approbation", "● erreur", "● urgent").
+- Top: neutral agent badge, then an optional red kind tag ("● approbation", "● erreur", "● urgent").
 - Headline summary, then captioned sections: Commande (mono well), Résumé (bullets), Options, Proposition.
 - **Options:** full-width rows, 9px radius, 1px border, a mono key cap column (26px) then label and grey detail. Hover/focus brightens the border to Instrument Grey. Recommended: amber border, Amber Wash ground, amber "recommandé" tag. Approval options: Allow has a green border, Deny a red one.
 - **Proposition:** 3px amber left rule on Amber Wash, radius 0 8px 8px 0.
@@ -197,7 +200,7 @@ Softly rounded rectangles stepping down with size: 12px for panels, the card and
 
 ### Session Strip (signature)
 - One grid row per session: 9px lamp, bold label (120–190px, ellipsis), grey activity (ellipsis), 46px right-aligned tabular time. 13.5px, 6px radius, zebra on odd rows.
-- Lamps: amber working, red waiting for decision, red with halo waiting for approval, grey idle, green done.
+- Lamps: grey dot working, hollow ring idle, green dot done; amber square + amber row tint + bold amber state word waiting for your decision; red square + red row tint + bold red state word waiting for your approval. The state word always shows, activity follows it. Header count reads "N à toi · total" (red when an approval blocks); the favicon becomes an amber or red square while something waits.
 
 ### Queue Pills
 - "Ensuite" followed by up to five capsules (max 26ch, ellipsis), Console Slate with a Graphite Rule border; amber border if urgent, red if approval; "+N" for the rest.
@@ -210,13 +213,13 @@ Softly rounded rectangles stepping down with size: 12px for panels, the card and
 - The composer is a grid: auto-growing textarea (44–200px), primary Envoyer, ghost history. Pasted screenshots show as 80px thumbnails with a round ✕.
 
 ### Right Column Items
-- Group caption (12px, 600, grey), then items separated by 1px rules at 13.5px. Tests carry OK / Problème; KO swaps the buttons for an inline field. Plans show a right-aligned tabular done-over-total count and a 4px amber progress bar on a Graphite Rule track.
+- Group caption (12px, 600, grey), then items separated by 1px rules at 13.5px. Tests carry OK / Problème; KO swaps the buttons for an inline field. Plans show a right-aligned tabular done-over-total count and a 4px grey (Instrument Grey) progress bar on a Graphite Rule track.
 
 ## Do's and Don'ts
 
 ### Do:
 - **Do** take every color from the ten `:root` tokens and their light-mode redefinition; derive tints with `color-mix()`.
-- **Do** keep one meaning per lamp: red holds on the user, green clears, blue informs, amber is attention.
+- **Do** keep colour for what waits on you: amber square = your decision, red square = blocked on your approval; everything else in the strip stays neutral.
 - **Do** print the keyboard shortcut next to the control it triggers (key caps, "(N)", "↵", the hint line).
 - **Do** use `tabular-nums` for any time, count or ratio that updates in place.
 - **Do** keep section captions at 11px uppercase grey so the card summary stays the only loud text.
