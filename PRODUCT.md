@@ -8,9 +8,11 @@ web
 
 ## Users
 
-One user: the developer who owns the repo, French-speaking, 20+ years of experience. They run several Claude Code
-sessions in parallel (one per topic), coordinated by an "orchestrator" session that relays decisions to them and
-their answers back to the sessions. No other audience; the plugin is local and never published.
+A developer who runs several Claude Code sessions in parallel (one per topic), coordinated by an "orchestrator"
+session that relays decisions to them and their answers back to the sessions. First user: the repo's owner,
+French-speaking, 20+ years of experience, on several projects (a game server, a wrestling game, work projects).
+The plugin is meant to be published: nothing in it may assume one project, one domain or one person's setup.
+Each user runs it locally for themselves; the page never serves more than one person.
 
 ## Product Purpose
 
@@ -18,6 +20,16 @@ Move the whole orchestrator relationship out of a terminal that scrolls too fast
 decisions as cards (one at a time, with a recommendation), a one-line-per-session status strip, permission
 approvals from the page, free text to the orchestrator (screenshots via Ctrl+V), and the TODO → active plan →
 to-test cycle read from the project's master plan.
+
+What the page is for, in the user's order of importance (the layout follows it):
+
+1. Take a decision when one is waiting (decisions and approvals, one at a time).
+2. Talk with the orchestrator, especially in reply to what she just sent: her messages and the user's live in
+   one conversation thread, not in the decision slot.
+3. See what is ready to test and answer fast: OK, Pas OK, or Clarifier.
+4. See the plans in progress and how far along they are.
+5. See what could be built next (TODO).
+6. Last, and only as a nice-to-have: who is connected and what each session is doing.
 
 Success: the user almost never returns to the terminal, and always knows where things stand after looking away.
 
@@ -30,13 +42,14 @@ ticks it, it never keeps a copy.
 
 ## Operating Context
 
-- The tab lives on a **second monitor, always visible**, while the user works or tests in game on the main one.
-  It is read in peripheral vision and at a glance, then read up close when a decision is due.
+- The tab lives on a **second monitor, always visible**, while the user works or tests on the main one, usually
+  in a dark room with a desk lamp. It is read in peripheral vision and at a glance, then read up close when a
+  decision is due.
 - The user sometimes switches to another browser tab and comes back; on return after more than 2 minutes, one
   dismissible line summarizes what happened in between. No other "new" markers.
 - Started each session from the user's own terminal (`control-room start`), which opens the page with a one-time
   key. Typically 2–3 working sessions plus the orchestrator.
-- Projects plug in by paths given to `claim` (plans folder, master plan); SoloConquest is the first one.
+- Projects plug in by paths given to `claim` (plans folder, board); nothing is hard-coded for a project.
 
 ## Capabilities and Constraints
 
@@ -48,7 +61,8 @@ ticks it, it never keeps a copy.
 - Card fields: agent, summary, recap, options, proposition, recommended, urgent, free answer. Approval cards are
   prioritized in the same queue. Pending cards appear as upcoming markers, not a feed.
 - Session states: working, waiting for a decision, waiting for an approval, blocked, idle.
-- History is closed by default; it is the only place the past accumulates.
+- The conversation with the orchestrator shows its last exchanges in place; the history of answered cards stays
+  closed by default.
 - Security model is binding: client secret creates cards only; the page secret (memory + `HttpOnly` cookie) is the
   only one that answers, approves or ticks; `Origin` + `Host` checked on page writes.
 - Approvals whose hook stopped polling for 90 s expire and lose their Allow button.

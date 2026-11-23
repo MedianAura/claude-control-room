@@ -53,4 +53,5 @@ Le design fait foi : `docs/superpowers/specs/2026-11-21-control-room-design.md` 
 
 ## Git
 
-Dépôt local, jamais poussé. Commits sur `main`.
+Commits sur `main`, poussés sur GitHub (`origin` : `git@github.com:MedianAura/claude-control-room.git`, public à
+terme) : rien de propre à une machine ni de secret dans le dépôt.
