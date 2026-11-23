@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-22T22:13:15-05:00",
+  "title": "Design System: control-room",
+  "extensions": {
+    "colorMeta": {
+      "tower-night": { "role": "neutral", "displayName": "Tower Night", "canonical": "oklch(18.2% 0.004 264)", "light": "#f5f4f1", "tonalRamp": ["#0b0b0c", "#242527", "#414244", "#606164", "#818285", "#a4a5a8", "#c8c9cb", "#eeeeef"] },
+      "console-slate": { "role": "neutral", "displayName": "Console Slate", "canonical": "oklch(22.6% 0.008 264)", "light": "#ffffff", "tonalRamp": ["#0a0b0d", "#232529", "#404247", "#5f6166", "#808287", "#a2a5aa", "#c7c9cd", "#eeeeef"] },
+      "graphite-rule": { "role": "neutral", "displayName": "Graphite Rule", "canonical": "oklch(29.7% 0.012 264)", "light": "#e3e1dc", "tonalRamp": ["#0a0b0d", "#23252a", "#3f4248", "#5e6168", "#7f828a", "#a1a5ad", "#c7c9ce", "#eeeef0"] },
+      "screen-white": { "role": "neutral", "displayName": "Screen White", "canonical": "oklch(92.9% 0.004 286)", "light": "#1c1c1e", "tonalRamp": ["#0b0b0c", "#252527", "#424244", "#616163", "#828285", "#a5a5a7", "#c9c9cb", "#eeeeef"] },
+      "instrument-grey": { "role": "neutral", "displayName": "Instrument Grey", "canonical": "oklch(69.3% 0.010 273)", "light": "#6b6b70", "tonalRamp": ["#0a0b0d", "#23252a", "#404248", "#5f6167", "#808289", "#a3a5ac", "#c7c9ce", "#eeeef0"] },
+      "runway-amber": { "role": "primary", "displayName": "Runway Amber", "canonical": "oklch(76.7% 0.124 76)", "light": "#b4741a", "tonalRamp": ["#130900", "#342101", "#593b02", "#825803", "#ac770c", "#d19a3f", "#e8c38d", "#f8eddd"] },
+      "amber-wash": { "role": "primary", "displayName": "Amber Wash", "canonical": "oklch(26.4% 0.023 80)", "light": "#fbf2e2", "tonalRamp": ["#0d0b07", "#2a241a", "#484134", "#686052", "#8a8173", "#ada495", "#cec8be", "#f0eeeb"] },
+      "clearance-green": { "role": "tertiary", "displayName": "Clearance Green", "canonical": "oklch(74.5% 0.116 154)", "light": "#2f8a52", "tonalRamp": ["#001005", "#002e16", "#01502a", "#137442", "#3f9662", "#64ba84", "#a2d8b3", "#e3f3e8"] },
+      "hold-red": { "role": "tertiary", "displayName": "Hold Red", "canonical": "oklch(65.4% 0.157 26)", "light": "#c0453c", "tonalRamp": ["#1f0001", "#4d0104", "#80020c", "#a8302d", "#d0554d", "#f8796f", "#feb3aa", "#fee9e6"] },
+      "radar-blue": { "role": "tertiary", "displayName": "Radar Blue", "canonical": "oklch(65.5% 0.156 262)", "light": "#2f63c9", "tonalRamp": ["#010825", "#001b61", "#0d3893", "#2d5bb8", "#4d7edf", "#73a3ff", "#adcaff", "#e6efff"] }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "The decision card summary; one per screen." },
+      "title": { "displayName": "Title", "purpose": "Empty-state heading." },
+      "body": { "displayName": "Body", "purpose": "Card recap, options, composer." },
+      "body-dense": { "displayName": "Body dense", "purpose": "Session rows, right-column items, option details." },
+      "label": { "displayName": "Label", "purpose": "Uppercase grey captions for panels and card sections." },
+      "mono": { "displayName": "Mono", "purpose": "Commands, inline code, key caps." }
+    },
+    "shadows": [
+      { "name": "approval-halo", "value": "0 0 0 3px color-mix(in srgb, var(--ko) 30%, transparent)", "purpose": "Ring around the session lamp of a session waiting for an approval. A signal, not elevation." }
+    ],
+    "motion": [],
+    "breakpoints": [
+      { "name": "stack", "value": "980px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The validating action on a card or the composer.",
+      "html": "<button class=\"ds-btn-primary\">Go avec la proposition ↵</button>",
+      "css": ".ds-btn-primary { all: unset; cursor: pointer; padding: 8px 15px; border-radius: 8px; font: 600 14px ui-sans-serif, system-ui, 'Segoe UI', sans-serif; background: var(--accent, #e0a84f); color: #111; } .ds-btn-primary:hover { filter: brightness(1.06); } .ds-btn-primary:focus-visible { outline: 2px solid var(--text, #e7e7ea); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action: note, history.",
+      "html": "<button class=\"ds-btn-ghost\">Autre / nuancer (N)</button>",
+      "css": ".ds-btn-ghost { all: unset; cursor: pointer; padding: 8px 15px; border-radius: 8px; font: 600 14px ui-sans-serif, system-ui, 'Segoe UI', sans-serif; border: 1px solid var(--line, #2a2d33); color: var(--muted, #9a9ca3); } .ds-btn-ghost:hover, .ds-btn-ghost:focus-visible { border-color: var(--muted, #9a9ca3); color: var(--text, #e7e7ea); }"
+    },
+    {
+      "name": "Decision Option",
+      "kind": "custom",
+      "refersTo": "option",
+      "description": "One choice on a decision card, with its key cap; recommended variant in amber.",
+      "html": "<div class=\"ds-opts\"><button class=\"ds-opt\"><span class=\"ds-k\">1</span><span>Retrait auto<div class=\"ds-d\">Vide le coffre sans demander.</div></span></button><button class=\"ds-opt ds-rec\"><span class=\"ds-k\">2</span><span>Bouton Retirer<span class=\"ds-tag\">recommandé</span><div class=\"ds-d\">Garde le contrôle sur le coffre.</div></span></button></div>",
+      "css": ".ds-opts { display: grid; gap: 8px; font: 15px/1.55 ui-sans-serif, system-ui, 'Segoe UI', sans-serif; color: var(--text, #e7e7ea); } .ds-opt { all: unset; cursor: pointer; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; padding: 10px 13px; border: 1px solid var(--line, #2a2d33); border-radius: 9px; } .ds-opt:hover, .ds-opt:focus-visible { border-color: var(--muted, #9a9ca3); } .ds-rec { border-color: var(--accent, #e0a84f); background: var(--accent-bg, #2b2418); } .ds-k { font: 12px ui-monospace, monospace; color: var(--muted, #9a9ca3); border: 1px solid var(--line, #2a2d33); border-radius: 5px; text-align: center; padding: 1px 0; height: fit-content; } .ds-d { color: var(--muted, #9a9ca3); font-size: 13.5px; } .ds-tag { font-size: 11px; color: var(--accent, #e0a84f); font-weight: 600; margin-left: 6px; }"
+    },
+    {
+      "name": "Decision Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "One decision at a time: agent badge, headline summary, captioned sections, proposition.",
+      "html": "<div class=\"ds-card\"><span class=\"ds-agent\">⚔️ Quick Up. · c9</span><div class=\"ds-summary\">Le palier « All to 80 » doit-il retirer seul les réactifs ?</div><div class=\"ds-label\">Proposition</div><div class=\"ds-prop\">2, garde le contrôle sur le coffre.</div></div>",
+      "css": ".ds-card { background: var(--panel, #1a1c20); border: 1px solid var(--line, #2a2d33); border-radius: 12px; padding: 20px 22px; color: var(--text, #e7e7ea); font: 15px/1.55 ui-sans-serif, system-ui, 'Segoe UI', sans-serif; } .ds-agent { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--accent, #e0a84f); background: var(--accent-bg, #2b2418); padding: 3px 9px; border-radius: 6px; } .ds-summary { font-size: 19px; font-weight: 600; line-height: 1.35; margin: 12px 0 4px; } .ds-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted, #9a9ca3); margin: 18px 0 6px; } .ds-prop { border-left: 3px solid var(--accent, #e0a84f); padding: 8px 14px; background: var(--accent-bg, #2b2418); border-radius: 0 8px 8px 0; }"
+    },
+    {
+      "name": "Session Strip",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "One line per session, updated in place: lamp, label, activity, time.",
+      "html": "<div class=\"ds-sessions\"><div class=\"ds-row ds-working\"><span class=\"ds-dot\"></span><span class=\"ds-lab\">🔨 Builds · b2</span><span class=\"ds-act\">build n°3 en cours… 14 min</span><span class=\"ds-at\">17:37</span></div><div class=\"ds-row ds-approval\"><span class=\"ds-dot\"></span><span class=\"ds-lab\">⚔️ Quick Up. · c9</span><span class=\"ds-act\">attend ton approbation</span><span class=\"ds-at\">17:49</span></div></div>",
+      "css": ".ds-sessions { background: var(--panel, #1a1c20); border: 1px solid var(--line, #2a2d33); border-radius: 12px; padding: 12px 16px; color: var(--text, #e7e7ea); font: 13.5px ui-sans-serif, system-ui, 'Segoe UI', sans-serif; } .ds-row { display: grid; grid-template-columns: 12px minmax(120px, 190px) 1fr 46px; gap: 10px; align-items: center; padding: 4px 6px; border-radius: 6px; } .ds-row:nth-child(odd) { background: color-mix(in srgb, var(--line, #2a2d33) 35%, transparent); } .ds-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted, #9a9ca3); } .ds-working .ds-dot { background: var(--accent, #e0a84f); } .ds-approval .ds-dot { background: var(--ko, #e0645b); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ko, #e0645b) 30%, transparent); } .ds-lab { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-act { color: var(--muted, #9a9ca3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-at { color: var(--muted, #9a9ca3); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Queue Pills",
+      "kind": "chip",
+      "refersTo": "queue-pill",
+      "description": "What comes after the displayed card, in order.",
+      "html": "<div class=\"ds-queue\">Ensuite<span class=\"ds-pill\">Voler partout</span><span class=\"ds-pill ds-urgent\">Rendement de récolte</span><span class=\"ds-pill ds-approval\">docker compose build</span></div>",
+      "css": ".ds-queue { color: var(--muted, #9a9ca3); font: 13px ui-sans-serif, system-ui, 'Segoe UI', sans-serif; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .ds-pill { max-width: 26ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line, #2a2d33); background: var(--panel, #1a1c20); color: var(--text, #e7e7ea); } .ds-urgent { border-color: var(--accent, #e0a84f); } .ds-approval { border-color: var(--ko, #e0645b); }"
+    },
+    {
+      "name": "Composer Field",
+      "kind": "input",
+      "refersTo": "textarea",
+      "description": "Message to the orchestrator; recessed well.",
+      "html": "<textarea class=\"ds-textarea\" placeholder=\"Écrire à l'orchestratrice… (Ctrl+Entrée pour envoyer, Ctrl+V pour une capture)\"></textarea>",
+      "css": ".ds-textarea { width: 100%; min-height: 44px; resize: vertical; background: var(--bg, #111214); color: var(--text, #e7e7ea); border: 1px solid var(--line, #2a2d33); border-radius: 8px; padding: 10px; font: 15px/1.55 ui-sans-serif, system-ui, 'Segoe UI', sans-serif; } .ds-textarea:focus-visible { outline: none; border-color: var(--muted, #9a9ca3); }"
+    },
+    {
+      "name": "Away Banner",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "The single catch-up line after more than 2 minutes away.",
+      "html": "<div class=\"ds-banner\"><b>Pendant ton absence (12 min) :</b> <span>build n°3 réussi · test 6 ajouté · 1 nouvelle carte</span><button class=\"ds-x\" title=\"Fermer\">✕</button></div>",
+      "css": ".ds-banner { border-radius: 10px; padding: 9px 14px; display: flex; gap: 10px; align-items: baseline; color: var(--text, #e7e7ea); font: 15px/1.55 ui-sans-serif, system-ui, 'Segoe UI', sans-serif; background: color-mix(in srgb, var(--info, #5b8def) 14%, var(--panel, #1a1c20)); border: 1px solid color-mix(in srgb, var(--info, #5b8def) 40%, transparent); } .ds-x { all: unset; cursor: pointer; margin-left: auto; color: var(--muted, #9a9ca3); } .ds-x:hover, .ds-x:focus-visible { color: var(--text, #e7e7ea); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "La tour de contrôle",
+    "overview": "The page is a control tower seen from the side: a second monitor that stays lit while the user works on the main one. Like flight strips on a controller's desk, each session is one quiet line that changes in place, and only one clearance is handed over at a time. The tower never shouts; it holds. Whatever arrives while the user is reading waits its turn in plain sight.\n\nThe look is a dark, flat instrument panel. Surfaces separate by tone and a single hairline, not by shadow. One warm amber carries attention, red marks what holds on the user, green clears, blue reports. Type is the system stack at a compact operational density: the decision summary is the only large text, every section heading is a small uppercase caption. Light mode exists and follows the OS (`prefers-color-scheme`); dark is the reference.",
+    "keyCharacteristics": [
+      "Dark, flat, tonal layering; no shadows.",
+      "One warm accent (amber) and three signal colors (red, green, blue), each with a fixed meaning.",
+      "System font stack, 15px body, 11px uppercase captions, one 19px headline per screen.",
+      "Two columns: the decision on the left, the plan cycle in a sticky 380px column on the right.",
+      "Keyboard affordances printed on screen (`1`, `2`… key caps, hint line under the card)."
+    ],
+    "rules": [
+      { "name": "The Lamp Rule", "body": "Red, green and blue are lamps with one meaning each (holds on you / cleared / for your information); they never decorate. Tints are derived with `color-mix()` against `--panel` at 12–14% for banner grounds and 30–45% for their borders, never new hex values.", "section": "colors" },
+      { "name": "The Token-Only Rule", "body": "Every color comes from the ten `:root` custom properties, redefined once for light mode. The only literal is `#111` text on the amber button.", "section": "colors" },
+      { "name": "The One Voice Rule", "body": "Only the card summary is large. Everything else is body, dense body or caption, so the eye lands on the decision first from across the desk.", "section": "typography" },
+      { "name": "The Still Column Rule", "body": "Nothing re-renders under the pointer or the focus. The right column skips updates while hovered or focused, and the displayed card is never replaced until it is answered; later cards wait as pills in \"Ensuite\".", "section": "layout" },
+      { "name": "The No-Shadow Rule", "body": "No drop shadows. Emphasis comes from border color (amber, red, green) and the Amber Wash ground, never from lifting a surface.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do take every color from the ten `:root` tokens and their light-mode redefinition; derive tints with `color-mix()`.",
+      "Do keep one meaning per lamp: red holds on the user, green clears, blue informs, amber is attention.",
+      "Do print the keyboard shortcut next to the control it triggers (key caps, \"(N)\", \"↵\", the hint line).",
+      "Do use `tabular-nums` for any time, count or ratio that updates in place.",
+      "Do keep section captions at 11px uppercase grey so the card summary stays the only loud text."
+    ],
+    "donts": [
+      "Don't add drop shadows or elevation; separate by tone and 1px borders.",
+      "Don't animate, auto-scroll or reflow content the user may be reading; the card and the hovered column hold still.",
+      "Don't add \"new\" badges or highlight outlines to announce changes; the away banner is the only catch-up."
+    ]
+  }
+}
