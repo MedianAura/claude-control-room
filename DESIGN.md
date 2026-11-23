@@ -128,7 +128,7 @@ Rules:
 - The Lamp Rule. In the session strip, colour means "waits on you": an amber square is your decision, a red square an approval blocking a session; living sessions stay neutral round lamps (grey working, hollow idle, green done). Elsewhere red only marks Deny and breakage, green clears, blue informs. Shape and the state word always double the colour.
 - The Token-Only Rule. Every color comes from the ten `:root` custom properties, redefined once for light mode.
 - The One Voice Rule. Only the card summary is large.
-- The Still Column Rule. Nothing re-renders under the pointer or the focus.
+- The Still Column Rule. Nothing re-renders under the pointer or the focus. Nothing sits above the card; a card gone unanswered stays as a tombstone until "Continuer".
 - The No-Shadow Rule. No drop shadows.
 Don't:
 - Don't add drop shadows or elevation; separate by tone and 1px borders.
@@ -137,7 +137,7 @@ Don't:
 Do:
 - Do take every color from the ten `:root` tokens and their light-mode redefinition; derive tints with `color-mix()`.
 - Do keep colour for what waits on you: amber square = your decision, red square = blocked on your approval; everything else in the strip stays neutral.
-- Do print the keyboard shortcut next to the control it triggers (key caps, "(N)", "↵", the hint line).
+- Do print the keyboard shortcut on the control it triggers (key caps, "(N)", "↵"); the hint line only carries what no control shows.
 - Do use `tabular-nums` for any time, count or ratio that updates in place.
 - Do keep section captions at 11px uppercase grey so the card summary stays the only loud text.
 Full: .impeccable/design-full.md (read a section when you need its detail)

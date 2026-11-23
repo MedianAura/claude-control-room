@@ -131,8 +131,8 @@ Rejected by construction (see PRODUCT.md principles): anything that scrolls by i
 - Dark, flat, tonal layering; no shadows.
 - One warm accent (amber) and three signal colors (red, green, blue), each with a fixed meaning.
 - System font stack, 15px body, 11px uppercase captions, one 19px headline per screen.
-- Two columns: the decision on the left, the plan cycle in a sticky 380px column on the right.
-- Keyboard affordances printed on screen (`1`, `2`… key caps, hint line under the card).
+- Two columns: the decision alone at the top of the left column; the session strip, then the plan cycle, in a sticky 380px column on the right.
+- Keyboard affordances printed on the controls themselves (`1`, `2`… key caps, "(N)", "↵"); the hint line only says what no control shows.
 
 ## Colors
 
@@ -181,12 +181,16 @@ A near-black graphite base with a single runway amber and three signal lamps.
 
 ## Layout
 
-A centered grid, max 1280px, padding 22px 20px 60px: a fluid left column and a fixed 380px right column, gap 26px. Below 980px the columns stack. The left column stacks, in order: sessions panel, alerts, away summary, "Ensuite" queue, notice, the card, the composer, then the closed-by-default history. Vertical rhythm is 14px between blocks; 8px inside option lists and the composer; 10px between action buttons.
+A centered grid, max 1280px, padding 22px 20px 60px: a fluid left column and a fixed 380px right column, gap 26px.
 
-The right column is `position: sticky` (top 20px) with its own scroll capped at the viewport. Its three panels (À tester par toi, Plans actifs, TODO) collapse by clicking their caption; the state persists in `localStorage`.
+The left column carries the decision path and nothing sits above the card: only the away summary, which lands while the user was gone. In order: away summary, the card (with the failure notice and the "Envoyé" trace rendered inside the same slot), "Ensuite" queue, alerts, then one deliberate 26px interval before the composer and its closed-by-default history. Everything that belongs to deciding is 8px apart; the composer is the only generous break. At 1280x800 the card, its actions, "Ensuite" and the composer all fit the first screen.
+
+The right column stacks the session strip, then À tester par toi, Plans actifs and TODO, 14px apart. It is `position: sticky` (top 20px) with its own scroll capped at the viewport. The three plan-cycle panels collapse by clicking their caption; the state persists in `localStorage`.
+
+Below 980px the columns stack (left first) and the right column becomes static: no sticky, no inner scroll inside the scrolling page.
 
 ### Named Rules
-**The Still Column Rule.** Nothing re-renders under the pointer or the focus. The right column skips updates while hovered or focused, and the displayed card is never replaced until it is answered; later cards wait as pills in "Ensuite".
+**The Still Column Rule.** Nothing re-renders under the pointer or the focus. The right column skips updates while hovered or focused, and the session strip freezes its height while the pointer is over that column (a new session scrolls inside the strip). The displayed card is never replaced by another one: answered, it gives way to the next; gone without an answer from the page, it stays in place as a tombstone until "Continuer ↵". Later cards wait as pills in "Ensuite".
 
 ## Elevation & Depth
 
@@ -197,7 +201,7 @@ Flat. Depth is tonal: Tower Night ground, Console Slate surfaces, Tower Night ag
 
 ## Shapes
 
-Softly rounded rectangles stepping down with size: 12px for panels, the card and the empty state; 10px for banners; 9px for options; 8px for buttons, text fields and command blocks; 6px for session rows, the agent badge and test buttons; 4–5px for inline code and key caps. Queue pills are full capsules. Session lamps are 9px circles; lamps that wait on the user are 10px squares (2px radius). The empty state uses a dashed border, the only dashed line in the system.
+Softly rounded rectangles stepping down with size: 12px for panels, the card and the empty state; 10px for banners; 9px for options; 8px for buttons, text fields and command blocks; 6px for session rows, the agent badge and test buttons; 4–5px for inline code and key caps. Queue pills are full capsules. Session lamps are 9px circles; lamps that wait on the user are 10px squares (2px radius). Dashed borders mean "nothing to act on here": the empty state and the tombstone card are the only dashed lines in the system.
 
 ## Components
 
@@ -210,34 +214,36 @@ Softly rounded rectangles stepping down with size: 12px for panels, the card and
 ### Decision Card (signature)
 - Console Slate, 12px radius, 1px border (Hold Red for an approval), padding 20px 22px.
 - Top: neutral agent badge, then an optional red kind tag ("● approbation", "● erreur", "● urgent").
-- Headline summary, then captioned sections: Commande (mono well), Résumé (bullets), Options, Proposition.
-- **Options:** full-width rows, 9px radius, 1px border, a mono key cap column (26px) then label and grey detail. Hover/focus brightens the border to Instrument Grey. Recommended: amber border, Amber Wash ground, amber "recommandé" tag. Approval options: Allow has a green border, Deny a red one.
+- Headline summary, then captioned sections: the tool well ("Commande Bash", or "Outil <name>" for non-shell input; mono, capped at 10 lines with its own thin scroll so Allow / Deny stay next to it), Résumé (bullets), Options, Proposition.
+- **Options:** full-width rows, 9px radius, 1px border, a mono key cap column (26px) then label and grey detail. Hover/focus brightens the border to Instrument Grey. Recommended: amber border, Amber Wash ground, amber "recommandé" tag. Approval options: Allow has a green border, Deny a red one. **Picked** (Shift+digit, waiting for its note): Screen White border and an inverted key cap (Screen White ground, Tower Night digit), `aria-pressed`; the note placeholder names the option.
 - **Proposition:** Amber Wash ground with a full 1px amber border (accent at 55%), 8px radius. No one-sided rule.
-- Footer: action buttons, a hidden note textarea (N), and a grey hint line listing the shortcuts.
+- Footer: action buttons, a hidden note textarea (N), and a grey hint line that appears only on decisions with options and says only "Maj+chiffre : choisir avec une note" (everything else is printed on the controls).
+- **States.** *Arming* (400 ms, 800 ms for an approval) and *held* (server lost) both dim options and actions to 45%; held replaces the hint with a red "Réponses suspendues" line. *Tombstone*: the same card with a dashed border, the summary struck through in Instrument Grey, the reason (cancelled with the orchestrator's reason, approval expired, or answered elsewhere) and a single "Continuer ↵".
 
 ### Session Strip (signature)
-- One grid row per session: 9px lamp, bold label (120–190px, ellipsis), grey activity (ellipsis), 46px right-aligned tabular time. 13.5px, 6px radius, zebra on odd rows.
-- Lamps: grey dot working, hollow ring idle, green dot done; amber square + amber row tint + bold amber state word waiting for your decision; red square + red row tint + bold red state word waiting for your approval. The state word always shows, activity follows it. Header count reads "N à toi · total" (red when an approval blocks); the favicon becomes an amber or red square while something waits.
+- First panel of the right column. One grid row per session: 9px lamp, bold label (`clamp(100px, 22%, 190px)`, ellipsis, full label in `title`), grey activity, 40px right-aligned tabular time, 8px gaps. 13.5px, 6px radius, zebra on odd rows. Column widths never depend on content, so rows stay aligned.
+- Lamps: grey dot working, hollow ring idle, green dot done; amber square + amber row tint + bold amber state word waiting for your decision; red square + red row tint + bold red state word waiting for your approval. The state word always shows in full and never shrinks; only the activity after it truncates. Header count reads "N à toi · total" (red when an approval blocks); the favicon becomes an amber or red square while something waits.
+- Header status line (red, 12px, one line, ellipsis, full sentence in `title`): "hors ligne depuis HH h MM" when the server is lost (rows dim to 45%), "⚠ alerte · détail sous la carte" otherwise. Showing it never grows the header.
 
 ### Queue Pills
 - "Ensuite" followed by up to five capsules (max 26ch, ellipsis), Console Slate with a Graphite Rule border; amber border if urgent, red if approval; "+N" for the rest.
 
 ### Banners
-- 10px radius, padding 9px 14px, close ✕ pushed right. Away = blue tint, alert = red tint with solid red border, notice = amber tint.
+- 10px radius, padding 9px 14px, close ✕ pushed right. Away = blue tint, alert = red tint with solid red border, notice = amber tint. The notice (an answer that failed to send) is rendered with the card, inside its slot, never inserted above a card being read.
 
 ### Inputs / Fields
 - **Style:** Tower Night well, 1px Graphite Rule border, 8px radius, 10px padding, inherited font.
 - The composer is a grid: auto-growing textarea (44–200px), primary Envoyer, ghost history. Pasted screenshots show as 80px thumbnails with a round ✕.
 
 ### Right Column Items
-- Group caption (12px, 600, grey), then items separated by 1px rules at 13.5px. Tests carry OK / Problème; KO swaps the buttons for an inline field. Plans show a right-aligned tabular done-over-total count and a 4px grey (Instrument Grey) progress bar on a Graphite Rule track.
+- Group caption (12px, 600, grey), optional task sub-caption (12px, grey), then items separated by 1px rules at 13.5px. Each test or TODO starts with its citable `#ID` (mono 12px, grey, Screen White on hover; a click quotes it into the composer) and a weight mark (▲ high in Screen White, ▽ low in grey, nothing for medium). Detail and notes fold under a grey "▸ détail · N notes" toggle, notes stamped with a tabular date. Tests carry OK / Problème; KO swaps the buttons for an inline field. Plans show a right-aligned tabular done-over-total count and a 4px grey (Instrument Grey) progress bar on a Graphite Rule track. An unreadable board shows a red alert banner at the top of the plan cycle.
 
 ## Do's and Don'ts
 
 ### Do:
 - **Do** take every color from the ten `:root` tokens and their light-mode redefinition; derive tints with `color-mix()`.
 - **Do** keep colour for what waits on you: amber square = your decision, red square = blocked on your approval; everything else in the strip stays neutral.
-- **Do** print the keyboard shortcut next to the control it triggers (key caps, "(N)", "↵", the hint line).
+- **Do** print the keyboard shortcut on the control it triggers (key caps, "(N)", "↵"); the hint line only carries what no control shows.
 - **Do** use `tabular-nums` for any time, count or ratio that updates in place.
 - **Do** keep section captions at 11px uppercase grey so the card summary stays the only loud text.
 
