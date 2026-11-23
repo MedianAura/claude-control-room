@@ -31,6 +31,15 @@ const STATUS = {
     : e.notification_type === 'idle_prompt' ? { status: 'idle', activity: '' } : {},
 };
 
+// Le bandeau montre l'équipe de l'orchestratrice, pas toutes les sessions où le plugin tourne : les sessions
+// inscrites (control-room label, à sa demande) et l'orchestratrice elle-même, reconnue par l'empreinte du
+// socket que claim a gardée dans orchestrator.json.
+const sha256 = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');
+function inTeam() {
+  const o = readJson(path.join(stateDir(), 'orchestrator.json'));
+  return (s) => s.enrolled || (!!o && sha256(s.key) === o.socketHash);
+}
+
 // Une session muette depuis 2 h (fermée sans SessionEnd, tuée) quitte le bandeau (revue #12).
 const SESSION_TTL_MS = 2 * 3600e3;
 
@@ -38,8 +47,9 @@ function list() {
   const dir = path.join(stateDir(), 'sessions');
   const pending = cards.pendingCards();
   const now = Date.now();
+  const team = inTeam();
   return fs.readdirSync(dir).filter(f => f.endsWith('.json')).map(f => readJson(path.join(dir, f))).filter(Boolean)
-    .filter(s => now - (s.at || 0) < SESSION_TTL_MS)
+    .filter(s => team(s) && now - (s.at || 0) < SESSION_TTL_MS)
     .map(({ key, label, status, activity, at }) => {
       if (pending.some(c => c.kind === 'approval' && c.session === key)) status = 'approval';
       else if (pending.some(c => c.kind === 'decision' && c.session && c.session === label)) status = 'decision';

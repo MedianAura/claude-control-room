@@ -92,7 +92,20 @@ test('the approval card cannot be answered with the client secret', async () => 
   await answerApprovalWhenItAppears('deny'); await hook;
 });
 
+test('a session that never enrolled stays off the strip', async () => {
+  await runHook('status', { hook_event_name: 'PreToolUse', tool_name: 'Read', tool_input: { file_path: 'x' } });
+  assert.equal((await state()).sessions.length, 0);
+});
+
+test('the orchestrator shows on the strip without enrolling', async () => {
+  await claimAs(t, 'K1');
+  await runHook('status', { hook_event_name: 'PreToolUse', tool_name: 'Read', tool_input: { file_path: 'x' } });
+  await runHook('status', { hook_event_name: 'PreToolUse', tool_name: 'Read', tool_input: { file_path: 'x' } }, { CLAUDE_CODE_MESSAGING_SOCKET: 'K2' });
+  assert.deepEqual((await state()).sessions.map(x => x.key), ['K1']);
+});
+
 test('PreToolUse updates the session line in place', async () => {
+  await claimAs(t, 'K1');
   await runHook('status', { hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { description: 'Lancer les tests' } });
   await runHook('status', { hook_event_name: 'PreToolUse', tool_name: 'Read', tool_input: { file_path: 'x' } });
   const s = (await state()).sessions;
@@ -103,6 +116,7 @@ test('PreToolUse updates the session line in place', async () => {
 });
 
 test('Stop marks the session idle', async () => {
+  await label('K1', 'w');
   await runHook('status', { hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { description: 'x' } });
   await runHook('stop', { hook_event_name: 'Stop', stop_hook_active: false });
   assert.equal((await state()).sessions[0].status, 'idle');
@@ -115,6 +129,7 @@ test('a label replaces the default name', async () => {
 });
 
 test('PermissionDenied shows the auto-mode refusal as activity', async () => {
+  await label('K1', 'w');
   await runHook('status', { hook_event_name: 'PermissionDenied', tool_name: 'Bash', reason: 'commande destructrice' });
   assert.match((await state()).sessions[0].activity, /refus du mode auto : commande destructrice/);
 });

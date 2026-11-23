@@ -108,6 +108,8 @@ L'utilisateur a choisi l'approche 1.
 - **Bandeau des sessions** : une ligne par session, jamais de nouvelle ligne pour un événement. Pastille d'état :
   travaille, attend une décision, attend une approbation, bloquée, inactive. Texte = activité courante en une
   ligne, heure du dernier changement. Alimenté par les hooks des sessions (voir plus bas), pas par l'orchestratrice.
+  Seule l'équipe y figure : l'orchestratrice (empreinte du socket gardée par `claim`) et les sessions qu'elle a
+  fait inscrire (`control-room label`). Les autres sessions où le plugin tourne n'y apparaissent pas.
 - **Résumé au retour** : quand l'onglet reprend le focus après plus de 2 minutes, une ligne liste ce qui s'est
   passé pendant l'absence. Elle reste jusqu'à ce qu'on la ferme. Pas de liseré ni de marqueur « nouveau » ailleurs.
 - **Carte** : celle de decision-inbox (champs `agent`, `summary`, `recap`, `options`, `proposition`,

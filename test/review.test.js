@@ -116,6 +116,7 @@ test('#12 SessionEnd removes the session line', async () => {
   await boot();
   const ev = (event) => request(t.port, 'POST', '/api/sessions/event', { body: { key: 'K1', session_id: 'abcd', cwd: 'F:/x', event }, headers: clientHeaders(t) });
   await ev('SessionStart');
+  await request(t.port, 'POST', '/api/sessions/label', { body: { key: 'K1', label: 'w' }, headers: clientHeaders(t) });
   assert.equal((await state()).sessions.length, 1);
   await ev('SessionEnd');
   assert.equal((await state()).sessions.length, 0);
@@ -124,6 +125,8 @@ test('#12 SessionEnd removes the session line', async () => {
 test('#12 a session silent for hours drops off the strip', async () => {
   await boot();
   await request(t.port, 'POST', '/api/sessions/event', { body: { key: 'K1', session_id: 'abcd', cwd: 'F:/x', event: 'PreToolUse', tool_name: 'Bash' }, headers: clientHeaders(t) });
+  await request(t.port, 'POST', '/api/sessions/label', { body: { key: 'K1', label: 'w' }, headers: clientHeaders(t) });
+  assert.equal((await state()).sessions.length, 1);
   const f = fs.readdirSync(path.join(dir, 'sessions'))[0];
   const s = JSON.parse(fs.readFileSync(path.join(dir, 'sessions', f), 'utf8'));
   s.at = Date.now() - 3 * 3600e3;

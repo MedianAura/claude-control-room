@@ -285,7 +285,7 @@ function renderSessions() {
   $('#sessions').innerHTML = s.length ? s.map(x => `
     <div class="row st-${esc(x.status)}"><span class="dot"></span><span class="lab">${esc(x.label)}</span>
       <span class="act">${esc(x.activity || STATE_LABEL[x.status] || '')}</span><span class="at">${x.at ? hhmm(x.at) : ''}</span></div>`).join('')
-    : '<div class="none">Aucune session ne s\'est encore signalée.</div>';
+    : '<div class="none">Aucune session de l\'équipe : l\'orchestratrice et les sessions inscrites (control-room label) apparaissent ici.</div>';
 }
 
 function renderAlerts() {
