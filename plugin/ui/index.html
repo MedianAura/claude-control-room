@@ -305,8 +305,15 @@ function renderCard() {
       ${o.detail ? `<div class="d">${esc(o.detail)}</div>` : ''}</span>
     </button>`).join('');
   const kindTag = next.kind === 'approval' ? '<span class="kind">● approbation</span>' : next.kind === 'error' ? '<span class="kind">● erreur</span>' : next.urgent ? '<span class="kind">● urgent</span>' : '';
-  const tool = next.tool ? `<div class="label">Commande</div><pre class="cmd">${esc(next.tool.input && next.tool.input.command ? next.tool.input.command : JSON.stringify(next.tool.input, null, 2))}</pre>` : '';
+  const cmd = next.tool && next.tool.input && next.tool.input.command;
+  const toolName = next.tool && next.tool.name ? ` ${esc(next.tool.name)}` : '';
+  const tool = next.tool ? `<div class="label">${cmd ? 'Commande' : 'Outil'}${toolName}</div><pre class="cmd">${esc(cmd || JSON.stringify(next.tool.input, null, 2))}</pre>` : '';
   const readOnly = next.kind === 'reply' || next.kind === 'error';
+  // Une note seule sur une approbation est un refus (hooks.js) ; sans option ni proposition, « Autre » n'a pas
+  // de quoi être autre.
+  const noteLabel = next.kind === 'approval' ? 'Refuser avec une note' : readOnly || !(opts.length || next.proposition) ? 'Répondre' : 'Autre / nuancer';
+  // Chiffres, ↵ et (N) sont imprimés sur les contrôles ; l'aide ne dit que ce qui ne se voit pas.
+  const hint = next.kind !== 'approval' && opts.length ? '<div class="hint">Maj+chiffre : choisir avec une note</div>' : '';
   $('#view').innerHTML = `${viewHead()}
     <div class="card k-${esc(next.kind)} arming">
       <span class="agent">${esc(next.agent)}</span>${kindTag}
@@ -318,11 +325,11 @@ function renderCard() {
       <div class="actions">
         ${readOnly ? `<button class="btn primary" data-choice="read">Lu ↵</button>` : ''}
         ${next.proposition ? `<button class="btn primary" data-choice="proposition">Go avec la proposition ↵</button>` : ''}
-        <button class="btn ghost" id="noteBtn">${readOnly ? 'Répondre (N)' : next.kind === 'approval' ? 'Ajouter une note (N)' : 'Autre / nuancer (N)'}</button>
+        <button class="btn ghost" id="noteBtn">${noteLabel} (N)</button>
       </div>
-      <textarea id="note" placeholder="${NOTE_PH}"></textarea>
+      <textarea id="note" placeholder="${notePh(next)}"></textarea>
       <div class="held-msg">Réponses suspendues : control-room ne répond plus. La carte attend le retour du serveur.</div>
-      <div class="hint">${opts.length ? `1–${opts.length} choisir · ` : ''}${next.proposition || readOnly ? 'Entrée valider · ' : ''}N note · Maj+chiffre = choix + note</div>
+      ${hint}
     </div>`;
   wireHead();
   $('#view').querySelectorAll('[data-choice]').forEach(b => b.onclick = () => answer(b.dataset.choice));
@@ -334,10 +341,15 @@ function renderCard() {
 
 function leaveTomb() { tomb = null; currentId = null; renderCard(); renderQueue(); }
 
-// Libellé lisible d'une réponse, pour la trace « Envoyé ».
+// Libellé lisible d'une réponse, pour la trace « Envoyé ». Sur une approbation, la trace dit ce que le hook fera :
+// une note seule refuse, et Autoriser ne transmet pas la note (hooks.js).
 function choiceLabel(c, choice, note) {
+  if (c && c.kind === 'approval') {
+    if (choice === 'allow') return note ? 'Autoriser, sans la note' : 'Autoriser';
+    return note ? 'Refuser + note' : 'Refuser';
+  }
   const o = c && optionsOf(c).find(x => x.id === choice);
-  const base = o ? o.label : choice === 'proposition' ? 'la proposition' : choice === 'read' ? 'Lu' : choice === 'note' ? 'ta note' : choice;
+  const base = o ? o.label : choice === 'proposition' ? 'la proposition' : choice === 'read' ? 'Lu' : choice === 'note' ? 'ta réponse' : choice;
   return note && choice !== 'note' ? `${base} + note` : base;
 }
 
@@ -354,7 +366,12 @@ function renderQueue() {
 
 // Note : fermer la note abandonne aussi le choix retenu par Maj+chiffre (sinon Échap puis N puis Ctrl+Entrée
 // enverrait un choix que plus rien n'affiche).
-const NOTE_PH = 'Ta réponse ou ta nuance… (Ctrl+Entrée pour envoyer)';
+function notePh(c, o) {
+  if (c.kind === 'approval') return 'Pourquoi tu refuses… (Ctrl+Entrée pour refuser)';
+  if (o) return `Note jointe à « ${o.label} »… (Ctrl+Entrée pour envoyer, Échap pour annuler le choix)`;
+  const free = c.kind === 'reply' || c.kind === 'error' || !((c.options || []).length || c.proposition);
+  return `${free ? 'Ta réponse' : 'Ta réponse ou ta nuance'}… (Ctrl+Entrée pour envoyer)`;
+}
 function toggleNote() {
   noteOpen = !noteOpen; const t = $('#note'); t.classList.toggle('show', noteOpen);
   if (noteOpen) t.focus(); else pick(null);
@@ -368,7 +385,7 @@ function pick(ch) {
     if (on) b.setAttribute('aria-pressed', 'true'); else b.removeAttribute('aria-pressed');
   });
   const t = $('#note');
-  if (t) t.placeholder = o ? `Note jointe à « ${o.label} »… (Ctrl+Entrée pour envoyer, Échap pour annuler le choix)` : NOTE_PH;
+  if (t && c) t.placeholder = notePh(c, o);
 }
 
 async function answer(choice) {
