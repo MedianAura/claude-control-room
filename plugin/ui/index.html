@@ -50,6 +50,8 @@
   .none { color: var(--muted); font-size: 13px; }
 
   /* Bandeau des sessions : une ligne par session, mise à jour sur place. */
+  /* Hauteur figée pendant la lecture d'une carte (renderSessions) : une session de plus défile ici. */
+  #sessions { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
   #sessions .row { display: grid; grid-template-columns: 12px minmax(120px, 190px) 1fr 46px; gap: 10px; align-items: center; padding: 4px 6px; border-radius: 6px; font-size: 13.5px; }
   #sessions .row:nth-child(odd) { background: color-mix(in srgb, var(--line) 35%, transparent); }
   /* Voyants : la couleur est réservée à « ça attend après toi ». Rond = la session vit sa vie (gris plein :
@@ -74,7 +76,8 @@
   .banner { border-radius: 10px; padding: 9px 14px; display: flex; gap: 10px; align-items: baseline; }
   .banner.away { background: color-mix(in srgb, var(--info) 14%, var(--panel)); border: 1px solid color-mix(in srgb, var(--info) 40%, transparent); }
   .banner.alert { background: color-mix(in srgb, var(--ko) 14%, var(--panel)); border: 1px solid var(--ko); }
-  #notice:empty, #alerts:empty, #away:empty { display: none; }
+  #alerts:empty, #away:empty { display: none; }
+  #view > .banner { margin-bottom: 10px; }
   #alerts { display: grid; gap: 8px; }
   .banner.notice { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
   .banner .x { all: unset; cursor: pointer; margin-left: auto; color: var(--muted); }
@@ -90,6 +93,13 @@
   .card.k-approval { border-color: var(--ko); }
   /* Armement (400 / 800 ms) : les choix sont visiblement inertes tant qu'une touche ne peut pas répondre. */
   .card.arming .opts, .card.arming .actions { opacity: .45; }
+  /* Serveur perdu : la carte reste lisible mais ne répond plus ; la ligne rouge remplace l'aide. */
+  .card.held .opts, .card.held .actions { opacity: .45; }
+  .held-msg { display: none; color: var(--ko); font-size: 12px; margin-top: 12px; }
+  .card.held .held-msg { display: block; } .card.held .hint { display: none; }
+  /* Pierre tombale : la carte lue a disparu sans réponse d'ici ; elle reste en place jusqu'à « Continuer ». */
+  .card.gone { border-style: dashed; }
+  .card.gone .summary { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
   .sent { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
   .sent b { color: var(--text); font-weight: 600; }
   .agent { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text); background: color-mix(in srgb, var(--line) 70%, var(--panel)); padding: 3px 9px; border-radius: 6px; }
@@ -103,6 +113,9 @@
   button.opt:hover, button.opt:focus-visible { border-color: var(--muted); }
   button.opt.rec { border-color: var(--accent); background: var(--accent-bg); }
   button.opt.allow { border-color: var(--ok); } button.opt.deny { border-color: var(--ko); }
+  /* Choix retenu par Maj+chiffre, en attente de la note : la touche s'allume, le cadre passe au texte. */
+  button.opt.picked { border-color: var(--text); }
+  button.opt.picked .k { background: var(--text); border-color: var(--text); color: var(--bg); }
   .k { font: 12px ui-monospace, monospace; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; text-align: center; padding: 1px 0; height: fit-content; }
   .opt .d { color: var(--muted); font-size: 13.5px; }
   .tag { font-size: 11px; color: var(--accent-ink); font-weight: 600; margin-left: 6px; }
@@ -176,7 +189,6 @@
     <!-- Au-dessus de la carte : seulement ce qui ne change pas pendant qu'on la lit. Ce qui arrive en cours de
          lecture (cartes suivantes, alertes) se range dessous ; l'alerte est en plus signalée dans l'en-tête. -->
     <div id="away"></div>
-    <div id="notice"></div>
     <div id="view" aria-live="polite"></div>
     <div class="queue" id="queue"></div>
     <div id="alerts"></div>
@@ -232,21 +244,57 @@ function optionsOf(c) {
   return c.options || [];
 }
 
+// Pourquoi la carte lue a disparu sans réponse d'ici. Seule cette page répond : une approbation non annulée
+// qui quitte la file a expiré (le hook ne tire plus, ou son délai est passé) et se règle dans le terminal.
+function goneWhy(c) {
+  const k = (state.cancelled || []).find(x => x.id === c.id);
+  if (k) return `Annulée par l'orchestratrice${k.reason ? ` : ${esc(k.reason)}` : '.'}`;
+  if (c.kind === 'approval') return 'Approbation expirée : la demande se règle maintenant dans le terminal.';
+  return 'Cette carte n\'est plus en attente (réponse donnée depuis un autre onglet ?).';
+}
+
+// En tête de #view, rendus avec la carte : l'échec d'envoi, puis la trace de la dernière réponse. Jamais ajoutés
+// au-dessus d'une carte déjà affichée.
+function viewHead() {
+  const n = notice ? `<div class="banner notice" role="alert">${notice}<button class="x" title="Fermer" aria-label="Fermer">✕</button></div>` : '';
+  const sent = lastSent ? `<div class="sent">✓ Envoyé à ${esc(lastSent.agent)} : <b>${esc(lastSent.label)}</b> · ${hhmm(lastSent.at)}</div>` : '';
+  return n + sent;
+}
+function wireHead() {
+  const x = $('#view > .banner .x'); if (x) x.onclick = () => { notice = ''; x.closest('.banner').remove(); };
+}
+
+let shown = null, tomb = null; // carte affichée ; pierre tombale tant qu'on n'a pas fait « Continuer »
 function renderCard() {
+  if (tomb) return; // la pierre tombale reste jusqu'à « Continuer »
   const c = currentId && state.pending.find(x => x.id === currentId);
   if (c) return; // la carte affichée reste telle quelle
-  const gone = currentId && (state.cancelled || []).find(x => x.id === currentId);
-  if (gone) notice = `Carte « ${esc(gone.summary)} » annulée par l'orchestratrice${gone.reason ? ` : ${esc(gone.reason)}` : '.'}`;
-  const next = state.pending[0];
   noteOpen = false; pendingChoice = null;
-  // Trace de la dernière réponse, posée avec la carte suivante (jamais ajoutée sous une carte en lecture).
-  const sent = lastSent ? `<div class="sent">✓ Envoyé à ${esc(lastSent.agent)} : <b>${esc(lastSent.label)}</b> · ${hhmm(lastSent.at)}</div>` : '';
-  if (!next) {
-    currentId = null;
-    $('#view').innerHTML = `${sent}<div class="empty"><b>Rien à trancher</b>Les prochaines cartes de l'orchestratrice apparaîtront ici.</div>`;
+  if (currentId && shown && shown.id === currentId) {
+    // Disparue sans réponse d'ici : elle reste à sa place, barrée, avec la raison. Aucune touche ne peut tomber
+    // sur la carte suivante tant qu'on n'a pas continué. Le bandeau reste figé (même place de lecture) ; un
+    // échec d'envoi sur cette carte ne veut plus rien dire.
+    tomb = shown; notice = '';
+    $('#view').innerHTML = `${viewHead()}
+      <div class="card gone">
+        <span class="agent">${esc(tomb.agent)}</span>
+        <div class="summary">${esc(tomb.summary)}</div>
+        <div>${goneWhy(tomb)}</div>
+        <div class="actions"><button class="btn primary" id="goOn">Continuer ↵</button></div>
+      </div>`;
+    wireHead();
+    $('#goOn').onclick = leaveTomb;
     return;
   }
-  currentId = next.id;
+  stripH = null; // ce qu'on lit change : le bandeau peut reprendre sa hauteur
+  const next = state.pending[0];
+  if (!next) {
+    currentId = null; shown = null;
+    $('#view').innerHTML = `${viewHead()}<div class="empty"><b>Rien à trancher</b>Les prochaines cartes de l'orchestratrice apparaîtront ici.</div>`;
+    wireHead();
+    return;
+  }
+  currentId = next.id; shown = next;
   shownAt = Date.now();
   const armMs = next.kind === 'approval' ? APPROVAL_ARM_MS : CARD_ARM_MS;
   const opts = optionsOf(next);
@@ -259,7 +307,7 @@ function renderCard() {
   const kindTag = next.kind === 'approval' ? '<span class="kind">● approbation</span>' : next.kind === 'error' ? '<span class="kind">● erreur</span>' : next.urgent ? '<span class="kind">● urgent</span>' : '';
   const tool = next.tool ? `<div class="label">Commande</div><pre class="cmd">${esc(next.tool.input && next.tool.input.command ? next.tool.input.command : JSON.stringify(next.tool.input, null, 2))}</pre>` : '';
   const readOnly = next.kind === 'reply' || next.kind === 'error';
-  $('#view').innerHTML = `${sent}
+  $('#view').innerHTML = `${viewHead()}
     <div class="card k-${esc(next.kind)} arming">
       <span class="agent">${esc(next.agent)}</span>${kindTag}
       <div class="summary">${esc(next.summary)}</div>
@@ -272,14 +320,19 @@ function renderCard() {
         ${next.proposition ? `<button class="btn primary" data-choice="proposition">Go avec la proposition ↵</button>` : ''}
         <button class="btn ghost" id="noteBtn">${readOnly ? 'Répondre (N)' : next.kind === 'approval' ? 'Ajouter une note (N)' : 'Autre / nuancer (N)'}</button>
       </div>
-      <textarea id="note" placeholder="Ta réponse ou ta nuance… (Ctrl+Entrée pour envoyer)"></textarea>
+      <textarea id="note" placeholder="${NOTE_PH}"></textarea>
+      <div class="held-msg">Réponses suspendues : control-room ne répond plus. La carte attend le retour du serveur.</div>
       <div class="hint">${opts.length ? `1–${opts.length} choisir · ` : ''}${next.proposition || readOnly ? 'Entrée valider · ' : ''}N note · Maj+chiffre = choix + note</div>
     </div>`;
+  wireHead();
   $('#view').querySelectorAll('[data-choice]').forEach(b => b.onclick = () => answer(b.dataset.choice));
   $('#noteBtn').onclick = toggleNote;
   const card = $('#view .card'), id = next.id;
+  card.classList.toggle('held', lostSince !== null);
   setTimeout(() => { if (currentId === id) card.classList.remove('arming'); }, armMs);
 }
+
+function leaveTomb() { tomb = null; currentId = null; renderCard(); renderQueue(); }
 
 // Libellé lisible d'une réponse, pour la trace « Envoyé ».
 function choiceLabel(c, choice, note) {
@@ -299,18 +352,29 @@ function renderQueue() {
     (others.length > QUEUE_PILLS ? `<span>+${others.length - QUEUE_PILLS}</span>` : '');
 }
 
-let shownNotice = null;
-function renderNotice() {
-  if (notice === shownNotice) return;
-  shownNotice = notice;
-  $('#notice').innerHTML = notice ? `<div class="banner notice">${notice}<button class="x" title="Fermer">✕</button></div>` : '';
-  const x = $('#notice .x'); if (x) x.onclick = () => { notice = ''; renderNotice(); };
+// Note : fermer la note abandonne aussi le choix retenu par Maj+chiffre (sinon Échap puis N puis Ctrl+Entrée
+// enverrait un choix que plus rien n'affiche).
+const NOTE_PH = 'Ta réponse ou ta nuance… (Ctrl+Entrée pour envoyer)';
+function toggleNote() {
+  noteOpen = !noteOpen; const t = $('#note'); t.classList.toggle('show', noteOpen);
+  if (noteOpen) t.focus(); else pick(null);
+}
+function pick(ch) {
+  pendingChoice = ch;
+  const c = shown, o = ch && c && optionsOf(c).find(x => x.id === ch);
+  $('#view').querySelectorAll('button.opt').forEach(b => {
+    const on = b.dataset.choice === ch;
+    b.classList.toggle('picked', on);
+    if (on) b.setAttribute('aria-pressed', 'true'); else b.removeAttribute('aria-pressed');
+  });
+  const t = $('#note');
+  if (t) t.placeholder = o ? `Note jointe à « ${o.label} »… (Ctrl+Entrée pour envoyer, Échap pour annuler le choix)` : NOTE_PH;
 }
 
-function toggleNote() { noteOpen = !noteOpen; const t = $('#note'); t.classList.toggle('show', noteOpen); if (noteOpen) t.focus(); }
-
 async function answer(choice) {
-  if (!currentId) return;
+  if (!currentId || tomb) return;
+  // Serveur perdu : la carte est suspendue (ligne rouge), rien ne part.
+  if (lostSince !== null) return;
   const c = state.pending.find(x => x.id === currentId);
   // Armement : un double clic ou une touche répétée ne doit pas répondre à la carte qui vient d'apparaître.
   if (Date.now() - shownAt < (c && c.kind === 'approval' ? APPROVAL_ARM_MS : CARD_ARM_MS)) return;
@@ -320,14 +384,16 @@ async function answer(choice) {
   answered.add(id); notice = '';
   lastSent = { agent: c ? c.agent : '', label: choiceLabel(c, choice, note), at: Date.now() };
   state.pending = state.pending.filter(x => x.id !== id);
-  currentId = null; renderCard(); renderQueue(); renderNotice();
+  currentId = null; renderCard(); renderQueue();
   const r = await post('/api/answer', { id, choice, note });
   if (r.status !== 200 && r.status !== 409 && r.status !== 404) {
     answered.delete(id); lastSent = null;
-    notice = `Réponse à « ${esc(c ? c.summary : id)} » non envoyée (${r.status ? `erreur ${r.status}` : 'serveur injoignable'}) : la carte revient dans la file.`;
+    notice = `Réponse à « ${esc(c ? c.summary : id)} » non envoyée (${r.status ? `erreur ${r.status}` : 'serveur injoignable'}) : la carte est de nouveau à toi.`;
+    // La carte qui a échoué redevient la carte affichée, en tête de file : renderCard a déjà promu la suivante,
+    // il faut la lâcher (currentId = null) sans quoi elle resterait affichée sous une trace « Envoyé » fausse.
     // Remise locale : si le serveur est tombé, load() échoue aussi et ne la ramènerait pas.
-    if (c && !state.pending.some(x => x.id === id)) state.pending.unshift(c);
-    renderCard(); renderQueue(); renderNotice();
+    if (c) state.pending = [c, ...state.pending.filter(x => x.id !== id)];
+    tomb = null; currentId = null; renderCard(); renderQueue();
   }
   load();
 }
@@ -339,23 +405,34 @@ let shownAt = 0;
 
 document.addEventListener('keydown', (e) => {
   if (e.repeat) return;
-  const c = currentId && state.pending.find(x => x.id === currentId); if (!c) return;
-  if (c.kind === 'approval' && Date.now() - shownAt < APPROVAL_ARM_MS && !e.target.closest?.('#note')) return;
   const a = document.activeElement;
   if (a && (a.id === 'msg' || (a.closest && a.closest('aside')))) return;
+  // Entrée / Espace sur un bouton focalisé : c'est ce bouton qui répond (activation native), pas la proposition.
+  const onButton = (e.key === 'Enter' || e.key === ' ') && e.target.closest?.('button');
+  if (tomb) { if (e.key === 'Enter' && !onButton && !e.altKey && !e.ctrlKey && !e.metaKey) { e.preventDefault(); leaveTomb(); } return; }
+  const c = currentId && state.pending.find(x => x.id === currentId); if (!c) return;
+  if (c.kind === 'approval' && Date.now() - shownAt < APPROVAL_ARM_MS && !e.target.closest?.('#note')) return;
   if (a && a.id === 'note') {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); answer(pendingChoice || 'note'); }
     if (e.key === 'Escape') toggleNote();
     return;
   }
-  // Entrée / Espace sur un bouton focalisé : c'est ce bouton qui répond (activation native), pas la proposition.
-  if ((e.key === 'Enter' || e.key === ' ') && e.target.closest?.('button')) return;
+  if (onButton) return;
+  // Alt / Ctrl / Méta + chiffre appartiennent au navigateur ou à l'OS (onglets, AltGr) : jamais une réponse.
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
   const opts = optionsOf(c);
   const m = /^(?:Digit|Numpad)([1-9])$/.exec(e.code || '');
   const digit = m ? +m[1] : NaN;
   if (digit >= 1 && digit <= opts.length) {
     const ch = opts[digit - 1].id;
-    if (e.shiftKey) { pendingChoice = ch; if (!noteOpen) toggleNote(); } else answer(ch);
+    if (!e.shiftKey) answer(ch);
+    else {
+      // preventDefault : sinon le caractère (« ! ») tombe dans la note qui prend le focus pendant la frappe.
+      e.preventDefault();
+      // Autoriser + note n'existe pas : le hook ne transmet une note qu'avec un refus (hooks.js).
+      if (c.kind === 'approval' && ch === 'allow') return;
+      pick(ch); if (!noteOpen) toggleNote();
+    }
   } else if (e.key === 'Enter' && (c.kind === 'reply' || c.kind === 'error')) answer('read');
   else if (e.key === 'Enter' && c.proposition) answer('proposition');
   else if (e.key.toLowerCase() === 'n') { e.preventDefault(); toggleNote(); }
@@ -374,12 +451,19 @@ function renderSessions() {
     const extra = x.activity && x.activity !== STATE_LABEL[x.status] ? ` · ${esc(x.activity)}` : '';
     return `<span class="sw">${STATE_LABEL[x.status]}</span>${extra}`;
   };
-  $('#sessions').innerHTML = s.length ? s.map(x => `
+  const el = $('#sessions');
+  el.innerHTML = s.length ? s.map(x => `
     <div class="row st-${esc(x.status)}"><span class="dot"></span><span class="lab">${esc(x.label)}</span>
       <span class="act">${act(x)}</span><span class="at">${x.at ? hhmm(x.at) : ''}</span></div>`).join('')
     : '<div class="none">Aucune session de l\'équipe : l\'orchestratrice et les sessions inscrites (control-room label) apparaissent ici.</div>';
+  // Le bandeau est au-dessus de la carte : sa hauteur est figée tant que la même carte est lue (une session qui
+  // arrive défile dans le bandeau, une qui part laisse un vide), mesurée de nouveau quand la carte change.
+  if (stripH === null) { el.style.height = ''; stripH = el.offsetHeight; }
+  el.style.height = `${stripH}px`;
   setFavicon(blocked ? 'approval' : mine.length ? 'decision' : '');
 }
+let stripH = null;
+window.addEventListener('resize', () => { stripH = null; });
 
 // Favicon : un carré rouge (approbation) ou ambre (décision) quand quelque chose attend, pour le voir depuis un
 // autre onglet ; rien sinon.
@@ -402,6 +486,7 @@ function renderAlerts() {
 function renderStatus() {
   const lost = lostSince !== null, nAlerts = lost ? 0 : (state.alerts || []).length;
   $('#sessionsPanel').classList.toggle('lost', lost);
+  const card = $('#view .card:not(.gone)'); if (card) card.classList.toggle('held', lost);
   $('#conn').textContent = lost
     ? (lostStatus === 401 || lostStatus === 403 ? 'onglet plus autorisé : utilise celui ouvert par control-room start' : `control-room ne répond plus depuis ${hhmm(lostSince)}`)
     : nAlerts ? `⚠ ${nAlerts > 1 ? `${nAlerts} alertes` : 'alerte'} · détail sous la carte` : '';
@@ -625,7 +710,7 @@ async function load() {
   try { state = await r.json(); } catch { setLink(0); return; }
   setLink(200);
   state.pending = state.pending.filter(c => !answered.has(c.id));
-  renderCard(); renderQueue(); renderNotice(); renderSessions(); renderAlerts(); renderHistory(); renderSide();
+  renderCard(); renderQueue(); renderSessions(); renderAlerts(); renderHistory(); renderSide();
 }
 load();
 setInterval(load, 1500);
