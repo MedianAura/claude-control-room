@@ -85,7 +85,11 @@
   .composer { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: end; }
   #msg { min-height: 44px; max-height: 200px; }
   #shot { display: none; font-size: 12px; color: var(--muted); grid-column: 1 / -1; }
-  #shot img { max-height: 80px; border-radius: 6px; vertical-align: middle; margin-right: 8px; border: 1px solid var(--line); }
+  #shot .thumb { position: relative; display: inline-block; margin: 0 8px 6px 0; vertical-align: middle; }
+  #shot .thumb img { max-height: 80px; border-radius: 6px; display: block; border: 1px solid var(--line); }
+  #shot .thumb .x { all: unset; position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; line-height: 18px; text-align: center;
+    font-size: 11px; border-radius: 50%; background: var(--panel); border: 1px solid var(--line); color: var(--text); cursor: pointer; }
+  #shot .err { color: var(--ko); margin-top: 4px; }
   #histPanel { display: none; } #histPanel.show { display: block; }
   #hist li { margin: 4px 0; font-size: 13px; color: var(--muted); }
 
@@ -319,25 +323,42 @@ function renderHistory() {
   $('#hist').innerHTML = (state.recent || []).map(r => `<li>${r.at ? hhmm(r.at) + ' · ' : ''}${esc(r.text)}</li>`).join('') || '<li>Rien encore.</li>';
 }
 
-// ---------- message libre à l'orchestratrice (+ capture collée) ----------
-let shot = null;
+// ---------- message libre à l'orchestratrice (+ captures collées, 5 au plus) ----------
+const MAX_SHOTS = 5, MAX_SHOT_BYTES = 10 * 1024 * 1024;
+let shots = [], shotMsg = '';
+function renderShots() {
+  const el = $('#shot');
+  el.style.display = shots.length || shotMsg ? 'block' : 'none';
+  el.innerHTML = shots.map((s, i) => !s ? '' : `<span class="thumb"><img src="${s}" alt=""><button class="x" data-i="${i}" title="Retirer">✕</button></span>`).join('')
+    + (shots.length ? `<span>${shots.length} capture${shots.length > 1 ? 's' : ''} jointe${shots.length > 1 ? 's' : ''}</span>` : '')
+    + (shotMsg ? `<div class="err">${esc(shotMsg)}</div>` : '');
+  el.querySelectorAll('.x').forEach(b => b.onclick = () => { shots.splice(+b.dataset.i, 1); shotMsg = ''; renderShots(); });
+}
 $('#msg').addEventListener('paste', (e) => {
-  const f = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith('image/'));
-  if (!f) return;
+  const files = [...(e.clipboardData?.items || [])].filter(i => i.type.startsWith('image/')).map(i => i.getAsFile());
+  if (!files.length) return;
   e.preventDefault();
-  const reader = new FileReader();
-  reader.onload = () => { shot = reader.result; $('#shot').style.display = 'block'; $('#shot').innerHTML = `<img src="${shot}" alt=""> capture jointe · <a href="#" id="dropShot">retirer</a>`; $('#dropShot').onclick = (ev) => { ev.preventDefault(); clearShot(); }; };
-  const file = f.getAsFile();
-  if (file.size > 10 * 1024 * 1024) { $('#shot').style.display = 'block'; $('#shot').textContent = 'Capture trop lourde (10 Mo max).'; return; }
-  reader.readAsDataURL(file);
+  for (const file of files) {
+    if (shots.length >= MAX_SHOTS) { shotMsg = `${MAX_SHOTS} captures au plus par message.`; break; }
+    if (file.size > MAX_SHOT_BYTES) { shotMsg = 'Capture trop lourde (10 Mo max).'; continue; }
+    const slot = shots.push(null) - 1; // garde l'ordre de collage malgré la lecture asynchrone
+    const reader = new FileReader();
+    reader.onload = () => { shots[slot] = reader.result; renderShots(); };
+    reader.readAsDataURL(file);
+  }
+  renderShots();
 });
-function clearShot() { shot = null; $('#shot').style.display = 'none'; $('#shot').innerHTML = ''; }
+function clearShots() { shots = []; shotMsg = ''; renderShots(); }
 async function sendMessage() {
   const text = $('#msg').value.trim();
-  if (!text && !shot) return;
-  const r = await post('/api/message', { text, image: shot || undefined });
-  if (r.status === 200) { $('#msg').value = ''; clearShot(); load(); }
-  else { $('#shot').style.display = 'block'; $('#shot').textContent = r.status === 413 ? 'Capture trop lourde (10 Mo max).' : r.status === 415 ? 'Ce n\'est pas une image PNG, JPEG ou WebP.' : r.status === 0 ? 'control-room ne répond plus (serveur arrêté ?).' : `Envoi impossible (${r.status}).`; shot = null; }
+  const images = shots.filter(Boolean);
+  if (!text && !images.length) return;
+  const r = await post('/api/message', { text, images });
+  if (r.status === 200) { $('#msg').value = ''; clearShots(); load(); return; }
+  // Échec : texte et captures restent là pour réessayer.
+  shotMsg = r.status === 413 ? ((r.json && r.json.error) || 'Trop lourd.') : r.status === 415 ? 'Ce n\'est pas une image PNG, JPEG ou WebP.'
+    : r.status === 0 ? 'control-room ne répond plus (serveur arrêté ?).' : `Envoi impossible (${r.status}).`;
+  renderShots();
 }
 $('#sendMsg').onclick = sendMessage;
 $('#msg').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendMessage(); } });

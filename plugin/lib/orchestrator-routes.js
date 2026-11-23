@@ -5,22 +5,35 @@ const { stateDir, addEvent } = require('./store');
 const cards = require('./cards');
 
 const MAX_IMAGE = 10 * 1024 * 1024;
+const MAX_IMAGES = 5;
+const MAX_BODY = Math.ceil(MAX_IMAGES * MAX_IMAGE * 4 / 3) + 1024 * 1024; // base64 + texte
 const IMAGE_TYPES = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
 
+// Toutes les images sont validées avant d'en écrire une : un message refusé ne laisse aucun fichier.
 async function handleMessage(req, res, url, { readBody, send, deliver }) {
-  const { text = '', image } = await readBody(req, 16 * 1024 * 1024);
-  let file = null;
-  if (image) {
-    const m = String(image).match(/^data:([\w/+.-]+);base64,(.*)$/s);
+  const { text = '', image, images } = await readBody(req, MAX_BODY);
+  const list = [...(Array.isArray(images) ? images : []), ...(image ? [image] : [])];
+  if (list.length > MAX_IMAGES) return send(res, 413, { error: `${MAX_IMAGES} images maximum` });
+  const decoded = [];
+  for (const img of list) {
+    const m = String(img).match(/^data:([\w/+.-]+);base64,(.*)$/s);
     if (!m || !IMAGE_TYPES[m[1]]) return send(res, 415, { error: 'image PNG, JPEG ou WebP attendue' });
     const bytes = Buffer.from(m[2], 'base64');
-    if (bytes.length > MAX_IMAGE) return send(res, 413, { error: '10 Mo maximum' });
-    file = path.join(stateDir(), 'uploads', `${new Date().toISOString().replace(/[:.]/g, '-')}.${IMAGE_TYPES[m[1]]}`);
-    fs.writeFileSync(file, bytes);
+    if (bytes.length > MAX_IMAGE) return send(res, 413, { error: '10 Mo maximum par image' });
+    decoded.push({ bytes, ext: IMAGE_TYPES[m[1]] });
   }
-  if (!text.trim() && !file) return send(res, 400, { error: 'message vide' });
-  await deliver(`[control-room] Message de l'utilisateur : ${text.trim()}${file ? `\nCapture : ${file}` : ''}`);
-  addEvent(file ? 'message et capture envoyés à l\'orchestratrice' : 'message envoyé à l\'orchestratrice');
+  if (!text.trim() && !decoded.length) return send(res, 400, { error: 'message vide' });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const files = decoded.map(({ bytes, ext }, i) => {
+    const file = path.join(stateDir(), 'uploads', `${stamp}${decoded.length > 1 ? `-${i + 1}` : ''}.${ext}`);
+    fs.writeFileSync(file, bytes);
+    return file;
+  });
+  const shots = files.length === 1 ? `\nCapture : ${files[0]}`
+    : files.length ? `\nCaptures :\n${files.map(f => `- ${f}`).join('\n')}` : '';
+  await deliver(`[control-room] Message de l'utilisateur : ${text.trim()}${shots}`);
+  const what = files.length > 1 ? `message et ${files.length} captures envoyés` : files.length ? 'message et capture envoyés' : 'message envoyé';
+  addEvent(`${what} à l'orchestratrice`);
   return send(res, 200, { ok: true });
 }
 

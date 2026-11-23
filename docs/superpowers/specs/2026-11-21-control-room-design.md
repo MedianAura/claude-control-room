@@ -119,8 +119,9 @@ L'utilisateur a choisi l'approche 1.
   que rien ne défile.
 - **Approbations** : une carte de type approbation (« b2 veut lancer `docker compose build …` » : Autoriser /
   Refuser + note), dans la même file, prioritaire.
-- **Zone de saisie** vers l'orchestratrice. Ctrl+V d'une image l'enregistre en PNG dans le dossier d'état ; le
-  message envoyé contient son chemin absolu, que l'orchestratrice lit avec son outil de lecture.
+- **Zone de saisie** vers l'orchestratrice. Chaque Ctrl+V d'une image ajoute une capture (5 au plus, 10 Mo
+  chacune), retirable avant l'envoi ; elles sont enregistrées dans le dossier d'état et le message contient leurs
+  chemins absolus, que l'orchestratrice lit avec son outil de lecture.
 - **Historique** (🕘) : fermé par défaut, ouvert à la demande ; c'est le seul endroit où le passé s'accumule.
 
 ### La page, colonne de droite : le cycle TODO → Plan → À tester

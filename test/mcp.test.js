@@ -126,6 +126,29 @@ test('a free message with a pasted image is saved and delivered with its path', 
   assert.equal(fs.statSync(file).size, 2000);
 });
 
+test('several pasted images are all saved and listed in the message', async () => {
+  await claimAs(t, 'A');
+  const r = await request(t.port, 'POST', '/api/message', { body: { text: 'trois', images: [png(100), png(200), png(300)] }, headers: pageHeaders(t) });
+  assert.equal(r.status, 200);
+  const files = [...delivery.pendingFor()[0].text.matchAll(/^- (.+.png)$/gm)].map(m => m[1]);
+  assert.deepEqual(files.map(f => fs.statSync(f).size), [100, 200, 300]);
+});
+
+test('more than five images are refused and nothing is written', async () => {
+  await claimAs(t, 'A');
+  const r = await request(t.port, 'POST', '/api/message', { body: { text: 'x', images: Array(6).fill(png(10)) }, headers: pageHeaders(t) });
+  assert.equal(r.status, 413);
+  assert.equal(delivery.pendingFor().length, 0);
+  assert.deepEqual(fs.readdirSync(path.join(dir, 'uploads')), []);
+});
+
+test('one bad image refuses the whole message, no file left behind', async () => {
+  await claimAs(t, 'A');
+  const r = await request(t.port, 'POST', '/api/message', { body: { text: 'x', images: [png(10), 'data:text/html;base64,PGI+'] }, headers: pageHeaders(t) });
+  assert.equal(r.status, 415);
+  assert.deepEqual(fs.readdirSync(path.join(dir, 'uploads')), []);
+});
+
 test('an image over 10 MB is refused and nothing is delivered', async () => {
   const { claimId } = await claimAs(t, 'A');
   const r = await request(t.port, 'POST', '/api/message', { body: { text: 'gros', image: png(11 * 1024 * 1024) }, headers: pageHeaders(t) });
