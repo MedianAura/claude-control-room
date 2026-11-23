@@ -50,7 +50,7 @@ function clientHeaders(t) { return { 'x-cr-secret': t.clientSecret }; }
 
 // Déclare une orchestratrice ; rend { claimId, code }.
 async function claimAs(t, socket, extra = {}) {
-  const r = await request(t.port, 'POST', '/api/claim', { body: { socket, project: 'F:/p', plans: 'F:/p/plans', master: 'F:/p/plans/m/plan.md', ...extra }, headers: clientHeaders(t) });
+  const r = await request(t.port, 'POST', '/api/claim', { body: { socket, project: 'F:/p', plans: 'F:/p/plans', board: 'F:/p/.control-room/board.json', ...extra }, headers: clientHeaders(t) });
   if (r.status !== 200) throw new Error(`claim ${r.status}`);
   return r.json;
 }

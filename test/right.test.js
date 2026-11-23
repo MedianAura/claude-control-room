@@ -3,69 +3,127 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 const { tempStateDir, startTestServer, request, pageHeaders } = require('./helpers');
-const { rightState, routes } = require('../plugin/lib/right');
+const right = require('../plugin/lib/right');
+const { rightState, routes } = right;
+const orchRoutes = require('../plugin/lib/orchestrator-routes');
+const board = require('../plugin/lib/board');
 const { writeJson } = require('../plugin/lib/store');
-const { parseMaster } = require('../plugin/lib/plan-file');
 const { pendingCards } = require('../plugin/lib/cards');
 
-const fixture = fs.readFileSync(path.join(__dirname, 'fixtures', 'master-plan.md'), 'utf8');
-let t, dir, master, plansRoot;
+let t, dir, boardPath, plansRoot;
 
 test.beforeEach(async () => {
   dir = tempStateDir('cr-right-');
   plansRoot = path.join(dir, 'plans');
   fs.mkdirSync(path.join(plansRoot, 'dungeon-speed'), { recursive: true });
   fs.writeFileSync(path.join(plansRoot, 'dungeon-speed', 'plan.md'), '- [x] a\n- [ ] b\n');
-  master = path.join(dir, 'master.md');
-  fs.writeFileSync(master, fixture);
-  writeJson(path.join(dir, 'orchestrator.json'), { master, plans: plansRoot });
+  boardPath = path.join(dir, '.control-room', 'board.json');
+  writeJson(path.join(dir, 'orchestrator.json'), { plans: plansRoot, board: boardPath });
   t = await startTestServer({ routes, state: () => ({ right: rightState() }) });
 });
 test.afterEach(async () => { await t.close(); });
 
-const openTest = () => parseMaster(fixture).tests.find(x => !x.done);
+// Élément à identifiant choisi (« 45BG ») : on souffle les tirages à board._random.
+function addWithId(id, kind, fields) {
+  const real = board._random;
+  const draws = [...id].map(c => board.ID_ALPHABET.indexOf(c));
+  board._random = () => draws.shift();
+  try { return board.addItem(boardPath, kind, fields); } finally { board._random = real; }
+}
+const ok = (id, headers = pageHeaders(t)) => request(t.port, 'POST', '/api/test', { body: { id, result: 'ok' }, headers });
+const ko = (id, note) => request(t.port, 'POST', '/api/test', { body: { id, result: 'fail', note }, headers: pageHeaders(t) });
+const item = (id) => board.readBoard(boardPath).items.find(i => i.id === id);
 
-test('the right column lists only open tests and open todos', () => {
-  const r = rightState();
-  assert.equal(r.tests.length, parseMaster(fixture).tests.filter(x => !x.done).length);
-  assert.ok(!r.todos.some(x => x.name === 'Dungeon speed'));
-});
-
-test('active plans show their progress from their own plan file', () => {
+test('the right column shows open items grouped by the board view', () => {
   writeJson(path.join(dir, 'active-plans.json'), [{ name: 'dungeon-speed', dir: path.join(plansRoot, 'dungeon-speed'), label: '🏃 dungeon-speed' }]);
-  assert.deepEqual(rightState().plans, [{ name: 'dungeon-speed', label: '🏃 dungeon-speed', done: 1, total: 2, tasks: [] }]);
+  const a = board.addItem(boardPath, 'test', { text: 'scan', plan: 'dungeon-speed', task: 'Task 4: Deploy' });
+  const b = board.addItem(boardPath, 'test', { text: 'hors plan', weight: 'high' });
+  const c = board.addItem(boardPath, 'test', { text: 'déjà vu', plan: 'dungeon-speed', task: 'Task 4: Deploy' });
+  board.tickTest(boardPath, c.id);
+  const d = board.addItem(boardPath, 'todo', { text: 'Bag cleaner', weight: 'low', group: 'Bags' });
+  const r = rightState();
+  assert.deepEqual(Object.keys(r), ['board', 'tests', 'plans', 'todos']);
+  assert.deepEqual(r.board, { error: null });
+  assert.deepEqual(r.tests.map(g => [g.plan, g.label, g.tasks.map(k => [k.task, k.items.map(i => i.id)])]), [
+    ['dungeon-speed', '🏃 dungeon-speed', [['Task 4: Deploy', [a.id]]]],
+    [null, 'Hors plan', [[null, [b.id]]]],
+  ]);
+  assert.deepEqual(r.todos.map(g => [g.group, g.label, g.items.map(i => i.id)]), [['Bags', 'Bags', [d.id]]]);
+  assert.deepEqual(r.plans, [{ name: 'dungeon-speed', label: '🏃 dungeon-speed', done: 1, total: 2, tasks: [] }]);
 });
 
 test('without a claimed orchestrator the column is empty', () => {
   fs.unlinkSync(path.join(dir, 'orchestrator.json'));
-  assert.deepEqual(rightState(), { tests: [], plans: [], todos: [] });
+  assert.deepEqual(rightState(), { board: { error: null }, tests: [], plans: [], todos: [] });
 });
 
-test('OK from the page ticks the box in the master plan', async () => {
-  const r = await request(t.port, 'POST', '/api/test', { body: { text: openTest().text, result: 'ok' }, headers: pageHeaders(t) });
+test('an unreadable board is shown, not emptied', async () => {
+  fs.mkdirSync(path.dirname(boardPath), { recursive: true });
+  fs.writeFileSync(boardPath, '{ "items": [ cassé');
+  const r = rightState();
+  assert.ok(r.board.error);
+  assert.deepEqual(r.tests, []);
+  assert.equal((await ok('45BG')).status, 409);
+  assert.equal(fs.readFileSync(boardPath, 'utf8'), '{ "items": [ cassé');
+});
+
+test('OK ticks the test and tells the orchestrator', async () => {
+  addWithId('45BG', 'test', { text: 'scan', plan: 'p', task: 'Task 4' });
+  addWithId('K2P9', 'test', { text: 'autre', plan: 'p' });
+  const r = await ok('45BG');
   assert.equal(r.status, 200);
-  assert.ok(parseMaster(fs.readFileSync(master, 'utf8')).tests.find(x => x.text === openTest().text).done);
-  assert.equal(t.delivered.length, 0);
+  assert.equal(item('45BG').state, 'ok');
+  assert.deepEqual(t.delivered, ['[control-room] Test OK #45BG : fais cocher son étape dans le plan.']);
 });
 
-test('a problem sends the note to the orchestrator and leaves the box open', async () => {
-  const o = openTest();
-  const r = await request(t.port, 'POST', '/api/test', { body: { text: o.text, result: 'fail', note: 'le son boucle encore' }, headers: pageHeaders(t) });
+test('KO keeps the test open, stores the note and delivers it', async () => {
+  addWithId('45BG', 'test', { text: 'scan', plan: 'p' });
+  const r = await ko('45BG', 'le son boucle encore');
   assert.equal(r.status, 200);
-  assert.equal(t.delivered.length, 1);
-  assert.match(t.delivered[0], new RegExp(`Test KO — ${o.parent}`));
-  assert.match(t.delivered[0], /Note : le son boucle encore/);
-  assert.equal(fs.readFileSync(master, 'utf8'), fixture);
+  const it = item('45BG');
+  assert.equal(it.state, 'open');
+  assert.deepEqual(it.notes.map(n => [n.by, n.text]), [['user', 'le son boucle encore']]);
+  assert.deepEqual(t.delivered, ['[control-room] Test KO #45BG\nNote : le son boucle encore']);
 });
 
-test('a vanished test makes an error card and writes nothing', async () => {
-  const r = await request(t.port, 'POST', '/api/test', { body: { text: 'disparu', result: 'ok' }, headers: pageHeaders(t) });
+test('a second OK on the same test is refused and delivers nothing', async () => {
+  addWithId('45BG', 'test', { text: 'scan', plan: 'p' });
+  addWithId('K2P9', 'test', { text: 'autre', plan: 'p' });
+  await ok('45BG');
+  const before = t.delivered.length;
+  assert.equal((await ok('45BG')).status, 409);
+  assert.equal(t.delivered.length, before);
+});
+
+test('an unknown id → 409 and an error card', async () => {
+  board.addItem(boardPath, 'test', { text: 'scan' });
+  const before = fs.readFileSync(boardPath, 'utf8');
+  const r = await ok('ZZZZ');
   assert.equal(r.status, 409);
   assert.equal(pendingCards().filter(c => c.kind === 'error').length, 1);
-  assert.equal(fs.readFileSync(master, 'utf8'), fixture);
+  assert.equal(fs.readFileSync(boardPath, 'utf8'), before);
+  assert.deepEqual(t.delivered, []);
 });
 
 test('the client secret cannot tick a test', async () => {
-  const r = await request(t.port, 'POST', '/api/test', { body: { text: openTest().text, result: 'ok' }, headers: { 'x-cr-secret': t.clientSecret } });
+  addWithId('45BG', 'test', { text: 'scan' });
+  const r = await ok('45BG', { 'x-cr-secret': t.clientSecret });
   assert.equal(r.status, 403);
+  assert.equal(item('45BG').state, 'open');
+});
+
+test('wrapDeliver appends the refs block', async () => {
+  addWithId('45BG', 'test', { text: 'scan', plan: 'crucible', task: 'Task 4', weight: 'high', origin: { file: 'crucible/plan.md', step: 'Step 4' } });
+  const delivered = [];
+  const s = await startTestServer({ routes: orchRoutes.routes, deliver: right.wrapDeliver(async (x) => { delivered.push(x); }) });
+  try {
+    const r = await request(s.port, 'POST', '/api/message', { body: { text: 'Clarifie #45bg, et #ZZZZ' }, headers: pageHeaders(s) });
+    assert.equal(r.status, 200);
+  } finally { await s.close(); }
+  assert.equal(delivered.length, 1);
+  assert.equal(delivered[0], "[control-room] Message de l'utilisateur : Clarifie #45bg, et #ZZZZ\n#45BG (test, crucible › Task 4, high) : scan\n  origine : crucible/plan.md, Step 4");
+});
+
+test('withRefs leaves a text without known ids untouched', () => {
+  assert.equal(right.withRefs('rien #ZZZZ'), 'rien #ZZZZ');
 });

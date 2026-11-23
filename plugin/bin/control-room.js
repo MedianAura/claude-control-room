@@ -39,7 +39,8 @@ const commands = {
     const bootstrapKey = newPageSecret();
     const delivery = createDelivery();
     const server = createServer({
-      pageSecret, bootstrapKey, clientSecret: loadClientSecret(), deliver: delivery.deliver,
+      // Tout ce qui part vers l'orchestratrice (message libre, note de carte, OK / KO) a ses #XXXX développés.
+      pageSecret, bootstrapKey, clientSecret: loadClientSecret(), deliver: right.wrapDeliver(delivery.deliver),
       routes: [...right.routes, ...delivery.routes, ...require('../lib/orchestrator-routes').routes, ...require('../lib/board-routes').routes, ...require('../lib/sessions').routes(delivery)],
       state: () => ({ right: right.rightState(), events: readEvents(), alerts: delivery.alerts(), sessions: require('../lib/sessions').list() }),
     });
@@ -65,8 +66,8 @@ const commands = {
   async claim(args) {
     const { call } = require('../lib/client');
     const { socket } = sessionInbox();
-    const body = { socket, project: flag(args, 'project'), plans: flag(args, 'plans'), master: flag(args, 'master'), board: flag(args, 'board') && path.resolve(flag(args, 'board')), version: claudeVersion() };
-    if (!body.project || !body.plans || !(body.board || body.master)) { console.error(USAGE); process.exit(2); }
+    const body = { socket, project: flag(args, 'project'), plans: flag(args, 'plans'), board: flag(args, 'board') && path.resolve(flag(args, 'board')), version: claudeVersion() };
+    if (!body.project || !body.plans || !body.board) { console.error(USAGE); process.exit(2); }
     const r = await call('POST', '/api/claim', body);
     if (r.status === 0) { console.error('control-room ne tourne pas : demande à l\'utilisateur de lancer control-room start.'); process.exit(1); }
     if (r.status !== 200) { console.error(`Déclaration refusée (${r.status}).`); process.exit(1); }

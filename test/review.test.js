@@ -8,7 +8,7 @@ const { createDelivery } = require('../plugin/lib/delivery');
 const orchRoutes = require('../plugin/lib/orchestrator-routes');
 const right = require('../plugin/lib/right');
 const sessions = require('../plugin/lib/sessions');
-const { parseMaster } = require('../plugin/lib/plan-file');
+const board = require('../plugin/lib/board');
 const { writeJson } = require('../plugin/lib/store');
 const { pendingCards } = require('../plugin/lib/cards');
 
@@ -94,22 +94,25 @@ test('#9 the page only answers on its dedicated loopback host', async () => {
   assert.equal(r.status, 403);
 });
 
-test('#11 ticking the last open test of a feature tells the orchestrator to propose archiving', async () => {
+test('#11 the last open test of a plan asks for archiving, once', async () => {
   dir = tempStateDir('cr-review-');
   t = await startTestServer({ routes: right.routes }); // collecteur t.delivered, sans file de livraison
-  const text = '# P\n\n## To do\n\n- [ ] **Feature A**: planned in `.agents/plans/feature-a/`.\n  - [ ] (user) premier test\n  - [x] (user) déjà fait\n  - [ ] (user) second test\n- [ ] **Feature B**\n  - [ ] (user) autre test\n';
-  const master = path.join(dir, 'master.md');
-  fs.writeFileSync(master, text);
-  writeJson(path.join(dir, 'orchestrator.json'), { master, plans: dir });
-  const feature = 'Feature A';
-  const open = parseMaster(text).tests.filter(x => x.parent === feature && !x.done);
-  assert.equal(open.length, 2);
-  for (const [i, o] of open.entries()) {
-    await request(t.port, 'POST', '/api/test', { body: { text: o.text, result: 'ok' }, headers: pageHeaders(t) });
-    const notices = t.delivered.filter(x => /propose l'archivage/.test(x));
-    assert.equal(notices.length, i === open.length - 1 ? 1 : 0);
-  }
-  assert.match(t.delivered.at(-1), /« Feature A ».*\.agents\/plans\/feature-a\//);
+  const file = path.join(dir, '.control-room', 'board.json');
+  writeJson(path.join(dir, 'orchestrator.json'), { plans: dir, board: file });
+  const first = board.addItem(file, 'test', { text: 'premier test', plan: 'feature-a', task: 'Task 1' });
+  const second = board.addItem(file, 'test', { text: 'second test', plan: 'feature-a', task: 'Task 2' });
+  const other = board.addItem(file, 'test', { text: 'autre test', plan: 'feature-b' });
+  const loose = board.addItem(file, 'test', { text: 'hors plan' });
+  const ok = (id) => request(t.port, 'POST', '/api/test', { body: { id, result: 'ok' }, headers: pageHeaders(t) });
+  const notices = () => t.delivered.filter(x => /propose l'archivage/.test(x));
+  await ok(first.id);
+  assert.equal(notices().length, 0);
+  await ok(second.id);
+  assert.deepEqual(notices(), ["[control-room] Tous les tests de « feature-a » sont OK : propose l'archivage."]);
+  assert.equal((await ok(second.id)).status, 409);
+  await ok(loose.id);
+  assert.equal(notices().length, 1);
+  assert.equal(board.readBoard(file).items.find(i => i.id === other.id).state, 'open');
 });
 
 test('#12 SessionEnd removes the session line', async () => {

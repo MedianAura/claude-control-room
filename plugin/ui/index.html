@@ -48,7 +48,6 @@
   .panel .body { margin-top: 8px; }
   code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
   .none { color: var(--muted); font-size: 13px; }
-  .tdetail { color: var(--muted); }
 
   /* Bandeau des sessions : une ligne par session, mise à jour sur place. */
   #sessions .row { display: grid; grid-template-columns: 12px minmax(120px, 190px) 1fr 46px; gap: 10px; align-items: center; padding: 4px 6px; border-radius: 6px; font-size: 13.5px; }
@@ -155,6 +154,19 @@
   .steps { margin: 0 0 4px 1.2em; font-size: 12px; color: var(--text); }
   .steps .sdone { color: var(--muted); }
   .pct { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; float: right; }
+  /* Tableau : tâche sous son plan, #id qui se cite, poids en forme (▲ haut, ▽ bas, rien pour moyen), détail et
+     notes repliés sous l'élément. */
+  #boardErr:empty { display: none; }
+  .tgrp { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  .tgrp + .item { border-top: 0; }
+  .ref { all: unset; cursor: pointer; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); margin-right: 5px; }
+  .ref:hover { color: var(--text); }
+  .wt { display: inline-block; width: 1.1em; font-size: 11px; }
+  .wt.high { color: var(--text); } .wt.low { color: var(--muted); }
+  .more { all: unset; cursor: pointer; display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .more:hover { color: var(--text); }
+  .fold { font-size: 12.5px; color: var(--muted); margin: 2px 0 0 1.1em; }
+  .fold .nt { margin-top: 3px; } .fold .nt span { font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
@@ -177,6 +189,7 @@
     <div class="panel" id="histPanel"><h2><span>Historique</span></h2><div class="body"><ul id="hist"></ul></div></div>
   </section>
   <aside>
+    <div id="boardErr" role="status"></div>
     <div class="panel" data-sec="tests"><h2><button class="cap" aria-expanded="true"><span>À tester par toi</span><span id="tcount"></span></button></h2><div class="body" id="tests"></div></div>
     <div class="panel" data-sec="plans"><h2><button class="cap" aria-expanded="true"><span>Plans actifs</span><span id="pcount"></span></button></h2><div class="body" id="plans"></div></div>
     <div class="panel" data-sec="todos"><h2><button class="cap" aria-expanded="true"><span>TODO</span><span id="dcount"></span></button></h2><div class="body" id="todos"></div></div>
@@ -205,7 +218,7 @@ async function post(url, body) {
   return { status: r.status, json };
 }
 
-let state = { pending: [], recent: [], sessions: [], right: { tests: [], plans: [], todos: [] }, events: [], alerts: [] };
+let state = { pending: [], recent: [], sessions: [], right: { board: { error: null }, tests: [], plans: [], todos: [] }, events: [], alerts: [] };
 let currentId = null, noteOpen = false, pendingChoice = null, lastSent = null;
 // Cartes répondues depuis cette page : masquées dès le clic, même si un /api/state parti avant la réponse
 // les liste encore. Retirées du Set seulement si l'envoi échoue (la carte revient).
@@ -505,8 +518,35 @@ function planHtml(p) {
   return `<div class="item">${head}<div class="tasks">${body}</div></div>`;
 }
 
+// Élément du tableau (test ou TODO) : #id qui se cite, poids, texte ; détail et notes repliés.
+const WEIGHT_MARK = { high: ['▲', 'haut'], low: ['▽', 'bas'] };
+const BY = { user: 'toi', orchestrator: 'orchestratrice' };
+const openItems = new Set();
+const stamp = (t) => new Date(t).toLocaleString('fr-CA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+function boardItem(t, isTest) {
+  const w = WEIGHT_MARK[t.weight];
+  const mark = w ? `<span class="wt ${t.weight}" title="Poids ${w[1]}" aria-label="poids ${w[1]}">${w[0]}</span>` : '';
+  const notes = t.notes || [];
+  const what = [t.detail ? 'détail' : '', notes.length ? `${notes.length} note${notes.length > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ');
+  const open = openItems.has(t.id);
+  const more = what ? `<button class="more" data-more="${esc(t.id)}" data-fk="fold:${esc(t.id)}" aria-expanded="${open}"><span class="chev">${open ? '▾' : '▸'}</span>${what}</button>` : '';
+  const fold = open && what ? `<div class="fold">${t.detail ? md(t.detail) : ''}${notes.map(n => `<div class="nt"><span>${stamp(n.at)}</span> · ${esc(BY[n.by] || n.by)} : ${inline(n.text)}</div>`).join('')}</div>` : '';
+  const plan = !isTest && t.plan ? ` <span class="none">· ${esc(t.plan)}</span>` : '';
+  const tb = isTest ? `<div class="tb"><button class="okb" data-fk="ok:${esc(t.id)}">OK</button><button class="ko" data-fk="ko:${esc(t.id)}">Problème</button></div>` : '';
+  return `<div class="item" data-id="${esc(t.id)}"><div><button class="ref" data-ref="${esc(t.id)}" data-fk="ref:${esc(t.id)}" title="Citer #${esc(t.id)} dans le message">#${esc(t.id)}</button>${mark}${inline(t.text)}${plan}</div>${more}${fold}${tb}</div>`;
+}
+
+// Un clic sur #id le cite dans la zone de message, à l'endroit du curseur.
+function cite(id) {
+  const m = $('#msg');
+  const start = m.selectionStart ?? m.value.length, end = m.selectionEnd ?? start;
+  const before = m.value.slice(0, start);
+  m.setRangeText(`${before && !/\s$/.test(before) ? ' ' : ''}#${id} `, start, end, 'end');
+  m.focus();
+}
+
 function renderSide(force) {
-  const r = state.right || { tests: [], plans: [], todos: [] };
+  const r = state.right || { board: { error: null }, tests: [], plans: [], todos: [] };
   const key = JSON.stringify(r);
   // Gelée sous la souris et pendant une saisie (note KO). Un bouton focalisé ne gèle pas la colonne : il est
   // retrouvé par sa clé data-fk après le rendu, pour qu'on puisse la parcourir au clavier.
@@ -514,21 +554,21 @@ function renderSide(force) {
   if (!force && (key === lastSide || hovering || f?.matches?.('aside input'))) return;
   const fk = f?.closest?.('aside') && f.dataset.fk;
   lastSide = key;
-  const groups = new Map();
-  for (const t of r.tests) { if (!groups.has(t.parent)) groups.set(t.parent, []); groups.get(t.parent).push(t); }
-  $('#tcount').textContent = r.tests.length || '';
-  $('#tests').innerHTML = r.tests.length ? [...groups].map(([g, items]) => `<div class="grp">${esc(g)}</div>` + items.map(t => `
-    <div class="item" data-test="${esc(t.text)}"><div>${md(t.text)}${t.detail ? ` <span class="tdetail">${md(t.detail)}</span>` : ''}</div>
-      <div class="tb"><button class="okb" data-fk="ok:${esc(t.text)}">OK</button><button class="ko" data-fk="ko:${esc(t.text)}">Problème</button></div></div>`).join('')).join('')
-    : '<div class="none">Rien à tester.</div>';
+  const unreadable = r.board && r.board.error;
+  $('#boardErr').innerHTML = unreadable ? `<div class="banner alert">⚠ Tableau illisible : ${esc(r.board.error)}</div>` : '';
+  const nTests = r.tests.reduce((n, g) => n + g.tasks.reduce((m, k) => m + k.items.length, 0), 0);
+  $('#tcount').textContent = nTests || '';
+  $('#tests').innerHTML = nTests ? r.tests.map(g => `<div class="grp">${esc(g.label)}</div>` + g.tasks.map(k =>
+    (k.task === null ? '' : `<div class="tgrp">${inline(k.task)}</div>`) + k.items.map(t => boardItem(t, true)).join('')).join('')).join('')
+    : `<div class="none">${unreadable ? 'Tableau illisible.' : 'Rien à tester.'}</div>`;
   $('#tests').querySelectorAll('.item').forEach(el => {
-    const text = el.dataset.test;
-    el.querySelector('.okb').onclick = () => post('/api/test', { text, result: 'ok' }).then(() => { lastSide = ''; load(); });
+    const id = el.dataset.id;
+    el.querySelector('.okb').onclick = () => post('/api/test', { id, result: 'ok' }).then(() => { lastSide = ''; load(); });
     el.querySelector('.ko').onclick = () => {
       const tb = el.querySelector('.tb');
       tb.innerHTML = `<input placeholder="Qu'est-ce qui ne marche pas ? (Entrée)"><button class="ko">Envoyer</button>`;
       const input = tb.querySelector('input'); input.focus();
-      const go = () => input.value.trim() && post('/api/test', { text, result: 'fail', note: input.value.trim() }).then(() => { input.blur(); lastSide = ''; load(); });
+      const go = () => input.value.trim() && post('/api/test', { id, result: 'fail', note: input.value.trim() }).then(() => { input.blur(); lastSide = ''; load(); });
       input.onkeydown = (e) => { if (e.key === 'Enter') go(); if (e.key === 'Escape') { input.blur(); lastSide = ''; renderSide(); } };
       tb.querySelector('button').onclick = go;
     };
@@ -537,9 +577,12 @@ function renderSide(force) {
   $('#plans').innerHTML = r.plans.length ? r.plans.map(planHtml).join('') : '<div class="none">Aucun plan actif.</div>';
   $('#plans').querySelectorAll('[data-plan]').forEach(el => el.onclick = () => { flip(openPlans, el.dataset.plan); saveOpenPlans(); renderSide(true); });
   $('#plans').querySelectorAll('[data-task]').forEach(el => el.onclick = () => { flip(flippedTasks, el.dataset.task); renderSide(true); });
-  $('#dcount').textContent = r.todos.length || '';
-  $('#todos').innerHTML = r.todos.length ? r.todos.map(t => `<div class="item">${esc(t.name)}${t.planDir ? ' <span class="none">· plan</span>' : ''}</div>`).join('')
-    : '<div class="none">Rien en attente.</div>';
+  const nTodos = r.todos.reduce((n, g) => n + g.items.length, 0);
+  $('#dcount').textContent = nTodos || '';
+  $('#todos').innerHTML = nTodos ? r.todos.map(g => `<div class="grp">${esc(g.label)}</div>` + g.items.map(t => boardItem(t, false)).join('')).join('')
+    : `<div class="none">${unreadable ? 'Tableau illisible.' : 'Rien en attente.'}</div>`;
+  document.querySelectorAll('aside .ref').forEach(b => b.onclick = () => cite(b.dataset.ref));
+  document.querySelectorAll('aside .more').forEach(b => b.onclick = () => { flip(openItems, b.dataset.more); renderSide(true); });
   if (fk) [...document.querySelectorAll('aside [data-fk]')].find(el => el.dataset.fk === fk)?.focus();
 }
 

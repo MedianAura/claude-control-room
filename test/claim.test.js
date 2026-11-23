@@ -68,7 +68,7 @@ test('the orchestrator file keeps only fingerprints, never the socket, token or 
   const { claimId } = await claimAs(t, 'A', { token: 'secret-token' });
   const raw = JSON.stringify(readJson(path.join(dir, 'orchestrator.json')));
   assert.ok(!raw.includes('"A"') && !raw.includes('secret-token') && !raw.includes(claimId));
-  assert.equal(readJson(path.join(dir, 'orchestrator.json')).master, 'F:/p/plans/m/plan.md');
+  assert.equal(readJson(path.join(dir, 'orchestrator.json')).board, 'F:/p/.control-room/board.json');
 });
 
 test('claim needs the client secret', async () => {
@@ -201,9 +201,11 @@ test('review #7: stale answers are only given to the orchestrator socket', async
   assert.equal((await request(t.port, 'GET', '/api/outbox/stale?socket=A', { headers: clientHeaders(t) })).json.messages.length, 1);
 });
 
-test('claim stores the board path', async () => {
-  await claimAs(t, 'A', { board: 'F:/p/.control-room/board.json' });
-  assert.equal(readJson(path.join(dir, 'orchestrator.json')).board, 'F:/p/.control-room/board.json');
+test('claim stores the board path, and no master plan anymore', async () => {
+  await claimAs(t, 'A', { board: 'F:/p/.control-room/board.json', master: 'F:/p/plans/m/plan.md' });
+  const o = readJson(path.join(dir, 'orchestrator.json'));
+  assert.equal(o.board, 'F:/p/.control-room/board.json');
+  assert.ok(!('master' in o));
 });
 
 test('set_plan without dir or file is refused and active-plans.json stays untouched', async () => {
@@ -213,12 +215,10 @@ test('set_plan without dir or file is refused and active-plans.json stays untouc
 });
 
 test('rightState skips an active plan entry that has neither dir nor file', () => {
-  const master = path.join(dir, 'master.md');
-  require('fs').writeFileSync(master, '# Plan maître');
-  require('fs').writeFileSync(path.join(dir, 'orchestrator.json'), JSON.stringify({ master }));
-  require('fs').writeFileSync(path.join(dir, 'active-plans.json'), JSON.stringify([{ name: 'bad' }]));
+  require('fs').writeFileSync(path.join(dir, 'orchestrator.json'), JSON.stringify({ board: path.join(dir, 'board.json') }));
+  require('fs').writeFileSync(path.join(dir, 'active-plans.json'), JSON.stringify([{ name: 'bad' }, null]));
   const right = require('../plugin/lib/right');
-  assert.doesNotThrow(() => right.rightState());
+  assert.deepEqual(right.rightState().plans, []);
 });
 
 test('set_plan keeps a plan given as a file', async () => {

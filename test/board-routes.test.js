@@ -39,7 +39,7 @@ test('no board claimed → 409 no-board', async () => {
   let r = await post('/api/board/items', { kind: 'todo', text: 'x' });
   assert.equal(r.status, 409);
   assert.equal(r.json.error, 'no-board');
-  await claimAs(t, 'A');
+  await claimAs(t, 'A', { board: undefined }); // déclaration sans tableau (orchestrator.json d'avant --board)
   r = await get('/api/board');
   assert.equal(r.status, 409);
   assert.equal(r.json.error, 'no-board');

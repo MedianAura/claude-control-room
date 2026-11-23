@@ -40,10 +40,10 @@ function createDelivery({ ackTimeoutMs = 120000, foreignTtlMs = 10 * 60000 } = {
     push(o ? o.claimHash : null, o ? o.code : null, text);
   }
 
-  function claim({ socket, project, plans, master, board, version }) {
+  function claim({ socket, project, plans, board, version }) {
     const prev = current();
     const claimId = crypto.randomBytes(16).toString('hex');
-    const next = { claimHash: sha(claimId), socketHash: sha(socket), code: codeOf(claimId), project, plans, master, board, version: version || null, claimedAt: Date.now() };
+    const next = { claimHash: sha(claimId), socketHash: sha(socket), code: codeOf(claimId), project, plans, board, version: version || null, claimedAt: Date.now() };
     writeJson(orchFile(), next);
     const box = load();
     for (const m of box) {

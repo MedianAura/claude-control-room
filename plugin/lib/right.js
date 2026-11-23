@@ -1,54 +1,78 @@
-// Colonne de droite : À tester / Plans actifs / TODO, lue depuis les fichiers du projet de l'orchestratrice.
-const fs = require('fs');
+// Colonne de droite : À tester et TODO lus au tableau du projet, Plans actifs lus dans leurs plan.md.
 const path = require('path');
 const { stateDir, readJson, addEvent } = require('./store');
-const { parseMaster, tickTest, planOutline } = require('./plan-file');
+const { planOutline } = require('./plan-file');
+const board = require('./board');
+const { boardFile } = require('./board-routes');
 const cards = require('./cards');
 
 function orchestrator() { return readJson(path.join(stateDir(), 'orchestrator.json')); }
-function activePlans() { return readJson(path.join(stateDir(), 'active-plans.json')) || []; }
+function activePlans() { return (readJson(path.join(stateDir(), 'active-plans.json')) || []).filter(p => p && p.name); }
 
-function readMaster() {
-  const o = orchestrator();
-  if (!o || !o.master) return null;
-  try { return { file: o.master, ...parseMaster(fs.readFileSync(o.master, 'utf8')) }; } catch { return null; }
+function readCurrentBoard() {
+  const file = boardFile();
+  return file ? { file, ...board.readBoard(file) } : { file: null, items: [], error: null };
 }
 
 function rightState() {
-  const m = readMaster();
-  if (!m) return { tests: [], plans: [], todos: [] };
+  if (!orchestrator()) return { board: { error: null }, tests: [], plans: [], todos: [] };
+  const plans = activePlans();
+  const { items, error } = readCurrentBoard();
+  const { tests, todos } = board.view(items, plans);
   return {
-    tests: m.tests.filter(x => !x.done).map(({ text, parent }) => ({ text, parent })),
-    plans: activePlans().filter(p => p && (p.file || p.dir)).map(p => ({ name: p.name, label: p.label || p.name, ...planOutline(p.file || path.join(p.dir, 'plan.md')) })),
-    todos: m.todos.filter(x => !x.done).map(({ name, planDir }) => ({ name, planDir })),
+    board: { error },
+    tests,
+    plans: plans.filter(p => p.file || p.dir).map(p => ({ name: p.name, label: p.label || p.name, ...planOutline(p.file || path.join(p.dir, 'plan.md')) })),
+    todos,
   };
 }
 
-const MESSAGES = { 'not-found': 'introuvable dans le plan maître (modifié entre-temps ?)', ambiguous: 'présent plusieurs fois dans le plan maître' };
+// Tout texte livré à l'orchestratrice : chaque #XXXX connu du tableau est développé à la fin.
+function withRefs(text) {
+  const { items } = readCurrentBoard();
+  const block = items.length ? board.refsBlock(items, text) : '';
+  return block ? `${text}\n${block}` : text;
+}
+const wrapDeliver = (deliver) => (text, ...rest) => deliver(withRefs(text), ...rest);
+
+// Refus : carte d'erreur pour l'utilisateur, rien d'écrit, rien de livré.
+function refuse(send, res, id, why) {
+  cards.createCard({ kind: 'error', agent: 'control-room', summary: 'Impossible de traiter ce test', recap: `#${id} : ${why}. Rien n'a été écrit.` });
+  return send(res, 409, { error: why });
+}
 
 async function handleTest(req, res, url, { readBody, send, deliver }) {
-  const { text, result, note } = await readBody(req);
-  const m = readMaster();
-  if (!m) return send(res, 409, { error: 'no-orchestrator' });
-  const t = m.tests.find(x => x.text === text);
+  const body = await readBody(req);
+  const { id, result } = body || {};
+  const note = typeof body?.note === 'string' ? body.note.trim() : '';
+  if (typeof id !== 'string' || (result !== 'ok' && result !== 'fail')) return send(res, 400, { error: 'id et result (ok | fail) attendus' });
+  if (result === 'fail' && !note) return send(res, 400, { error: 'note requise pour un KO' });
+  const { file, items, error } = readCurrentBoard();
+  if (!file) return send(res, 409, { error: 'no-board' });
+  if (error) return refuse(send, res, id, `tableau illisible (${error})`);
+  const it = items.find(i => i.id === id);
+  if (!it || it.kind !== 'test') return refuse(send, res, id, 'test inconnu au tableau');
+  if (it.state !== 'open') return refuse(send, res, id, `test déjà fermé (${it.state})`);
+  try {
+    if (result === 'fail') board.addNote(file, id, note, 'user');
+    else board.tickTest(file, id);
+  } catch (e) {
+    if (e instanceof board.BoardError) return refuse(send, res, id, e.message);
+    throw e;
+  }
   if (result === 'fail') {
-    await deliver(`[control-room] Test KO — ${t ? t.parent : '?'} : ${text}${note ? `\nNote : ${note}` : ''}`);
-    addEvent(`test KO : ${text}`);
+    addEvent(`test KO #${id} : ${it.text}`);
+    await deliver(`[control-room] Test KO #${id}\nNote : ${note}`);
     return send(res, 200, { ok: true });
   }
-  const r = tickTest(m.file, text);
-  if (r !== 'ok') {
-    cards.createCard({ kind: 'error', agent: 'control-room', summary: 'Impossible de cocher ce test', recap: `« ${text} » est ${MESSAGES[r]}. Rien n'a été écrit.` });
-    return send(res, 409, { error: r });
-  }
-  addEvent(`test OK : ${text}`);
-  // Dernier test ouvert d'une fonctionnalité de « To do » : l'orchestratrice doit proposer l'archivage (revue #11).
-  if (t && m.todos.some(td => td.name === t.parent)) {
-    const after = parseMaster(fs.readFileSync(m.file, 'utf8'));
-    if (!after.tests.some(x => x.parent === t.parent && !x.done)) {
-      const td = after.todos.find(x => x.name === t.parent);
-      await deliver(`[control-room] Tous les tests (user) de « ${t.parent} » sont OK : propose l'archivage de son plan${td && td.planDir ? ` (${td.planDir})` : ''}.`);
-      addEvent(`tous les tests OK : ${t.parent}`);
+  addEvent(`test OK #${id} : ${it.text}`);
+  await deliver(`[control-room] Test OK #${id} : fais cocher son étape dans le plan.`);
+  // Dernier test ouvert d'un plan : l'orchestratrice doit proposer l'archivage (revue #11).
+  if (it.plan !== null && it.plan !== undefined) {
+    const after = board.readBoard(file).items;
+    if (!after.some(i => i.kind === 'test' && i.state === 'open' && i.plan === it.plan)) {
+      addEvent(`tous les tests OK : ${it.plan}`);
+      await deliver(`[control-room] Tous les tests de « ${it.plan} » sont OK : propose l'archivage.`);
     }
   }
   return send(res, 200, { ok: true });
@@ -58,4 +82,4 @@ const routes = [
   { method: 'POST', match: (p) => p === '/api/test', auth: 'page', handle: handleTest },
 ];
 
-module.exports = { rightState, routes, orchestrator, activePlans };
+module.exports = { rightState, routes, withRefs, wrapDeliver, orchestrator, activePlans };
