@@ -194,3 +194,24 @@ test('refsBlock expands known ids once, case-insensitive, whole tokens only', ()
   assert.equal(refsBlock([td], '#k2p9'), '#K2P9 (todo, Divers, medium, done) : scan');
   assert.ok(a.id);
 });
+
+test('add and update refuse non-string fields that would break view', () => {
+  for (const f of ['plan', 'task', 'detail', 'text']) assert.throws(() => addItem(file, 'test', { text: 'x', [f]: 5 }), { code: 'invalid' }, f);
+  for (const f of ['plan', 'group', 'detail', 'text']) assert.throws(() => addItem(file, 'todo', { text: 'x', [f]: {} }), { code: 'invalid' }, f);
+  assert.throws(() => addItem(file, 'test', { text: 'x', origin: 'f' }), { code: 'invalid' });
+  assert.throws(() => addItem(file, 'test', { text: 'x', origin: { file: 'f' } }), { code: 'invalid' });
+  assert.throws(() => addItem(file, 'test', { text: 'x', origin: { file: 'f', step: 3 } }), { code: 'invalid' });
+  const it = addItem(file, 'test', { text: 'x', plan: null, origin: { file: 'f', step: 's' } });
+  assert.throws(() => updateItem(file, it.id, { plan: 7 }), { code: 'invalid' });
+  assert.throws(() => updateItem(file, it.id, { origin: [] }), { code: 'invalid' });
+  assert.equal(updateItem(file, it.id, { origin: null }).origin, null);
+  assert.doesNotThrow(() => view(readBoard(file).items, []));
+});
+
+test('removeItem and reopenItem need a non-empty string reason', () => {
+  const t = addItem(file, 'test', { text: 'x' });
+  for (const r of [undefined, '', '  ', 3]) assert.throws(() => removeItem(file, t.id, r), { code: 'invalid' });
+  tickTest(file, t.id);
+  for (const r of [undefined, '', 3]) assert.throws(() => reopenItem(file, t.id, r), { code: 'invalid' });
+  assert.equal(readBoard(file).items[0].state, 'ok');
+});

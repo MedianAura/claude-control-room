@@ -63,13 +63,22 @@ function checkText(t) {
   if (typeof t !== 'string' || !t.trim()) throw new BoardError('invalid', 'texte vide');
 }
 
+const STRING_FIELDS = ['detail', 'plan', 'task', 'group'];
+function checkField(k, v) {
+  if (k === 'text') return checkText(v);
+  if (STRING_FIELDS.includes(k) && v !== null && typeof v !== 'string') throw new BoardError('invalid', `${k} doit être un texte`);
+  if (k === 'origin' && v !== null && !(v && typeof v === 'object' && typeof v.file === 'string' && typeof v.step === 'string'))
+    throw new BoardError('invalid', 'origin doit être { file, step } (textes)');
+}
+
 // Copie les champs permis qui sont présents ; null efface (sauf text).
 function applyFields(it, fields, allowed) {
+  // Tout est validé avant d'écrire quoi que ce soit dans l'élément.
+  for (const k of allowed) if (fields[k] !== undefined) checkField(k, fields[k]);
   for (const k of allowed) {
     if (fields[k] === undefined) continue;
     const v = fields[k];
-    if (k === 'text') checkText(v);
-    else if (k === 'weight') {
+    if (k === 'weight') {
       checkWeight(v);
       if (v === null) { delete it.weight; continue; }
     }
@@ -129,6 +138,7 @@ function addNote(file, id, text, by) {
 }
 
 function removeItem(file, id, reason) {
+  checkText(reason);
   return mutate(file, (items) => {
     const it = find(items, id);
     it.state = 'removed';
@@ -138,6 +148,7 @@ function removeItem(file, id, reason) {
 }
 
 function reopenItem(file, id, reason) {
+  checkText(reason);
   return mutate(file, (items) => {
     const it = find(items, id);
     const reopenable = it.kind === 'test' ? it.state === 'ok' : (it.state === 'done' || it.state === 'dropped');

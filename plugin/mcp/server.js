@@ -5,6 +5,11 @@ const { call } = require('../lib/client');
 
 const DOWN = 'control-room ne tourne pas : lance `control-room start` (l\'utilisateur, dans son propre terminal).';
 
+const WEIGHT = { type: 'string', enum: ['high', 'medium', 'low'], description: 'Poids ; défaut medium.' };
+const ID = { type: 'string', description: 'Identifiant à 4 caractères, ex. 45BG.' };
+const FIELD = (d) => ({ type: 'string', description: d });
+const BOARD_NOTE = " Le tableau est celui déclaré par control-room claim --board.";
+
 const TOOLS = [
   {
     name: 'queue_decision',
@@ -30,11 +35,34 @@ const TOOLS = [
     description: "Déclare un plan actif (quand tu le confies à une session) ou archivé (après accord de l'utilisateur), pour la colonne Plans actifs.",
     inputSchema: { type: 'object', required: ['name', 'state'], properties: {
       name: { type: 'string', description: 'Nom du dossier du plan, ex. dungeon-speed.' },
-      dir: { type: 'string', description: 'Chemin absolu du dossier du plan (contient plan.md). Requis pour active.' },
+      dir: { type: 'string', description: 'Chemin absolu du dossier du plan (contient plan.md). Pour active : dir ou file.' },
+      file: { type: 'string', description: 'Chemin absolu du plan quand il tient en un seul fichier markdown. Pour active : dir ou file.' },
       label: { type: 'string', description: 'Libellé affiché, ex. 🏃 dungeon-speed.' },
       state: { type: 'string', enum: ['active', 'archived'] },
     } },
   },
+  { name: 'add_test', description: "Ajoute un test que l'utilisateur doit faire lui-même (colonne À tester). Rend son identifiant #XXXX. Tu ne peux pas le cocher : seul l'utilisateur le fait, depuis la page." + BOARD_NOTE, inputSchema: { type: 'object', required: ['text'], properties: {
+    text: FIELD("Ce qu'il doit vérifier, en une phrase."), detail: FIELD("Comment, si ce n'est pas évident."), weight: WEIGHT,
+    plan: FIELD('Nom du plan (dossier ou fichier) auquel le test appartient.'), task: FIELD('Tâche du plan, ex. Task 4.'),
+    origin: { type: 'object', required: ['file', 'step'], description: "D'où vient le test dans le plan.", properties: { file: { type: 'string' }, step: { type: 'string' } } },
+  } } },
+  { name: 'add_todo', description: "Ajoute un TODO (colonne TODO). Rend son identifiant #XXXX." + BOARD_NOTE, inputSchema: { type: 'object', required: ['text'], properties: {
+    text: FIELD('Le travail à faire, en une phrase.'), detail: FIELD('Contexte utile.'), weight: WEIGHT, group: FIELD("Groupe d'affichage ; sans groupe : Divers."), plan: FIELD("Plan concerné, s'il y en a un."),
+  } } },
+  { name: 'update_item', description: "Modifie les champs d'un test ou d'un TODO ; null efface un champ facultatif. Ne change jamais son état." + BOARD_NOTE, inputSchema: { type: 'object', required: ['id'], properties: {
+    id: ID, text: { type: 'string' }, detail: { type: ['string', 'null'] }, weight: { type: ['string', 'null'], enum: ['high', 'medium', 'low', null] },
+    plan: { type: ['string', 'null'] }, task: { type: ['string', 'null'], description: 'Tests seulement.' }, group: { type: ['string', 'null'], description: 'TODO seulement.' },
+    origin: { type: ['object', 'null'], description: 'Tests seulement.', properties: { file: { type: 'string' }, step: { type: 'string' } } },
+  } } },
+  { name: 'close_todo', description: "Ferme un TODO : fait ou abandonné. Les tests ne se ferment pas ici : seul l'utilisateur les coche." + BOARD_NOTE, inputSchema: { type: 'object', required: ['id', 'result'], properties: {
+    id: ID, result: { type: 'string', enum: ['done', 'dropped'], description: 'done = fait, dropped = abandonné.' }, note: { type: 'string', description: 'Pourquoi, si utile.' },
+  } } },
+  { name: 'add_note', description: "Ajoute une note datée à un test ou un TODO." + BOARD_NOTE, inputSchema: { type: 'object', required: ['id', 'text'], properties: { id: ID, text: { type: 'string' } } } },
+  { name: 'remove_item', description: "Retire un test ou un TODO du tableau (il reste dans le fichier, état removed) avec la raison." + BOARD_NOTE, inputSchema: { type: 'object', required: ['id', 'reason'], properties: { id: ID, reason: { type: 'string' } } } },
+  { name: 'reopen_item', description: "Rouvre un test coché (par erreur) ou un TODO fermé, avec la raison." + BOARD_NOTE, inputSchema: { type: 'object', required: ['id', 'reason'], properties: { id: ID, reason: { type: 'string' } } } },
+  { name: 'list_board', description: "Liste les tests et TODO du tableau, avec leurs notes." + BOARD_NOTE, inputSchema: { type: 'object', properties: {
+    kind: { type: 'string', enum: ['test', 'todo'] }, status: { type: 'string', enum: ['open', 'ok', 'done', 'dropped', 'removed'], description: 'Filtre de lecture.' },
+  } } },
   { name: 'cancel_decision', description: "Retire une de tes cartes en attente devenue inutile. La page affiche la raison à l'utilisateur, qui a peut-être la carte sous les yeux.", inputSchema: { type: 'object', required: ['id', 'reason'], properties: {
     id: { type: 'string' },
     reason: { type: 'string', description: "Pourquoi tu la retires, en une phrase, ex. « remplacée par une question plus précise »." },
@@ -76,6 +104,19 @@ async function callTool(name, a = {}) {
       return text({ shown: r.id });
     }
     case 'set_plan': await http('POST', '/api/plans', a); return text({ ok: true });
+    case 'add_test': case 'add_todo': {
+      const r = await http('POST', '/api/board/items', { ...a, kind: name === 'add_test' ? 'test' : 'todo' });
+      return text({ id: r.id });
+    }
+    case 'update_item': { const { id, ...fields } = a; return text(await http('POST', `/api/board/items/${encodeURIComponent(id || '')}`, fields)); }
+    case 'close_todo': return text(await http('POST', `/api/board/items/${encodeURIComponent(a.id || '')}/close`, { state: a.result, note: a.note }));
+    case 'add_note': return text(await http('POST', `/api/board/items/${encodeURIComponent(a.id || '')}/note`, { text: a.text }));
+    case 'remove_item': return text(await http('POST', `/api/board/items/${encodeURIComponent(a.id || '')}/remove`, { reason: a.reason }));
+    case 'reopen_item': return text(await http('POST', `/api/board/items/${encodeURIComponent(a.id || '')}/reopen`, { reason: a.reason }));
+    case 'list_board': {
+      const q = new URLSearchParams(Object.entries({ kind: a.kind, state: a.status }).filter(([, v]) => v));
+      return text(await http('GET', `/api/board${q.size ? `?${q}` : ''}`));
+    }
     case 'cancel_decision': await http('POST', `/api/cards/${encodeURIComponent(a.id)}/cancel`, { reason: a.reason || '' }); return text('Retirée.');
     case 'release_session': return text(await http('POST', '/api/sessions/release', { label: a.label || '' }));
     case 'list_pending': return text(await http('GET', '/api/pending'));

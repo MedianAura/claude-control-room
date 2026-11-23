@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Lanceur et commandes de control-room.
 //   control-room start [--no-open]                                lance le serveur et ouvre la page
-//   control-room claim --project <dir> --plans <dir> --master <f> l'orchestratrice se déclare (depuis son Bash)
+//   control-room claim --project <dir> --plans <dir> --board <f>  l'orchestratrice se déclare (depuis son Bash)
 //   control-room listen                                           l'orchestratrice reçoit les réponses (arrière-plan)
 const fs = require('fs');
 const path = require('path');
@@ -10,7 +10,7 @@ const { stateDir, writeJson, readEvents } = require('../lib/store');
 
 const USAGE = `Usage :
   control-room start [--no-open]
-  control-room claim --project <dossier> --plans <dossier des plans> --master <plan maître>
+  control-room claim --project <dossier> --plans <dossier des plans> --board <fichier du tableau>
   control-room listen --claim <identifiant>
   control-room label "<emoji> <libellé>"`;
 
@@ -40,7 +40,7 @@ const commands = {
     const delivery = createDelivery();
     const server = createServer({
       pageSecret, bootstrapKey, clientSecret: loadClientSecret(), deliver: delivery.deliver,
-      routes: [...right.routes, ...delivery.routes, ...require('../lib/orchestrator-routes').routes, ...require('../lib/sessions').routes(delivery)],
+      routes: [...right.routes, ...delivery.routes, ...require('../lib/orchestrator-routes').routes, ...require('../lib/board-routes').routes, ...require('../lib/sessions').routes(delivery)],
       state: () => ({ right: right.rightState(), events: readEvents(), alerts: delivery.alerts(), sessions: require('../lib/sessions').list() }),
     });
     server.on('error', (e) => {
@@ -65,8 +65,8 @@ const commands = {
   async claim(args) {
     const { call } = require('../lib/client');
     const { socket } = sessionInbox();
-    const body = { socket, project: flag(args, 'project'), plans: flag(args, 'plans'), master: flag(args, 'master'), version: claudeVersion() };
-    for (const k of ['project', 'plans', 'master']) if (!body[k]) { console.error(USAGE); process.exit(2); }
+    const body = { socket, project: flag(args, 'project'), plans: flag(args, 'plans'), master: flag(args, 'master'), board: flag(args, 'board') && path.resolve(flag(args, 'board')), version: claudeVersion() };
+    if (!body.project || !body.plans || !(body.board || body.master)) { console.error(USAGE); process.exit(2); }
     const r = await call('POST', '/api/claim', body);
     if (r.status === 0) { console.error('control-room ne tourne pas : demande à l\'utilisateur de lancer control-room start.'); process.exit(1); }
     if (r.status !== 200) { console.error(`Déclaration refusée (${r.status}).`); process.exit(1); }

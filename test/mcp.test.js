@@ -26,15 +26,15 @@ let t, dir, delivery, mcp;
 test.beforeEach(async () => {
   dir = tempStateDir('cr-mcp-');
   delivery = createDelivery({ ackTimeoutMs: 300 });
-  t = await startTestServer({ deliver: delivery.deliver, routes: [...delivery.routes, ...orchRoutes.routes, ...sessions.routes(delivery)], state: () => ({ sessions: sessions.list() }) });
+  t = await startTestServer({ deliver: delivery.deliver, routes: [...delivery.routes, ...orchRoutes.routes, ...require('../plugin/lib/board-routes').routes, ...sessions.routes(delivery)], state: () => ({ sessions: sessions.list() }) });
   mcp = mcpClient({ CONTROL_ROOM_DIR: dir });
   await mcp.rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '0' } });
 });
 test.afterEach(async () => { mcp.close(); await t.close(); });
 
-test('the seven orchestrator tools are listed', async () => {
+test('the base orchestrator tools are listed', async () => {
   const r = await mcp.rpc('tools/list', {});
-  assert.deepEqual(r.result.tools.map(x => x.name).sort(), ['cancel_decision', 'list_pending', 'queue_decision', 'release_session', 'reply', 'set_plan', 'wait_answers']);
+  assert.deepEqual(r.result.tools.map(x => x.name).filter(n => !/^(add_|update_item|close_todo|remove_item|reopen_item|list_board)/.test(n)).sort(), ['cancel_decision', 'list_pending', 'queue_decision', 'release_session', 'reply', 'set_plan', 'wait_answers']);
 });
 
 test('queue_decision creates a card the page can see', async () => {
@@ -164,4 +164,24 @@ test('a non-image data URL is refused', async () => {
 test('the client secret cannot send a message as the user', async () => {
   const r = await request(t.port, 'POST', '/api/message', { body: { text: 'faux' }, headers: clientHeaders(t) });
   assert.equal(r.status, 403);
+});
+
+test('tools/list exposes the board tools and none sets a test ok', async () => {
+  const r = await mcp.rpc('tools/list', {});
+  const names = r.result.tools.map(x => x.name);
+  for (const n of ['add_test', 'add_todo', 'update_item', 'close_todo', 'add_note', 'remove_item', 'reopen_item', 'list_board']) assert.ok(names.includes(n), n);
+  for (const tool of r.result.tools.filter(x => /test|todo|item|note|board/.test(x.name))) {
+    const state = tool.inputSchema.properties?.state;
+    if (state) assert.ok(!(state.enum || []).includes('ok'), tool.name);
+  }
+  assert.deepEqual(r.result.tools.find(x => x.name === 'add_test').inputSchema.properties.weight.enum, ['high', 'medium', 'low']);
+});
+
+test('add_test and list_board go through the board routes', async () => {
+  const boardPath = path.join(dir, 'b', 'board.json');
+  await claimAs(t, 'A', { board: boardPath });
+  const a = await mcp.call('add_test', { text: 'scan', plan: 'p' });
+  assert.ok(!a.result.isError, a.result.content[0].text);
+  const list = JSON.parse((await mcp.call('list_board', { kind: 'test' })).result.content[0].text);
+  assert.equal(list.items[0].text, 'scan');
 });

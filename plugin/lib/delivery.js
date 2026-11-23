@@ -40,10 +40,10 @@ function createDelivery({ ackTimeoutMs = 120000, foreignTtlMs = 10 * 60000 } = {
     push(o ? o.claimHash : null, o ? o.code : null, text);
   }
 
-  function claim({ socket, project, plans, master, version }) {
+  function claim({ socket, project, plans, master, board, version }) {
     const prev = current();
     const claimId = crypto.randomBytes(16).toString('hex');
-    const next = { claimHash: sha(claimId), socketHash: sha(socket), code: codeOf(claimId), project, plans, master, version: version || null, claimedAt: Date.now() };
+    const next = { claimHash: sha(claimId), socketHash: sha(socket), code: codeOf(claimId), project, plans, master, board, version: version || null, claimedAt: Date.now() };
     writeJson(orchFile(), next);
     const box = load();
     for (const m of box) {
@@ -132,9 +132,9 @@ function createDelivery({ ackTimeoutMs = 120000, foreignTtlMs = 10 * 60000 } = {
     return out;
   }
 
-  function setPlan({ name, dir, label, state }) {
+  function setPlan({ name, dir, file, label, state }) {
     const plans = (readJson(plansFile()) || []).filter(p => p.name !== name);
-    if (state !== 'archived') plans.push({ name, dir, label });
+    if (state !== 'archived') plans.push(file ? { name, file, label } : { name, dir, label });
     writeJson(plansFile(), plans);
     addEvent(state === 'archived' ? `plan archivé : ${name}` : `plan actif : ${label || name}`);
   }

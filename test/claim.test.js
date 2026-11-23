@@ -200,3 +200,13 @@ test('review #7: stale answers are only given to the orchestrator socket', async
   assert.equal((await request(t.port, 'GET', '/api/outbox/stale?socket=WORKER', { headers: clientHeaders(t) })).json.messages.length, 0);
   assert.equal((await request(t.port, 'GET', '/api/outbox/stale?socket=A', { headers: clientHeaders(t) })).json.messages.length, 1);
 });
+
+test('claim stores the board path', async () => {
+  await claimAs(t, 'A', { board: 'F:/p/.control-room/board.json' });
+  assert.equal(readJson(path.join(dir, 'orchestrator.json')).board, 'F:/p/.control-room/board.json');
+});
+
+test('set_plan keeps a plan given as a file', async () => {
+  await request(t.port, 'POST', '/api/plans', { body: { name: 'big', file: 'F:/p/plans/big.md', label: 'B', state: 'active' }, headers: clientHeaders(t) });
+  assert.deepEqual(readJson(path.join(dir, 'active-plans.json')), [{ name: 'big', file: 'F:/p/plans/big.md', label: 'B' }]);
+});
