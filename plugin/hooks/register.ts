@@ -29,13 +29,22 @@ async function report($: EngineInterface) {
   }
 }
 
+// La minuterie démarre au premier des deux qui passe : si l'un est sauté par un mod d'organisation, l'autre suffit.
+function startTimer($: EngineInterface) {
+  if (timerStarted) return
+  timerStarted = true
+  $.clock.every(EVERY_MS, () => report($))
+}
+
 export const register: Register = on => {
+  on('session.start', async ($, e, next) => {
+    const r = await next(e)
+    startTimer($)
+    return r
+  })
   on('turn.complete', async ($, e, next) => {
     const r = await next(e)
-    if (!timerStarted) {
-      timerStarted = true
-      $.clock.every(EVERY_MS, () => report($))
-    }
+    startTimer($)
     await report($)
     return r
   })
