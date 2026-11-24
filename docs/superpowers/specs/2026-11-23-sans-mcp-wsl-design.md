@@ -64,7 +64,9 @@ control-room tool --list                                 les outils, description
   absent (même message `DOWN` que le MCP).
 - `--list` existe parce que, sans MCP, l'orchestratrice ne voit pas les schémas : la skill ne décrit les arguments
   qu'en prose.
-- Pas de validation des arguments côté CLI : le MCP n'en fait pas non plus, le serveur tranche.
+- La CLI refuse (code 2) un `--json` sans valeur et un argument `required` absent du schéma : le client MCP voit
+  ces `required`, la CLI doit faire de même, sinon un `reply` sans texte poste une bulle vide. Le reste, le
+  serveur le tranche.
 
 ### Skill : section « Sans MCP »
 

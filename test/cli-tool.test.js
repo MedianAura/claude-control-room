@@ -71,10 +71,26 @@ test('tool with an unknown name exits 1', async () => {
   assert.match(r.stderr, /Outil inconnu/);
 });
 
-test('tool exits 1 with the server error', async () => {
+test('tool exits 1 with the server error for an unknown id', async () => {
+  await claimAs(t, 'A');
   const r = await cli(['tool', 'add_note', '--json', '{"id":"ZZZZ","text":"t"}']);
   assert.equal(r.code, 1);
-  assert.notEqual(r.stderr.trim(), '');
+  assert.match(r.stderr, /élément inconnu : ZZZZ/);
+});
+
+test('tool with --json and no value exits 2 and sends nothing', async () => {
+  const before = (await state()).conversation.length;
+  const r = await cli(['tool', 'reply', '--json'], { stdin: '{"text":"perdu"}' });
+  assert.equal(r.code, 2);
+  assert.equal((await state()).conversation.length, before);
+});
+
+test('tool missing a required argument exits 2 and sends nothing', async () => {
+  const before = (await state()).conversation.length;
+  const r = await cli(['tool', 'reply']);
+  assert.equal(r.code, 2);
+  assert.match(r.stderr, /text/);
+  assert.equal((await state()).conversation.length, before);
 });
 
 test('tool wait_answers waits out its long poll', async () => {

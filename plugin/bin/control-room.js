@@ -102,13 +102,17 @@ const commands = {
     if (args[0] === '--list') return console.log(JSON.stringify(TOOLS, null, 2));
     const name = args[0];
     if (!name || name.startsWith('--')) usage('Nom d\'outil manquant.');
-    const raw = flag(args, 'json');
     let input = {};
-    if (raw !== undefined) {
+    if (args.includes('--json')) {
+      const raw = flag(args, 'json');
+      if (raw === undefined || raw.startsWith('--')) usage('--json attend un objet JSON, ou - pour le lire sur stdin.');
       const src = raw === '-' ? fs.readFileSync(0, 'utf8') : raw;
       try { input = JSON.parse(src); } catch (e) { usage(`JSON illisible : ${e.message}`); }
       if (!input || typeof input !== 'object' || Array.isArray(input)) usage('--json attend un objet.');
     }
+    // Le MCP refuse un appel sans ses arguments requis ; sans lui, c'est ici (sinon une réponse vide part).
+    const missing = (TOOLS.find(t => t.name === name)?.inputSchema.required || []).filter(k => input[k] === undefined);
+    if (missing.length) usage(`Argument requis manquant pour ${name} : ${missing.join(', ')} (voir control-room tool --list).`);
     try {
       console.log(format(await runTool(name, input)));
     } catch (e) {

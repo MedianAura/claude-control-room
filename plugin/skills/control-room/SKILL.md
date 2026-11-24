@@ -23,8 +23,9 @@ Ton terminal ne sert qu'à une ligne d'état par tour.
 
 ## Sans MCP
 
-Si l'outil `reply` ne t'est pas offert (une politique de l'organisation bloque parfois les serveurs MCP des
-plugins), passe par la CLI : mêmes outils, mêmes noms, mêmes arguments.
+Si aucun outil `mcp__plugin_control-room_control-room__*` n'existe, ni chargé ni différé (cherche-le avec
+ToolSearch avant de conclure), une politique de l'organisation bloque le serveur MCP du plugin. Passe alors par la
+CLI : mêmes outils, mêmes noms, mêmes arguments. Si le MCP est là, ne prends jamais la CLI.
 
 - Une fois : `control-room tool --list` pour lire les outils et leurs arguments.
 - Puis chaque appel avec l'objet d'arguments sur stdin, dans un heredoc entre apostrophes (pas `--json '…'` : les
@@ -38,6 +39,8 @@ plugins), passe par la CLI : mêmes outils, mêmes noms, mêmes arguments.
 
 - Le résultat sort en JSON sur stdout. Code 3 : la page n'est pas lancée, dis-le à l'utilisateur ; code 1 : erreur
   (message sur stderr) ; code 2 : appel mal formé.
+- `wait_answers` : passe toujours `"timeout_seconds": 100` au plus. Son défaut (240 s) dépasse le délai de ton
+  outil Bash (120 s), qui tuerait l'appel pendant l'attente.
 - Pour ne pas valider chaque appel, l'utilisateur peut autoriser `Bash(control-room tool:*)`.
 
 ## Ce qui t'arrive de la page
