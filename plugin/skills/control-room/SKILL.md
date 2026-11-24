@@ -21,6 +21,25 @@ Ton terminal ne sert qu'à une ligne d'état par tour.
    livre les réponses de l'utilisateur. S'il s'arrête (manque de mémoire), relance-le avec le même identifiant ;
    si tu as refait `claim`, utilise le nouveau.
 
+## Sans MCP
+
+Si l'outil `reply` ne t'est pas offert (une politique de l'organisation bloque parfois les serveurs MCP des
+plugins), passe par la CLI : mêmes outils, mêmes noms, mêmes arguments.
+
+- Une fois : `control-room tool --list` pour lire les outils et leurs arguments.
+- Puis chaque appel avec l'objet d'arguments sur stdin, dans un heredoc entre apostrophes (pas `--json '…'` : les
+  apostrophes du français le cassent) :
+
+  ```bash
+  control-room tool reply --json - <<'EOF'
+  {"text": "C'est fait : les 3 worktrees sont nettoyés."}
+  EOF
+  ```
+
+- Le résultat sort en JSON sur stdout. Code 3 : la page n'est pas lancée, dis-le à l'utilisateur ; code 1 : erreur
+  (message sur stderr) ; code 2 : appel mal formé.
+- Pour ne pas valider chaque appel, l'utilisateur peut autoriser `Bash(control-room tool:*)`.
+
 ## Ce qui t'arrive de la page
 
 Un message `[control-room] …` qui **finit par `[cr:<id>:<ton code>]`** est un clic ou un message de l'utilisateur

@@ -12,7 +12,9 @@ const USAGE = `Usage :
   control-room start [--no-open]
   control-room claim --project <dossier> --plans <dossier des plans> --board <fichier du tableau>
   control-room listen --claim <identifiant>
-  control-room label "<emoji> <libellé>"`;
+  control-room label "<emoji> <libellé>"
+  control-room tool <nom> [--json '<objet>' | --json -]    un outil de l'orchestratrice, sans MCP
+  control-room tool --list                                  les outils et leurs arguments`;
 
 function flag(args, name) {
   const i = args.indexOf(`--${name}`);
@@ -91,6 +93,29 @@ const commands = {
 
   // Appelé par les hooks du plugin (hooks/hooks.json) : permission | stop | status.
   async hook(args) { await require('../lib/hooks').runHook(args[0]); },
+
+  // Les outils de l'orchestratrice sans MCP (politique d'org qui bloque les serveurs MCP des plugins).
+  // Codes : 0 succès, 1 erreur du serveur ou outil inconnu, 2 usage, 3 serveur absent.
+  async tool(args) {
+    const { TOOLS, runTool, format } = require('../lib/tools');
+    const usage = (m) => { console.error(`${m}\n${USAGE}`); process.exit(2); };
+    if (args[0] === '--list') return console.log(JSON.stringify(TOOLS, null, 2));
+    const name = args[0];
+    if (!name || name.startsWith('--')) usage('Nom d\'outil manquant.');
+    const raw = flag(args, 'json');
+    let input = {};
+    if (raw !== undefined) {
+      const src = raw === '-' ? fs.readFileSync(0, 'utf8') : raw;
+      try { input = JSON.parse(src); } catch (e) { usage(`JSON illisible : ${e.message}`); }
+      if (!input || typeof input !== 'object' || Array.isArray(input)) usage('--json attend un objet.');
+    }
+    try {
+      console.log(format(await runTool(name, input)));
+    } catch (e) {
+      console.error(e.message);
+      process.exit(e.down ? 3 : 1);
+    }
+  },
 
   // Une session de travail s'inscrit dans l'équipe (à la demande de l'orchestratrice).
   async label(args) { await require('../lib/hooks').label(args.join(' ').trim()); },
