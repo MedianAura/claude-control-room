@@ -53,7 +53,7 @@ un lanceur POSIX à la racine rejoint `control-room.cmd`.
 - `mcp/server.js` : `tools/call` → `text(format(await runTool(...)))`, erreur → `text(e.message, true)`.
   `serverInfo.version` lu dans `plugin/.claude-plugin/plugin.json`.
 
-- [ ] **Step 1: tests qui échouent** dans `test/tools.test.js` (même montage que `mcp.test.js` : `tempStateDir`,
+- [x] **Step 1: tests qui échouent** dans `test/tools.test.js` (même montage que `mcp.test.js` : `tempStateDir`,
   `startTestServer` avec les routes orchestratrice + tableau) :
   - `runTool('reply', {text:'Salut'})` rend un objet avec `shown` ; la conversation de `/api/state` finit par `Salut`.
   - `runTool('nope')` rejette avec `e.unknown === true`.
@@ -61,10 +61,10 @@ un lanceur POSIX à la racine rejoint `control-room.cmd`.
     `e.message === DOWN`.
   - `format('Retirée.') === 'Retirée.'` ; `format({a:1}) === '{\n  "a": 1\n}'`.
   - dans `mcp.test.js`, ajouter : `initialize` rend `serverInfo.version` égal à la `version` de `plugin.json`.
-- [ ] **Step 2:** `node --test` → les nouveaux tests échouent (module absent).
-- [ ] **Step 3:** créer `lib/tools.js`, réduire `mcp/server.js`.
-- [ ] **Step 4:** `node --test` → tout passe, `mcp.test.js` compris.
-- [ ] **Step 5:** commit `refactor(outils): lib/tools.js, source unique pour le MCP et la CLI`.
+- [x] **Step 2:** `node --test` → les nouveaux tests échouent (module absent).
+- [x] **Step 3:** créer `lib/tools.js`, réduire `mcp/server.js`.
+- [x] **Step 4:** `node --test` → tout passe, `mcp.test.js` compris.
+- [x] **Step 5:** commit `refactor(outils): lib/tools.js, source unique pour le MCP et la CLI`.
 
 ### Task 2: `control-room tool` et la skill « Sans MCP »
 
@@ -82,7 +82,7 @@ un lanceur POSIX à la racine rejoint `control-room.cmd`.
     Pas de nom, JSON illisible ou non-objet : message + usage sur stderr, code 2. Serveur absent : `DOWN` sur
     stderr, code 3.
 
-- [ ] **Step 1: tests qui échouent** dans `test/cli-tool.test.js` ; la CLI lancée par
+- [x] **Step 1: tests qui échouent** dans `test/cli-tool.test.js` ; la CLI lancée par
   `spawn(process.execPath, [bin, 'tool', ...])` avec `CONTROL_ROOM_DIR` du test, stdin écrit puis fermé :
   - `tool reply --json -` avec `{"text":"Je confie ça à l'utilisateur ⚔️ — prêt"}` : code 0, stdout parse en objet
     avec `shown` ; le dernier message de la conversation vaut exactement ce texte.
@@ -97,14 +97,14 @@ un lanceur POSIX à la racine rejoint `control-room.cmd`.
     stdout contient `messages`.
   - `CONTROL_ROOM_DIR` vide (pas de `server.json`) : `tool list_pending` → code 3, stderr contient
     `control-room ne tourne pas`.
-- [ ] **Step 2:** `node --test test/cli-tool.test.js` → échec (commande inconnue, code 2 partout).
-- [ ] **Step 3:** ajouter `tool` à `commands` dans `bin/control-room.js` et la ligne à `USAGE`.
-- [ ] **Step 4:** `node --test` → tout passe.
-- [ ] **Step 5:** section « Sans MCP » dans la skill, contenu fixé par le spec : si l'outil `reply` n'est pas
+- [x] **Step 2:** `node --test test/cli-tool.test.js` → échec (commande inconnue, code 2 partout).
+- [x] **Step 3:** ajouter `tool` à `commands` dans `bin/control-room.js` et la ligne à `USAGE`.
+- [x] **Step 4:** `node --test` → tout passe.
+- [x] **Step 5:** section « Sans MCP » dans la skill, contenu fixé par le spec : si l'outil `reply` n'est pas
   offert, `control-room tool --list` une fois, puis `control-room tool <nom> --json -` avec un heredoc `<<'EOF'`
   (pas `--json '…'` : les apostrophes du français le cassent), mêmes noms et arguments ; code 3 = page pas lancée,
   le dire à l'utilisateur ; l'utilisateur peut autoriser `Bash(control-room tool:*)`. Un exemple `reply`.
-- [ ] **Step 6:** commit `feat(cli): control-room tool, les outils sans MCP`.
+- [x] **Step 6:** commit `feat(cli): control-room tool, les outils sans MCP`.
 
 ### Task 3: WSL Ubuntu
 
@@ -126,7 +126,7 @@ un lanceur POSIX à la racine rejoint `control-room.cmd`.
     `['cmd.exe', ['/c', 'start', url], { cwd: '/mnt/c' }]` ; darwin : `open` ; sinon `xdg-open`.
     `openBrowser` l'utilise et garde `detached`, `stdio: 'ignore'`, `unref()`.
 
-- [ ] **Step 1: tests qui échouent** dans `test/host.test.js` :
+- [x] **Step 1: tests qui échouent** dans `test/host.test.js` :
   - `isWsl({platform:'linux', env:{WSL_DISTRO_NAME:'Ubuntu'}, osrelease:''})` → true ;
     `isWsl({platform:'linux', env:{}, osrelease:'5.15.167.4-microsoft-standard-WSL2'})` → true ;
     `isWsl({platform:'linux', env:{}, osrelease:'6.8.0-45-generic'})` → false ;
@@ -135,35 +135,35 @@ un lanceur POSIX à la racine rejoint `control-room.cmd`.
     `pickHost({env:{CONTROL_ROOM_HOST:'127.0.0.5'}, wsl:true})` → `'127.0.0.5'`.
   - `browserCommand('http://h/?k=x', {platform:'linux', wsl:true})` → cmd `cmd.exe`, argv
     `['/c','start','http://h/?k=x']`, `opts.cwd === '/mnt/c'` ; `{platform:'linux', wsl:false}` → `xdg-open`.
-- [ ] **Step 2:** `node --test test/host.test.js` → échec.
-- [ ] **Step 3:** implémenter `host.js` ; `openBrowser` passe par `browserCommand` (`browserCommand` vit dans
+- [x] **Step 2:** `node --test test/host.test.js` → échec.
+- [x] **Step 3:** implémenter `host.js` ; `openBrowser` passe par `browserCommand` (`browserCommand` vit dans
   `host.js` pour que `bin/` reste sans logique testable).
-- [ ] **Step 4:** `node --test` → tout passe.
-- [ ] **Step 5:** lanceur `control-room` (`#!/bin/sh`) : résout son propre chemin (`readlink -f "$0"`) ; si
+- [x] **Step 4:** `node --test` → tout passe.
+- [x] **Step 5:** lanceur `control-room` (`#!/bin/sh`) : résout son propre chemin (`readlink -f "$0"`) ; si
   `plugin/bin/control-room.js` existe à côté, `exec node` dessus ; sinon `node -e` lit
   `~/.claude/plugins/installed_plugins.json`, prend le premier `installPath` d'une clé `control-room@*` et
   `exec node "<installPath>/bin/control-room.js" "$@"` ; rien trouvé → `control-room : plugin introuvable (ni à côté
   du lanceur, ni dans installed_plugins.json).` sur stderr, code 1.
   `.gitattributes` : `control-room text eol=lf`. `git add --chmod=+x control-room`.
-- [ ] **Step 6:** vérifier dans Git Bash : `sh ./control-room tool --list | head -3` (cas « à côté ») ; copie du
+- [x] **Step 6:** vérifier dans Git Bash : `sh ./control-room tool --list | head -3` (cas « à côté ») ; copie du
   lanceur dans le scratchpad lancée par `sh` → cas `installPath` (ici 0.1.0 du cache, peu importe : `--list`
   inconnu de 0.1.0 donne l'usage, ce qui prouve le chemin) ; `installed_plugins.json` introuvable via
   `HOME=<dossier vide>` → le message ci-dessus, code 1 ; `git ls-files --eol control-room` → `i/lf w/lf`.
-- [ ] **Step 7:** README : sous « Installation », Linux / WSL : `ln -s <dépôt>/control-room ~/.local/bin/` ou
+- [x] **Step 7:** README : sous « Installation », Linux / WSL : `ln -s <dépôt>/control-room ~/.local/bin/` ou
   copier le lanceur seul quand le plugin vient d'une marketplace ; section « WSL » : `127.0.0.1` automatique (et
   `CONTROL_ROOM_HOST` qui reste prioritaire), le cookie de la page qui part alors vers les autres serveurs locaux
   en `127.0.0.1`, la page ouverte par `cmd.exe`, `--no-open` sinon.
-- [ ] **Step 8:** commit `feat(wsl): hôte, navigateur et lanceur POSIX pour WSL Ubuntu`.
+- [x] **Step 8:** commit `feat(wsl): hôte, navigateur et lanceur POSIX pour WSL Ubuntu`.
 
 ### Task 4: version 0.3.0
 
 **Files:**
 - Modify: `plugin/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`
 
-- [ ] **Step 1:** `version` → `0.3.0` dans les deux.
-- [ ] **Step 2:** `node --test` (le test de version de Task 1 suit `plugin.json`) ; `claude plugin validate ./plugin`
+- [x] **Step 1:** `version` → `0.3.0` dans les deux.
+- [x] **Step 2:** `node --test` (le test de version de Task 1 suit `plugin.json`) ; `claude plugin validate ./plugin`
   et `claude plugin validate .` → valides.
-- [ ] **Step 3:** commit `chore: 0.3.0`.
+- [x] **Step 3:** commit `chore: 0.3.0`.
 
 ### Acceptation
 
