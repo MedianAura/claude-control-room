@@ -37,6 +37,12 @@ test('the base orchestrator tools are listed', async () => {
   assert.deepEqual(r.result.tools.map(x => x.name).filter(n => !/^(add_|update_item|close_todo|remove_item|reopen_item|list_board)/.test(n)).sort(), ['cancel_decision', 'list_pending', 'queue_decision', 'release_session', 'reply', 'set_plan', 'wait_answers']);
 });
 
+test('initialize reports the version from plugin.json', async () => {
+  const r = await mcp.rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '0' } });
+  const { version } = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'plugin', '.claude-plugin', 'plugin.json'), 'utf8'));
+  assert.equal(r.result.serverInfo.version, version);
+});
+
 test('queue_decision creates a card the page can see', async () => {
   const r = await mcp.call('queue_decision', { agent: 'Quick Upgrade', summary: 'Retrait ?', options: ['Auto', 'Bouton'], recommended: '2' });
   assert.ok(!r.result.isError);
