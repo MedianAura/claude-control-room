@@ -7,7 +7,7 @@
       "name": "control-room",
       "source": "./plugin",
       "description": "Salle de contrôle visuelle pour une orchestratrice Claude et ses sessions de travail",
-      "version": "0.2.0"
+      "version": "0.3.0"
     }
   ]
 }
