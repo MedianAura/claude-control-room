@@ -1,0 +1,22 @@
+#!/bin/sh
+# Lanceur POSIX (Linux, WSL), pendant de control-room.cmd.
+# Lien symbolique vers ce fichier dans le dépôt : lance le plugin du dépôt. Copie seule (plugin installé depuis une
+# marketplace) : lance celui que Claude Code a installé, lu dans installed_plugins.json, quelle que soit sa version.
+here=$(dirname "$(readlink -f "$0")")
+js="$here/plugin/bin/control-room.js"
+if [ ! -f "$js" ]; then
+  root=$(node -e '
+    try {
+      const j = require(require("path").join(require("os").homedir(), ".claude", "plugins", "installed_plugins.json"));
+      const key = Object.keys(j.plugins || {}).find(k => k.startsWith("control-room@"));
+      const e = key && j.plugins[key][0];
+      if (e && e.installPath) process.stdout.write(e.installPath);
+    } catch {}
+  ')
+  js="$root/bin/control-room.js"
+  if [ -z "$root" ] || [ ! -f "$js" ]; then
+    echo "control-room : plugin introuvable (ni à côté du lanceur, ni dans installed_plugins.json)." >&2
+    exit 1
+  fi
+fi
+exec node "$js" "$@"

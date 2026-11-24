@@ -8,7 +8,9 @@ Node pur, aucune dépendance. État dans `~/.claude/control-room/`.
 
 ## Installation (une fois)
 
-1. Ajouter `E:\workspaces\claude\control-room` au `PATH` (pour `control-room.cmd`).
+1. Ajouter `E:\workspaces\claude\control-room` au `PATH` (pour `control-room.cmd`). Linux / WSL : lien symbolique
+   du lanceur, `ln -s <dépôt>/control-room ~/.local/bin/` ; sans le dépôt (plugin installé depuis une
+   marketplace), copier le lanceur seul dans `~/.local/bin/` : il lance la version installée.
 2. Dans Claude Code : `/plugin marketplace add E:\workspaces\claude\control-room`, puis
    `/plugin install control-room@control-room`.
 3. Sessions de travail en **mode auto** : la plupart des actions ne demandent rien ; le reste passe par la page.
@@ -50,6 +52,21 @@ Chemins à donner à `claim` (à mettre dans le `CLAUDE.md` du projet) :
 ```
 control-room claim --project F:\AzerothCoreCOA --plans F:\AzerothCoreCOA\.agents\plans --board <fichier du tableau>
 ```
+
+## Sans MCP
+
+Si une politique de l'organisation bloque le serveur MCP du plugin (`/mcp` ne liste pas control-room), les mêmes
+outils passent par `control-room tool <nom> --json -` (arguments en JSON sur stdin) ; `control-room tool --list`
+les décrit. La skill le dit à l'orchestratrice. Pour éviter une validation par appel : autoriser
+`Bash(control-room tool:*)`.
+
+## WSL
+
+- La page écoute sur `127.0.0.1` (détection automatique de WSL ; `CONTROL_ROOM_HOST` reste prioritaire) : le relais
+  localhost de WSL2 vers Windows ne transmet que cette adresse. Contrepartie : le cookie de la page part aussi vers
+  les autres serveurs locaux en `127.0.0.1`.
+- La page s'ouvre dans le navigateur Windows par `cmd.exe` ; `start --no-open` sinon, puis ouvrir l'adresse
+  affichée (`127.0.0.1`, pas `localhost`).
 
 ## Limites connues
 

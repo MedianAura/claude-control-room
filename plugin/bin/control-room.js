@@ -126,9 +126,10 @@ function claudeVersion() {
 }
 
 function openBrowser(url) {
-  const [cmd, argv] = process.platform === 'win32' ? ['cmd', ['/c', 'start', '""', url]]
-    : process.platform === 'darwin' ? ['open', [url]] : ['xdg-open', [url]];
-  spawn(cmd, argv, { detached: true, stdio: 'ignore', windowsVerbatimArguments: true }).unref();
+  const [cmd, argv, opts] = require('../lib/host').browserCommand(url);
+  const child = spawn(cmd, argv, { detached: true, stdio: 'ignore', ...opts });
+  child.on('error', () => console.error(`control-room : navigateur non ouvert (${cmd} introuvable) ; ouvre l'adresse à la main.`));
+  child.unref();
 }
 
 const [name, ...args] = process.argv.slice(2);
