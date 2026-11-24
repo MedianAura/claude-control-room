@@ -1,29 +1,136 @@
 {
-  "description": "control-room : état des sessions pour le bandeau, approbations depuis la page, accusés de réception et relance de l'orchestratrice.",
+  "description": "control-room : état des sessions pour le bandeau, approbations depuis la page, accusés de réception et relance de l'orchestratrice ; jauge de contexte des sessions (module register.ts).",
   "hooks": {
     "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/bin/control-room.js", "hook", "status"], "async": true } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/bin/control-room.js",
+              "hook",
+              "status"
+            ],
+            "async": true
+          }
+        ]
+      }
     ],
     "SessionEnd": [
-      { "hooks": [ { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/bin/control-room.js", "hook", "status"], "async": true } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/bin/control-room.js",
+              "hook",
+              "status"
+            ],
+            "async": true
+          }
+        ]
+      }
     ],
     "UserPromptSubmit": [
-      { "hooks": [ { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/bin/control-room.js", "hook", "status"], "async": true } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/bin/control-room.js",
+              "hook",
+              "status"
+            ],
+            "async": true
+          }
+        ]
+      }
     ],
     "PreToolUse": [
-      { "hooks": [ { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/bin/control-room.js", "hook", "status"], "async": true } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/bin/control-room.js",
+              "hook",
+              "status"
+            ],
+            "async": true
+          }
+        ]
+      }
     ],
     "Notification": [
-      { "hooks": [ { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/bin/control-room.js", "hook", "status"], "async": true } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/bin/control-room.js",
+              "hook",
+              "status"
+            ],
+            "async": true
+          }
+        ]
+      }
     ],
     "PermissionDenied": [
-      { "hooks": [ { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/bin/control-room.js", "hook", "status"], "async": true } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/bin/control-room.js",
+              "hook",
+              "status"
+            ],
+            "async": true
+          }
+        ]
+      }
     ],
     "Stop": [
-      { "hooks": [ { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/bin/control-room.js", "hook", "stop"], "timeout": 15 } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/bin/control-room.js",
+              "hook",
+              "stop"
+            ],
+            "timeout": 15
+          }
+        ]
+      }
     ],
     "PermissionRequest": [
-      { "hooks": [ { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/bin/control-room.js", "hook", "permission"], "timeout": 900 } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/bin/control-room.js",
+              "hook",
+              "permission"
+            ],
+            "timeout": 900
+          }
+        ]
+      }
     ]
-  }
+  },
+  "modules": [
+    "./register.ts"
+  ]
 }

@@ -91,7 +91,7 @@ const commands = {
     await listenForever(inbox, claim, (m) => console.log(`control-room listen : ${m}`));
   },
 
-  // Appelé par les hooks du plugin (hooks/hooks.json) : permission | stop | status.
+  // Appelé par les hooks du plugin (hooks/hooks.json) : permission | stop | status ; context par hooks/register.ts.
   async hook(args) { await require('../lib/hooks').runHook(args[0]); },
 
   // Les outils de l'orchestratrice sans MCP (politique d'org qui bloque les serveurs MCP des plugins).

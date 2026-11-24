@@ -212,6 +212,9 @@
   .chip.st-approval .dot { background: var(--ko); } .chip.st-approval { color: var(--ko-ink); font-weight: 600; }
   #scount .mine { color: var(--accent-ink); } #scount .mine.blocked { color: var(--ko-ink); }
   #sessionsPanel.lost .chip { opacity: .45; }
+  /* Jauge de contexte (0.4.0) : % après le nom ; ambre ≥ 40 (sortie de la zone fine), rouge ≥ 70 (handoff + clear). */
+  .chip .ctx { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 400; }
+  .chip .ctx.warm { color: var(--accent-ink); } .chip .ctx.hot { color: var(--ko-ink); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -507,9 +510,11 @@ function renderSessions() {
   $('#scount').innerHTML = !s.length ? '' : mine.length ? `<span class="mine ${blocked ? 'blocked' : ''}">${mine.length} à toi</span> · ${s.length}` : String(s.length);
   // En dernier dans la colonne : une pastille par session, le détail (état, activité, heure) en title. Ce qui attend
   // après toi garde sa forme carrée et son nom coloré ; le mot d'état est dans le title et dans l'aria-label.
-  const tip = (x) => [STATE_LABEL[x.status], x.activity && x.activity !== STATE_LABEL[x.status] ? x.activity : '', x.at ? hhmm(x.at) : ''].filter(Boolean).join(' · ');
+  const pct = (x) => x.context && Number.isFinite(x.context.pct) ? x.context.pct : null;
+  const tip = (x) => [STATE_LABEL[x.status], x.activity && x.activity !== STATE_LABEL[x.status] ? x.activity : '', pct(x) !== null ? `contexte ${pct(x)} %` : '', x.at ? hhmm(x.at) : ''].filter(Boolean).join(' · ');
+  const gauge = (x) => pct(x) === null ? '' : `<span class="ctx ${pct(x) >= 70 ? 'hot' : pct(x) >= 40 ? 'warm' : ''}">${pct(x)}%</span>`;
   $('#sessions').innerHTML = s.length ? s.map(x =>
-    `<span class="chip st-${esc(x.status)}" title="${esc(tip(x))}" aria-label="${esc(x.label)} : ${esc(tip(x))}"><span class="dot"></span>${esc(x.label)}</span>`).join('')
+    `<span class="chip st-${esc(x.status)}" title="${esc(tip(x))}" aria-label="${esc(x.label)} : ${esc(tip(x))}"><span class="dot"></span>${esc(x.label)}${gauge(x)}</span>`).join('')
     : '<div class="none">Aucune session inscrite (control-room label).</div>';
   setFavicon(blocked ? 'approval' : mine.length ? 'decision' : '');
 }

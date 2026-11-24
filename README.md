@@ -68,6 +68,13 @@ les décrit. La skill le dit à l'orchestratrice. Pour éviter une validation pa
 - La page s'ouvre dans le navigateur Windows par `cmd.exe` ; `start --no-open` sinon, puis ouvrir l'adresse
   affichée (`127.0.0.1`, pas `localhost`).
 
+## Jauge de contexte
+
+Chaque pastille de « Connectés » affiche le % de contexte de la session (ambre ≥ 40, rouge ≥ 70), le même chiffre
+que la statusline. Le module `plugin/hooks/register.ts` le lit par `$.session.usage()` en fin de tour (et une
+minuterie de repli, 60 s), puis le pousse par `control-room hook context`, seulement quand il change de palier
+(5 points). Les hooks classiques ne voient pas ce chiffre ; un module de mod, si. Rien à configurer.
+
 ## Limites connues
 
 - La page vit sur `http://127.83.82.1:4242` (bouclage dédié : son cookie n'est pas envoyé aux autres serveurs

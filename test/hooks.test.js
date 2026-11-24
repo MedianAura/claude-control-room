@@ -122,6 +122,28 @@ test('Stop marks the session idle', async () => {
   assert.equal((await state()).sessions[0].status, 'idle');
 });
 
+test('context: the mod pushes the % by session_id, without the messaging socket', async () => {
+  await label('K1', 'w1');
+  await runHook('status', { hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { description: 'x' } });
+  const before = (await state()).sessions[0];
+  await runHook('context', { context_pct: 44.6 }, { CLAUDE_CODE_MESSAGING_SOCKET: '' });
+  const s = (await state()).sessions[0];
+  assert.equal(s.context.pct, 45);
+  assert.equal(s.status, before.status); // la jauge ne touche pas à l'état
+  assert.equal(s.at, before.at); // ni à l'heure de la dernière activité
+});
+
+test('context: an unknown session or a bad % changes nothing', async () => {
+  await label('K1', 'w1');
+  await runHook('status', { hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { description: 'x' } });
+  await runHook('context', { session_id: 'inconnue', context_pct: 50 }, { CLAUDE_CODE_MESSAGING_SOCKET: '' });
+  await runHook('context', { context_pct: 'beaucoup' });
+  await runHook('context', { context_pct: 140 });
+  const s = (await state()).sessions;
+  assert.equal(s.length, 1);
+  assert.equal(s[0].context, null);
+});
+
 test('a label replaces the default name', async () => {
   await runHook('status', { hook_event_name: 'SessionStart' });
   await label('K1', '🔨 Builds · b2');

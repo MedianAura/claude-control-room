@@ -25,6 +25,14 @@ function reportStatus(input) {
   }, { timeoutMs: 3000 });
 }
 
+// Lancé par le module de mod (hooks/register.ts), pas par Claude Code : { session_id, context_pct } sur stdin.
+function reportContext(input) {
+  return call('POST', '/api/sessions/event', {
+    event: 'Context', key: process.env.CLAUDE_CODE_MESSAGING_SOCKET || undefined,
+    session_id: input.session_id, context_pct: input.context_pct,
+  }, { timeoutMs: 3000 });
+}
+
 async function permission(input) {
   const key = keyOf(input);
   const who = await call('GET', `/api/sessions/enrolled?key=${encodeURIComponent(key)}`, undefined, { timeoutMs: 3000 });
@@ -74,6 +82,7 @@ async function runHook(kind) {
   try {
     if (kind === 'permission') out = await permission(input);
     else if (kind === 'stop') out = await stop(input);
+    else if (kind === 'context') await reportContext(input);
     else await reportStatus(input);
   } catch { out = null; }
   if (out) process.stdout.write(JSON.stringify(out));

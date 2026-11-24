@@ -15,6 +15,18 @@ function defaultLabel({ cwd, session_id }) {
   return `${path.basename(String(cwd || '').replace(/[\\/]+$/, '')) || 'session'} · ${String(session_id || '').slice(0, 4)}`;
 }
 
+// Jauge de contexte (0.4.0) : poussée par le module de mod (hooks/register.ts), seul à voir le % que la
+// statusline affiche. Le module ne connaît pas toujours le socket de messagerie ; il donne le session_id, que les
+// hooks classiques ont déjà rangé dans la fiche. Ne touche ni à l'état, ni à `at` (l'heure de la dernière activité).
+function setContext({ key, session_id, pct }) {
+  const n = Math.round(Number(pct));
+  if (!Number.isFinite(n) || n < 0 || n > 100) return null;
+  const s = (key && read(key)) || (session_id && readAll().find(x => x.session_id === session_id));
+  if (!s) return null;
+  write({ ...s, context: { pct: n, at: Date.now() } });
+  return s;
+}
+
 function update(key, patch) {
   const s = { key, label: null, enrolled: false, status: 'idle', activity: '', ...read(key), ...patch, at: Date.now() };
   if (!s.label) s.label = defaultLabel(s);
@@ -84,10 +96,10 @@ function list() {
   const team = inTeam();
   return readAll()
     .filter(s => team(s) && now - (s.at || 0) < SESSION_TTL_MS)
-    .map(({ key, label, status, activity, at }) => {
+    .map(({ key, label, status, activity, at, context }) => {
       if (pending.some(c => c.kind === 'approval' && c.session === key)) status = 'approval';
       else if (pending.some(c => c.kind === 'decision' && c.session && c.session === label)) status = 'decision';
-      return { key, label, status, activity, at };
+      return { key, label, status, activity, at, context: context || null };
     })
     .sort((a, b) => String(a.label).localeCompare(String(b.label)));
 }
@@ -96,6 +108,7 @@ function routes(delivery) {
   return [
     { method: 'POST', match: p => p === '/api/sessions/event', auth: 'client', handle: async (req, res, url, { readBody, send }) => {
       const e = await readBody(req, 4 * 1024 * 1024);
+      if (e.event === 'Context') return send(res, 200, { ok: !!setContext({ key: e.key, session_id: e.session_id, pct: e.context_pct }) });
       if (!e.key) return send(res, 400, { error: 'key requise' });
       if (e.event === 'SessionEnd') { try { fs.unlinkSync(fileOf(e.key)); } catch {} return send(res, 200, { ok: true }); }
       const map = STATUS[e.event];
@@ -130,4 +143,4 @@ function routes(delivery) {
   ];
 }
 
-module.exports = { routes, list, sweep, defaultLabel };
+module.exports = { routes, list, sweep, defaultLabel, setContext };
