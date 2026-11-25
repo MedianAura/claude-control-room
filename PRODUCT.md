@@ -75,7 +75,7 @@ None beyond the name "control-room" and the French UI copy already in the page.
 
 - Brainstorm mockup: `F:\AzerothCoreCOA\.superpowers\brainstorm\269611-1795301586\content\layout-v2.html`.
 - Design spec: `docs/superpowers/specs/2026-11-21-control-room-design.md`; master plan with usage feedback:
-  `docs/superpowers/plans/2026-11-21-control-room.md`.
+  `docs/superpowers/plans/_archive/2026-11-21-control-room.md`.
 - No other users, testimonials or metrics; do not invent any.
 
 ## Product Principles

@@ -9,7 +9,7 @@ coordonne d'autres sessions par `SendMessage`. Cartes de décision une à la foi
 approbations de permission depuis la page, colonne TODO → Plan → À tester lue depuis le tableau JSON du projet (`claim --board`), plus les plans pour la
 progression.
 
-Le design fait foi : `docs/superpowers/specs/2026-11-21-control-room-design.md` et, pour le tableau, `docs/superpowers/specs/2026-11-22-board-design.md` ; plan et décisions : `docs/superpowers/plans/2026-11-21-control-room.md` ; usage : `README.md`.
+Le design fait foi : `docs/superpowers/specs/2026-11-21-control-room-design.md` et, pour le tableau, `docs/superpowers/specs/2026-11-22-board-design.md` ; plan et décisions : `docs/superpowers/plans/_archive/2026-11-21-control-room.md` ; usage : `README.md`.
 
 ## Commandes
 
