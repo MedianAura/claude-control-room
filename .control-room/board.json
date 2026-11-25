@@ -102,7 +102,7 @@
     {
       "id": "835Q",
       "kind": "test",
-      "state": "open",
+      "state": "ok",
       "text": "Poste perso, après mise à jour du plugin : avec le MCP, `reply` et `queue_decision` marchent comme avant.",
       "detail": "Session avec MCP ; rien n'a changé par rapport à avant la voie CLI.",
       "plan": "2026-11-23-sans-mcp-wsl",
@@ -113,12 +113,12 @@
       },
       "notes": [],
       "createdAt": "2026-11-25T04:42:29.411Z",
-      "closedAt": null
+      "closedAt": "2026-11-25T04:43:09.812Z"
     },
     {
       "id": "D4RP",
       "kind": "test",
-      "state": "open",
+      "state": "ok",
       "text": "Travail, MCP bloqué : un message de la page reçoit sa réponse par `control-room tool reply`.",
       "detail": "`claim` → `listen` en arrière-plan → message depuis la page → `control-room tool reply` → la réponse apparaît dans le fil.",
       "plan": "2026-11-23-sans-mcp-wsl",
@@ -129,7 +129,7 @@
       },
       "notes": [],
       "createdAt": "2026-11-25T04:42:29.447Z",
-      "closedAt": null
+      "closedAt": "2026-11-25T04:43:00.890Z"
     },
     {
       "id": "CPWC",
