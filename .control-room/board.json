@@ -70,7 +70,7 @@
     {
       "id": "9ZQW",
       "kind": "test",
-      "state": "open",
+      "state": "ok",
       "text": "L'orchestratrice de SoloConquest se déclare avec `--board` et transpose le plan maître `solo-power-creep/plan.md`.",
       "detail": "Tests ouverts avec plan, tâche, origine ; TODO avec P1 → high, P2 → medium, P3 → low ; notes datées en `notes` ; retire ces sections du markdown et commite le tableau à part. La colonne montre les groupes plan › tâche, le plus important d'abord.",
       "plan": "2026-11-22-board",
@@ -81,7 +81,7 @@
       },
       "notes": [],
       "createdAt": "2026-11-23T04:15:52.129Z",
-      "closedAt": null
+      "closedAt": "2026-11-25T04:45:20.356Z"
     },
     {
       "id": "9EET",
