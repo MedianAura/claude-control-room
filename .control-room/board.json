@@ -134,7 +134,7 @@
     {
       "id": "CPWC",
       "kind": "test",
-      "state": "open",
+      "state": "ok",
       "text": "Travail, MCP bloqué : une carte posée par `control-room tool queue_decision` revient par `listen` après le clic.",
       "detail": "`control-room tool queue_decision` → carte → clic → réponse relayée par `listen`.",
       "plan": "2026-11-23-sans-mcp-wsl",
@@ -145,12 +145,12 @@
       },
       "notes": [],
       "createdAt": "2026-11-25T04:42:29.483Z",
-      "closedAt": null
+      "closedAt": "2026-11-25T04:43:26.442Z"
     },
     {
       "id": "QTNB",
       "kind": "test",
-      "state": "open",
+      "state": "ok",
       "text": "WSL sans `CONTROL_ROOM_HOST` : `control-room start` ouvre la page dans le navigateur Windows.",
       "detail": null,
       "plan": "2026-11-23-sans-mcp-wsl",
@@ -161,7 +161,7 @@
       },
       "notes": [],
       "createdAt": "2026-11-25T04:42:29.521Z",
-      "closedAt": null
+      "closedAt": "2026-11-25T04:43:32.609Z"
     }
   ]
 }
