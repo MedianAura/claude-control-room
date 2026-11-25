@@ -103,7 +103,7 @@ l'ancienne liste globale est reprise au claim par chemin, `set_plan` sans claim 
 - [ ] **Step 1 (user):** relancer `control-room start` dans ton terminal (le serveur tourne depuis le dépôt).
 - [ ] **Step 2 (user):** sur la page de control-room, « Plans en cours » ne montre plus stat-gains ni
   crucible-quick-upgrade.
-- [ ] **Step 3:** l'orchestratrice refait son claim : l'ancienne liste passe dans `active-plans-legacy.json`, qui
+- [x] **Step 3:** l'orchestratrice refait son claim : l'ancienne liste passe dans `active-plans-legacy.json`, qui
   garde les deux plans d'AzerothCoreCOA (ils ne sont pas sous les plans de control-room).
 - [ ] **Step 4 (user):** au prochain claim de l'orchestratrice d'AzerothCoreCOA, ses deux plans réapparaissent
   dans sa page.
