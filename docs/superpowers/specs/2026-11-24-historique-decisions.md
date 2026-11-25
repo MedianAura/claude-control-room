@@ -35,9 +35,9 @@ discussion, `server.js:124` n'en crée plus), 1 approbation, ~18 décisions. L'h
    panneau titré « Décisions prises » (au lieu de « Historique des réponses »), fermé par défaut, sous le fil, comme
    aujourd'hui.
    Coordination avec g3 : pas de tiroir, les textes de terminal de l'orchestratrice vont dans le fil
-   (2026-11-24-chat-complet.md) ; aucun autre panneau près de « Décisions prises ». Le fil montre aussi les réponses de carte de l'utilisateur, choix et note
-   compris (« toi · décision « … » → choix », tranché par l'utilisateur avec g3, voir 2026-11-24-chat-complet.md) :
-   le fil raconte, l'historique recense ; le doublon est voulu.
+   (2026-11-24-chat-complet.md) ; aucun autre panneau près de « Décisions prises ». ~~Le fil montre aussi les
+   réponses de carte de l'utilisateur~~ : abandonné au shape du 2026-11-25, les décisions ne vont plus dans le fil
+   (pas de doublon).
 
 **Révisé au shape (2026-11-25), remplace la place du point 4 :** le bouton quitte l'en-tête de la discussion.
 Placé là, il faisait lire la discussion comme « l'historique ». Il s'appelle « Décisions prises » et va dans

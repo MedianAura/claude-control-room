@@ -36,8 +36,9 @@
 >   creusé ;
 > - l'heure passe sous le nom (plus de colonne à droite).
 >
-> Les décisions dans le fil (point 3 ci-dessous, « toi · décision … → choix », tranché par l'utilisateur avec g3)
-> ne sont pas dans la maquette : à reconfirmer, maintenant que « Décisions prises » est sur la carte.
+> **Les décisions ne vont pas dans la discussion** (revient sur le point 3 ci-dessous, tranché avec g3) : confirmé
+> par l'utilisateur le 2026-11-25, maintenant que « Décisions prises » est sur la carte. La discussion reste la
+> conversation ; les décisions passées se lisent dans « Décisions prises ».
 
 Date : 2026-11-24. Statut : décidé par grilling (g3, questions Q1 à Q9 relayées en cartes par l'orchestratrice). Pas de
 code modifié à cette étape. Vocabulaire : `GLOSSARY.md` (section Fil). Décision d'architecture :
