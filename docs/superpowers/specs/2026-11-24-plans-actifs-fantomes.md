@@ -15,7 +15,7 @@ La colonne « Plans en cours » de la page, avec control-room déclaré, montre 
   le lit tel quel. `claim()` (`delivery.js:43`) n'y touche pas, et aucun des deux ne regarde le projet déclaré.
 - Les deux plans ont été déclarés le 2026-11-22 (événements « plan actif : 📊 stat-gains » à 18:15 UTC,
   « ⚔️ crucible-quick-upgrade » à 19:19) par l'orchestratrice d'AzerothCoreCOA, avec
-  `dir = F:\AzerothCoreCOA\.agents\plans\<nom>`.
+  `dir = <dossier d'AzerothCoreCOA>\.agents\plans\<nom>`.
 - Ce **ne sont pas des résidus** : ils sont réellement en cours (3 et 4 tâches non cochées dans leur `plan.md`,
   absents de `_archive/`). C'est l'état qui fuit d'un projet à l'autre, pas un archivage oublié.
 - Ils pèsent aussi sur le tableau : `board.view(items, plans)` prend libellés et ordre des groupes dans cette liste.
