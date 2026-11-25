@@ -105,5 +105,5 @@ l'ancienne liste globale est reprise au claim par chemin, `set_plan` sans claim 
   crucible-quick-upgrade.
 - [x] **Step 3:** l'orchestratrice refait son claim : l'ancienne liste passe dans `active-plans-legacy.json`, qui
   garde les deux plans d'AzerothCoreCOA (ils ne sont pas sous les plans de control-room).
-- [ ] **Step 4 (user):** au prochain claim de l'orchestratrice d'AzerothCoreCOA, ses deux plans réapparaissent
+- [x] **Step 4 (user):** au prochain claim de l'orchestratrice d'AzerothCoreCOA, ses deux plans réapparaissent
   dans sa page.
