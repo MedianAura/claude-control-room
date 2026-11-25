@@ -231,7 +231,7 @@
     {
       "id": "658B",
       "kind": "test",
-      "state": "open",
+      "state": "ok",
       "text": "Relancer `control-room start` dans ton terminal, une fois le correctif livré.",
       "detail": "Le serveur tourne depuis le dépôt : sans redémarrage, l'ancien code reste en mémoire. Attends le feu vert de l'orchestratrice.",
       "plan": "2026-11-25-plans-actifs-par-projet",
@@ -242,13 +242,13 @@
       },
       "notes": [],
       "createdAt": "2026-11-25T05:14:07.719Z",
-      "closedAt": null,
+      "closedAt": "2026-11-25T05:18:19.005Z",
       "weight": "low"
     },
     {
       "id": "QXVY",
       "kind": "test",
-      "state": "open",
+      "state": "ok",
       "text": "Sur la page de control-room, « Plans en cours » ne montre plus stat-gains ni crucible-quick-upgrade.",
       "detail": null,
       "plan": "2026-11-25-plans-actifs-par-projet",
@@ -259,7 +259,7 @@
       },
       "notes": [],
       "createdAt": "2026-11-25T05:14:08.460Z",
-      "closedAt": null,
+      "closedAt": "2026-11-25T05:18:20.133Z",
       "weight": "high"
     },
     {
