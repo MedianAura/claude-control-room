@@ -201,6 +201,32 @@
       "createdAt": "2026-11-25T05:03:06.784Z",
       "closedAt": null,
       "weight": "medium"
+    },
+    {
+      "id": "PDAU",
+      "kind": "todo",
+      "state": "open",
+      "text": "Implémenter le fil lu dans le transcript de l'orchestratrice (textes de terminal, décisions avec choix et note, déclencheurs, alerte de format).",
+      "detail": "Spec : docs/superpowers/specs/2026-11-24-chat-complet.md, ADR docs/adr/0001-fil-lu-dans-le-transcript.md (0444a4e). Inclut la phrase à ajouter au skill : terminal = ligne d'état sans redite.",
+      "group": "Fil",
+      "plan": null,
+      "notes": [],
+      "createdAt": "2026-11-25T05:11:25.788Z",
+      "closedAt": null,
+      "weight": "medium"
+    },
+    {
+      "id": "XTQS",
+      "kind": "todo",
+      "state": "open",
+      "text": "Mettre les chemins de la commande claim du CLAUDE.md entre apostrophes (Git Bash mange les antislashs non quotés).",
+      "detail": "Vécu le 2026-11-24 : orchestrator.json enregistré avec E:workspacesclaude…, tableau pointant vers un fichier inexistant. Piste aussi : claim refuse un chemin sans séparateur ou inexistant.",
+      "group": "Plans actifs",
+      "plan": null,
+      "notes": [],
+      "createdAt": "2026-11-25T05:11:32.024Z",
+      "closedAt": null,
+      "weight": "low"
     }
   ]
 }
