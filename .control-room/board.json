@@ -54,7 +54,7 @@
     {
       "id": "C5JE",
       "kind": "test",
-      "state": "open",
+      "state": "ok",
       "text": "Mettre à jour le plugin et relancer le serveur et l'orchestratrice.",
       "detail": "`claude plugin update control-room@control-room`, relancer `control-room start` et l'orchestratrice ; `diff -rq` entre le cache du plugin et `plugin/` ne montre rien.",
       "plan": "2026-11-22-board",
@@ -65,7 +65,7 @@
       },
       "notes": [],
       "createdAt": "2026-11-23T04:15:52.127Z",
-      "closedAt": null
+      "closedAt": "2026-11-25T04:36:25.648Z"
     },
     {
       "id": "9ZQW",
