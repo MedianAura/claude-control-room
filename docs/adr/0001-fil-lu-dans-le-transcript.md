@@ -1,5 +1,9 @@
 # Le fil recopie les textes de terminal depuis le transcript de l'orchestratrice
 
+**Statut : abandonnée (2026-11-25), jamais implémentée.** Recopier le terminal ramenait un flux qui bouge dans une
+page faite pour que rien ne bouge. Le besoin est traité autrement : l'orchestratrice répond toujours dans la page
+(voir `docs/superpowers/specs/2026-11-24-chat-complet.md`, encadré en tête).
+
 Les textes que l'orchestratrice écrit dans son terminal ne sont exposés par aucun hook. Le serveur les lit donc dans
 son transcript JSONL (`~/.claude/projects/<dossier>/<session_id>.jsonl`), un format non documenté de Claude Code
 (2.1.330). Il en lit seulement la fin, depuis le dernier point lu, et recopie les lignes reconnues dans le fil

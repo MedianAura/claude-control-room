@@ -39,6 +39,12 @@ discussion, `server.js:124` n'en crée plus), 1 approbation, ~18 décisions. L'h
    compris (« toi · décision « … » → choix », tranché par l'utilisateur avec g3, voir 2026-11-24-chat-complet.md) :
    le fil raconte, l'historique recense ; le doublon est voulu.
 
+**Révisé au shape (2026-11-25), remplace la place du point 4 :** le bouton quitte l'en-tête de la discussion.
+Placé là, il faisait lire la discussion comme « l'historique ». Il s'appelle « Décisions prises » et va dans
+l'en-tête du panneau de la carte de décision : les décisions passées à côté de la décision en cours. Il reste là
+quand aucune carte n'attend. Le panneau « Décisions prises » s'ouvre sous la carte, fermé par défaut. Le panneau
+de discussion s'appelle « Discussion » (au lieu d'« Orchestratrice »).
+
 ## Affichage (shape Impeccable, 2026-11-25)
 
 Mesuré sur les 46 décisions réelles : question 124 car. en médiane (185 max), session 18, choix 20 (166 max pour

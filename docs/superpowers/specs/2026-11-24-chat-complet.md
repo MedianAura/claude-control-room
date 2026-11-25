@@ -1,5 +1,34 @@
 # Textes de terminal de l'orchestratrice dans le fil
 
+> **Abandonné au shape du 2026-11-25, remplacé par « un fil agréable à lire » (ci-dessous).** La recopie du
+> terminal ramenait dans la page ce que control-room évite : un flux qui bouge et dont la plupart ne demande rien à
+> l'utilisateur. Le reste de ce document (lecture du transcript, ADR 0001) n'est gardé que comme trace.
+>
+> **Le besoin, mesuré** (transcript de l'orchestratrice, 48 tours) : la discussion paraît incomplète parce
+> qu'elle répond à moitié ailleurs. Une bonne partie des messages de la page n'ont pas reçu de `reply` : la réponse
+> est restée dans son terminal (« Plan validé, relayé : g1 reprend la tâche 2. ») ou est arrivée en carte de
+> décision (« c'est quoi le status ? » → une carte, qui finit dans les décisions prises). Et le fil se lit mal :
+>
+> - boîte de 260 px (`#thread`, ~8 lignes) même quand l'écran a de la place dessous ;
+> - même couleur, même taille (13,5 px), interligne serré pour elle et pour l'utilisateur : rien ne sépare qui
+>   parle, un long message fait un mur ;
+> - `md()` ne connaît que les puces, le gras et le code en ligne : tableaux, listes numérotées, titres et blocs de
+>   code s'affichent en symboles bruts.
+>
+> **Direction retenue :**
+>
+> 1. **Elle répond dans la page.** Règle du skill : chaque message de la page reçoit une `reply`, même courte
+>    (« Relayé à g1 ») ; une carte seulement quand l'utilisateur doit trancher. Le terminal reste le terminal.
+> 2. **Le panneau s'appelle « Discussion »**, sans le bouton d'historique (déplacé sur la carte de décision, voir
+>    `2026-11-24-historique-decisions.md`).
+> 3. **La discussion prend la place libre** sous la carte au lieu d'une boîte de 8 lignes.
+> 4. **Lisible** : texte plus grand et plus aéré, ses messages et ceux de l'utilisateur bien distincts.
+> 5. **Markdown complet de ce qu'elle écrit** : tableaux, listes numérotées, titres, blocs de code (toujours
+>    échappés, Node/HTML sans dépendance).
+>
+> Prochaine étape : une maquette avec de vraies `reply`, à valider avant le plan. Les décisions dans le fil (point 3
+> ci-dessous, « toi · décision … → choix ») restent à trancher avec la maquette.
+
 Date : 2026-11-24. Statut : décidé par grilling (g3, questions Q1 à Q9 relayées en cartes par l'orchestratrice). Pas de
 code modifié à cette étape. Vocabulaire : `GLOSSARY.md` (section Fil). Décision d'architecture :
 `docs/adr/0001-fil-lu-dans-le-transcript.md`.
