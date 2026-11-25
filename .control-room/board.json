@@ -175,6 +175,32 @@
       "createdAt": "2026-11-25T04:59:39.941Z",
       "closedAt": null,
       "weight": "medium"
+    },
+    {
+      "id": "8A2P",
+      "kind": "todo",
+      "state": "open",
+      "text": "Implémenter les plans actifs par projet déclaré (adoption de l'ancienne liste sous --plans, set_plan sans claim → 409).",
+      "detail": "Spec : docs/superpowers/specs/2026-11-24-plans-actifs-fantomes.md (0e4d7f8). Corrige stat-gains et crucible-quick-upgrade affichés dans control-room.",
+      "group": "Plans actifs",
+      "plan": null,
+      "notes": [],
+      "createdAt": "2026-11-25T05:02:43.325Z",
+      "closedAt": null,
+      "weight": "high"
+    },
+    {
+      "id": "Z22G",
+      "kind": "todo",
+      "state": "open",
+      "text": "Implémenter l'historique « Décisions prises » construit depuis cards/ (décisions seules, ligne compacte, note dessous).",
+      "detail": "Spec : docs/superpowers/specs/2026-11-24-historique-decisions.md (33cb27f), suites listées dans la spec (test review #6, spec 2026-11-21 l. 128/180, PRODUCT.md l. 64).",
+      "group": "Historique",
+      "plan": null,
+      "notes": [],
+      "createdAt": "2026-11-25T05:03:06.784Z",
+      "closedAt": null,
+      "weight": "medium"
     }
   ]
 }
