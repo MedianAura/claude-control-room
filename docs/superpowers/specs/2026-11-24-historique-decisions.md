@@ -39,6 +39,22 @@ discussion, `server.js:124` n'en crée plus), 1 approbation, ~18 décisions. L'h
    compris (« toi · décision « … » → choix », tranché par l'utilisateur avec g3, voir 2026-11-24-chat-complet.md) :
    le fil raconte, l'historique recense ; le doublon est voulu.
 
+## Affichage (shape Impeccable, 2026-11-25)
+
+Mesuré sur les 46 décisions réelles : question 124 car. en médiane (185 max), session 18, choix 20 (166 max pour
+une proposition acceptée), note sur 8 décisions sur 46 (251 max). À ~140 car. par ligne dans la colonne gauche, une
+décision fait **deux lignes** en moyenne : « une ligne » (décision 3) veut dire une entrée, pas une ligne visuelle.
+
+- **La question s'affiche en entier**, à la ligne si besoin, jamais coupée par « … » : c'est par elle qu'on
+  reconnaît la décision cherchée, et Ctrl+F doit trouver ce qui se voit.
+- **Le choix est l'ancre** : après `→`, couleur du texte principal, un peu plus gras ; heure (Consolas,
+  `tabular-nums`) et session en muted. Pas de vert (le vert dit « go / OK », pas « tranché »).
+- **La note** en retrait dessous, en muted, avec le filet gauche des citations du fil.
+- Pas de hauteur maximale ni de défilement interne : 30 entrées suivent le défilement de la page.
+- **Rien ne bouge sous l'œil** : une décision arrivée pendant que le pointeur est sur la liste attend qu'il en
+  sorte (même gel que le fil, `talkHover`).
+- Vide : « Aucune décision prise. »
+
 ## Coût côté serveur et stockage
 
 - `GET /api/state` : `recent` devient une liste structurée (`{at, agent, summary, choice, note}` ou équivalent)
