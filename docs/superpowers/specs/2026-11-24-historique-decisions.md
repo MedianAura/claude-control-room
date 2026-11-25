@@ -36,9 +36,9 @@ discussion, `server.js:124` n'en crée plus), 1 approbation, ~18 décisions. L'h
    aujourd'hui.
    Coordination avec g3 (tiroir « chat de l'orchestratrice ») : s'il devient un tiroir, son lien précède
    « Historique » dans l'en-tête, il s'ouvre au plus près du fil, « Décisions prises » dessous ; les deux sont
-   indépendants (ouverture non exclusive) et sans contenu commun. Le contenu d'une décision (choix, note) n'apparaît
-   que dans l'historique ; le fil peut seulement signaler qu'une décision a déclenché un message de l'orchestratrice
-   (ligne « ← décision « … » », proposée par g3, sans choix ni note).
+   indépendants (ouverture non exclusive). Le fil montre aussi les réponses de carte de l'utilisateur, choix et note
+   compris (« toi · décision « … » → choix », tranché par l'utilisateur avec g3, voir 2026-11-24-chat-complet.md) :
+   le fil raconte, l'historique recense ; le doublon est voulu.
 
 ## Coût côté serveur et stockage
 
