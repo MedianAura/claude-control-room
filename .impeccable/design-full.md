@@ -150,12 +150,12 @@ A blackout-and-work-light neutral base carrying four cue colours whose jobs neve
 - **Go Green** (go-green): GO, OK, done. The filled GO button, the live cue light, the OK test answer, a finished session's dot, the plan progress bar, the Autoriser border on an approval.
 
 ### Secondary
-- **Standby Amber** (standby-amber): your decision. The recommended option's border and key digit, the "recommandé" tag, the Proposition legend, the card meta line, an urgent card's name in "Ensuite", a session waiting on your decision, the unread count, text selection tint.
+- **Standby Amber** (standby-amber): what waits on you. The recommended option's border and key digit, the "recommandé" tag, the Proposition legend, the card meta line, an urgent card's name in "Ensuite", a session waiting on your decision, a session's context gauge from 40%, the unread count, text selection tint.
 - **Amber Ink** (amber-ink): amber text on a panel. Currently the same value as Standby Amber; kept as its own token so text contrast can be tuned without moving the fill.
 
 ### Tertiary
-- **Stop Red** (stop-red): approval and breakage. An approval card's border, the held cue light, a session waiting on your approval, the server alert banner, Refuser and Pas OK borders.
-- **Red Ink** (red-ink): red text on a panel (approval meta, "Pas OK", lost connection, held message, send failure). Lighter than Stop Red for AA contrast on the work-light panel.
+- **Stop Red** (stop-red): stop. An approval card's border, the held cue light, a session waiting on your approval, the server alert banner, Refuser and Pas OK borders.
+- **Red Ink** (red-ink): red text on a panel (approval meta, "Pas OK", lost connection, held message, send failure, a context gauge from 70%). Lighter than Stop Red for AA contrast on the work-light panel.
 - **Away Blue** (away-blue): the away summary banner only.
 
 ### Neutral
@@ -168,7 +168,7 @@ A blackout-and-work-light neutral base carrying four cue colours whose jobs neve
 - **House Grey** (house-grey): muted text, captions, timestamps, key digits at rest, hover border on controls.
 
 ### Named Rules
-**The Fixed Jobs Rule.** Green is go / OK / done and progress; amber is your decision and the recommendation; red is approval and breakage; blue is the away summary and nothing else. A colour never borrows another's job, and a new state picks the job it shares or stays neutral.
+**The Fixed Jobs Rule.** Green is go / OK / done and progress; amber is what waits on you (your decision, the recommendation, a session's context filling up); red is stop (approval, breakage, a session that must hand off and clear); blue is the away summary and nothing else. A colour never borrows another's job, and a new state picks the job it shares or stays neutral.
 
 **The Ink Rule.** Coloured text on a panel uses the ink tokens (Amber Ink, Red Ink); the fill tokens are for borders, dots, bars and filled buttons.
 
@@ -259,11 +259,25 @@ Few, flat, unmistakable.
 - **Server alert:** Stop Red at 12%, full red border.
 - **Send failure:** Stop Red at 10%, 45% red border (one step below the server alert).
 
+### Board items (tests and TODOs)
+One row per item, separated by Soft Rail dividers, grouped under 12px/600 House Grey group titles (the plan or section) and, for tests, 12px House Grey task sub-titles.
+- **Reference:** the `#id` leads the row as a bare Consolas 12px House Grey link that turns Script Paper on hover; a click cites `#id` into the conversation field at the caret.
+- **Weight:** an optional 11px mark after the id: a filled SVG up-triangle in Script Paper for high, a hollow down-triangle in House Grey for low; nothing for normal.
+- **Plan origin (TODOs):** the plan name trails the text in House Grey after a middle dot.
+- **Fold:** "détail · N notes" as a 12px House Grey link with a CSS chevron; open, the detail and the timestamped notes (`tabular-nums`, "toi" / "orchestratrice") sit indented 1.1em at 12.5px House Grey.
+- **Test answers** follow under a test item (below).
+
 ### Test answers
-- OK / Pas OK / Clarifier as 12px buttons, 1px border, 4px radius; OK in Go Green with a 55% green border, Pas OK in Red Ink with a 55% red border, Clarifier neutral. 40px tall under a coarse pointer.
+- OK / Pas OK / Clarifier as 12px buttons, 1px border, 4px radius; OK in Go Green with a 55% green border, Pas OK in Red Ink with a 55% red border, Clarifier neutral. 40px tall under a coarse pointer. Clarifier cites the test's `#id` into the conversation, like the reference link.
+
+### Plan rows
+- **Head:** a full-width button: CSS chevron, plan name, `done/total` floated right in 12px `tabular-nums` House Grey; under it the 4px progress bar (Rail Line track, Go Green fill, 2px radius).
+- **Closed:** one 12.5px House Grey line under the bar names the current task with a filled SVG dot and its `done/total`.
+- **Open:** the task list indented 1.1em at 12.5px; each task carries an SVG mark: check when done (House Grey at 75%), filled dot for the current task (Script Paper, 600), ring for the rest. The current task shows its steps by default (12px, check or ring, done steps in House Grey); a click flips any task open or closed. Open plans persist across reloads.
 
 ### Session chips
 - One wrapping line of 12.5px House Grey names with an 8px dot; waiting sessions get a 9px square pip and their name in the job's ink at 600. The caption count reads "N à toi" in amber (red if an approval is among them). A lost server drops the chips to 45%.
+- **Context gauge:** the session's context use as "N%" right after its name, 11px `tabular-nums` House Grey at 400; Amber Ink from 40% (out of the comfortable zone), Red Ink at 600 from 70% (hand off and clear). Absent until the session reports it; the exact figure also goes in the chip's title and aria-label ("contexte N %").
 
 ### Cue Light (signature)
 The 14px lamp left of the card summary's first line, in a 1px outline bezel at 3px offset.
@@ -282,7 +296,7 @@ The 14px lamp left of the card summary's first line, in a 1px outline bezel at 3
 
 ### Do:
 - **Do** keep the page dark only: Blackout ground, Work-light Panel surfaces, Well Blue for anything typed or literal.
-- **Do** give each cue colour its one job: green go / OK / done and progress, amber your decision and the recommendation, red approval and breakage, blue the away summary only.
+- **Do** give each cue colour its one job: green go / OK / done and progress, amber what waits on you, red stop (approval, breakage, a session to hand off), blue the away summary only.
 - **Do** derive tints with `color-mix()` against the panel and use the ink tokens for coloured text.
 - **Do** keep the card summary the only large text (22px/600) and every panel caption 11px tracked caps in House Grey.
 - **Do** double colour with shape in the session strip: round lives its own life, square waits on you.

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-23T07:10:27.403Z",
+  "generatedAt": "2026-11-25T04:43:35.000Z",
   "title": "Design System: control-room",
   "extensions": {
     "colorMeta": {
@@ -331,6 +331,22 @@
       "css": ":host{--bg:#0c0d10;--panel:#131929;--well:#0f1422;--line:#232d47;--line-soft:#1a2236;--text:#e9e6df;--muted:#8a90a3;--accent:#f2a93b;--ok:#35d07f;--ko:#ff4d42;--info:#6f8cff;--accent-ink:#f2a93b;--ko-ink:#ff7a70} .ds-tb{font-family:\"Segoe UI\",system-ui,-apple-system,sans-serif;display:flex;gap:6px;color:var(--text)} .ds-tb button{all:unset;cursor:pointer;font-size:12px;padding:2px 10px;border:1px solid var(--line);border-radius:4px} .ds-tb .ds-ok{border-color:color-mix(in srgb,var(--ok) 55%,transparent);color:var(--ok)} .ds-tb .ds-ko{border-color:color-mix(in srgb,var(--ko) 55%,transparent);color:var(--ko-ink)} .ds-tb button:hover{border-color:var(--muted)} .ds-tb button:focus-visible{outline:2px solid var(--text);outline-offset:2px} @media (pointer:coarse){.ds-tb button{padding:10px 14px;min-height:40px;box-sizing:border-box;display:inline-flex;align-items:center}}"
     },
     {
+      "name": "Board Item",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "A test or TODO row: citable #id, optional weight mark, text, a fold for detail and notes; tests add OK / Pas OK / Clarifier.",
+      "html": "<div class=\"ds-items\"><div class=\"ds-grp\">Plan control-room</div><div class=\"ds-item\"><div><button class=\"ds-ref\">#K3F9</button><span class=\"ds-wt\"><svg class=\"ds-ic\" width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 4.5l4 7H4z\" fill=\"currentColor\"/></svg></span>La jauge passe au rouge à 70 %</div><button class=\"ds-more\"><span class=\"ds-chev\"></span>détail · 2 notes</button></div><div class=\"ds-item\"><div><button class=\"ds-ref\">#Q7M2</button>Ctrl+V colle une capture <span class=\"ds-from\">· page</span></div></div></div>",
+      "css": ":host{--bg:#0c0d10;--panel:#131929;--well:#0f1422;--line:#232d47;--line-soft:#1a2236;--text:#e9e6df;--muted:#8a90a3;--accent:#f2a93b;--ok:#35d07f;--ko:#ff4d42;--info:#6f8cff;--accent-ink:#f2a93b;--ko-ink:#ff7a70} .ds-items{font-family:\"Segoe UI\",system-ui,-apple-system,sans-serif;color:var(--text);font-size:13.5px} .ds-grp{font-size:12px;font-weight:600;color:var(--muted);margin:0 0 2px} .ds-item{padding:8px 0;border-top:1px solid var(--line-soft)} .ds-grp+.ds-item{border-top:0} .ds-ref{all:unset;cursor:pointer;font:12px Consolas,ui-monospace,monospace;color:var(--muted);margin-right:6px} .ds-ref:hover{color:var(--text)} .ds-ref:focus-visible,.ds-more:focus-visible{outline:2px solid var(--text);outline-offset:2px} .ds-wt{display:inline-block;width:1.1em;font-size:11px;color:var(--text)} .ds-ic{display:inline-block;vertical-align:-1px} .ds-from{color:var(--muted)} .ds-more{all:unset;cursor:pointer;display:block;font-size:12px;color:var(--muted);margin-top:2px} .ds-more:hover{color:var(--text)} .ds-chev{display:inline-block;width:1.1em} .ds-chev::before{content:\"\";display:inline-block;width:5px;height:5px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-1px) rotate(-45deg)}"
+    },
+    {
+      "name": "Plan Row",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "A plan in progress: head with chevron and done/total, green progress bar, tasks marked check / dot / ring, the current task's steps open.",
+      "html": "<div class=\"ds-plan\"><button class=\"ds-phead\"><span class=\"ds-pct\">7/12</span><span class=\"ds-chev ds-open\"></span>control-room</button><div class=\"ds-bar\"><i style=\"width:58%\"></i></div><div class=\"ds-tasks\"><button class=\"ds-task ds-tdone\"><span class=\"ds-pct\">4/4</span><svg class=\"ds-ic\" width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3.5 8.5l3 3 6-7\"/></svg> Tableau JSON</button><button class=\"ds-task ds-cur\"><span class=\"ds-pct\">3/6</span><svg class=\"ds-ic\" width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"8\" cy=\"8\" r=\"3\" fill=\"currentColor\" stroke=\"none\"/></svg> Jauge de contexte</button><div class=\"ds-steps\"><div class=\"ds-sdone\"><svg class=\"ds-ic\" width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3.5 8.5l3 3 6-7\"/></svg> Lire le % par le mod</div><div><svg class=\"ds-ic\" width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"8\" cy=\"8\" r=\"3\"/></svg> Afficher après le nom</div></div><button class=\"ds-task\"><span class=\"ds-pct\">0/2</span><svg class=\"ds-ic\" width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"8\" cy=\"8\" r=\"3\"/></svg> WSL</button></div></div>",
+      "css": ":host{--bg:#0c0d10;--panel:#131929;--well:#0f1422;--line:#232d47;--line-soft:#1a2236;--text:#e9e6df;--muted:#8a90a3;--accent:#f2a93b;--ok:#35d07f;--ko:#ff4d42;--info:#6f8cff;--accent-ink:#f2a93b;--ko-ink:#ff7a70} .ds-plan{font-family:\"Segoe UI\",system-ui,-apple-system,sans-serif;color:var(--text);font-size:13.5px} .ds-phead,.ds-task{all:unset;display:block;width:100%;box-sizing:border-box;cursor:pointer} .ds-phead:focus-visible,.ds-task:focus-visible{outline:2px solid var(--text);outline-offset:2px} .ds-pct{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;float:right} .ds-chev{display:inline-block;width:1.1em;color:var(--muted)} .ds-chev::before{content:\"\";display:inline-block;width:5px;height:5px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-1px) rotate(-45deg)} .ds-chev.ds-open::before{transform:translateY(-3px) rotate(45deg)} .ds-bar{height:4px;background:var(--line);border-radius:2px;margin:6px 0 3px;overflow:hidden} .ds-bar i{display:block;height:100%;background:var(--ok)} .ds-tasks{margin:4px 0 2px 1.1em;font-size:12.5px} .ds-task{padding:2px 0;color:var(--muted)} .ds-task.ds-cur{color:var(--text);font-weight:600} .ds-task.ds-tdone{opacity:.75} .ds-steps{margin:0 0 4px 1.2em;font-size:12px;color:var(--text)} .ds-sdone{color:var(--muted)} .ds-ic{display:inline-block;vertical-align:-1px}"
+    },
+    {
       "name": "Composer Field",
       "kind": "input",
       "refersTo": "textarea",
@@ -342,9 +358,9 @@
       "name": "Session Chips",
       "kind": "chip",
       "refersTo": "",
-      "description": "Connected sessions: round = lives its own life (grey working, hollow idle, green done), square = waits on you (amber decision, red approval).",
-      "html": "<div class=\"ds-chips\"><span class=\"ds-chip\"><i></i>orchestratrice</span><span class=\"ds-chip ds-dec\"><i></i>bd — schéma SQL</span><span class=\"ds-chip ds-app\"><i></i>ui — page</span><span class=\"ds-chip ds-idle\"><i></i>docs</span><span class=\"ds-chip ds-done\"><i></i>spike inbox</span></div>",
-      "css": ":host{--bg:#0c0d10;--panel:#131929;--well:#0f1422;--line:#232d47;--line-soft:#1a2236;--text:#e9e6df;--muted:#8a90a3;--accent:#f2a93b;--ok:#35d07f;--ko:#ff4d42;--info:#6f8cff;--accent-ink:#f2a93b;--ko-ink:#ff7a70} .ds-chips{font-family:\"Segoe UI\",system-ui,-apple-system,sans-serif;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted)} .ds-chip{display:inline-flex;align-items:center;gap:6px} .ds-chip i{width:8px;height:8px;border-radius:50%;background:var(--muted)} .ds-idle i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--muted)} .ds-done i{background:var(--ok)} .ds-dec i,.ds-app i{width:9px;height:9px;border-radius:2px} .ds-dec i{background:var(--accent)} .ds-dec{color:var(--accent-ink);font-weight:600} .ds-app i{background:var(--ko)} .ds-app{color:var(--ko-ink);font-weight:600}"
+      "description": "Connected sessions: round = lives its own life (grey working, hollow idle, green done), square = waits on you (amber decision, red approval); the context % after each name turns amber from 40%, red from 70%.",
+      "html": "<div class=\"ds-chips\"><span class=\"ds-chip\"><i></i>orchestratrice<span class=\"ds-ctx\">22%</span></span><span class=\"ds-chip ds-dec\"><i></i>bd — schéma SQL<span class=\"ds-ctx ds-warm\">46%</span></span><span class=\"ds-chip ds-app\"><i></i>ui — page<span class=\"ds-ctx ds-hot\">73%</span></span><span class=\"ds-chip ds-idle\"><i></i>docs</span><span class=\"ds-chip ds-done\"><i></i>spike inbox<span class=\"ds-ctx\">12%</span></span></div>",
+      "css": ":host{--bg:#0c0d10;--panel:#131929;--well:#0f1422;--line:#232d47;--line-soft:#1a2236;--text:#e9e6df;--muted:#8a90a3;--accent:#f2a93b;--ok:#35d07f;--ko:#ff4d42;--info:#6f8cff;--accent-ink:#f2a93b;--ko-ink:#ff7a70} .ds-chips{font-family:\"Segoe UI\",system-ui,-apple-system,sans-serif;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted)} .ds-chip{display:inline-flex;align-items:center;gap:6px} .ds-chip i{width:8px;height:8px;border-radius:50%;background:var(--muted)} .ds-idle i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--muted)} .ds-done i{background:var(--ok)} .ds-dec i,.ds-app i{width:9px;height:9px;border-radius:2px} .ds-dec i{background:var(--accent)} .ds-dec{color:var(--accent-ink);font-weight:600} .ds-app i{background:var(--ko)} .ds-app{color:var(--ko-ink);font-weight:600} .ds-ctx{font-size:11px;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:400} .ds-ctx.ds-warm{color:var(--accent-ink)} .ds-ctx.ds-hot{color:var(--ko-ink);font-weight:600}"
     },
     {
       "name": "Away Banner",
@@ -369,7 +385,7 @@
     "rules": [
       {
         "name": "The Fixed Jobs Rule",
-        "body": "Green is go / OK / done and progress; amber is your decision and the recommendation; red is approval and breakage; blue is the away summary and nothing else. A colour never borrows another's job, and a new state picks the job it shares or stays neutral.",
+        "body": "Green is go / OK / done and progress; amber is what waits on you (your decision, the recommendation, a session's context filling up); red is stop (approval, breakage, a session that must hand off and clear); blue is the away summary and nothing else. A colour never borrows another's job, and a new state picks the job it shares or stays neutral.",
         "section": "colors"
       },
       {
@@ -425,7 +441,7 @@
     ],
     "dos": [
       "**Do** keep the page dark only: Blackout ground, Work-light Panel surfaces, Well Blue for anything typed or literal.",
-      "**Do** give each cue colour its one job: green go / OK / done and progress, amber your decision and the recommendation, red approval and breakage, blue the away summary only.",
+      "**Do** give each cue colour its one job: green go / OK / done and progress, amber what waits on you, red stop (approval, breakage, a session to hand off), blue the away summary only.",
       "**Do** derive tints with `color-mix()` against the panel and use the ink tokens for coloured text.",
       "**Do** keep the card summary the only large text (22px/600) and every panel caption 11px tracked caps in House Grey.",
       "**Do** double colour with shape in the session strip: round lives its own life, square waits on you.",

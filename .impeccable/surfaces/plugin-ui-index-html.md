@@ -17,8 +17,9 @@ dependencies, French copy, full keyboard operation, nothing moves under a readin
 Chosen direction: "La régie", the stage manager's call desk. Memorable moment: the cue light beside the card
 caption lighting green the instant the keys go live, and the green GO.
 
-Unresolved: Clarifier cites the test's #id into the conversation (no server change); orchestrator messages move
-from the decision slot into the conversation thread (server keeps both directions of the conversation).
+Resolved since the brief: Clarifier cites the test's #id into the conversation (no server change); orchestrator
+messages live in the conversation thread, which the server keeps in both directions. Added after the brief (0.4.0):
+a context gauge (% of the session's context window) after each name in Connectés.
 
 ## Direction contract
 
@@ -28,7 +29,7 @@ in quieter panels on the right, in the user's order of importance.
 
 OWN-WORLD: Blackout ground (#0c0d10) under work-light blue panels (#131929, 1px #232d47, 6px radius), recessed
 wells in deeper blue. Paper-white text, blue-grey muted text. Cue-light colours with fixed jobs: green = go / OK /
-done, amber = your decision, red = approval and breakage. System sans, 11px tracked caps for captions, Consolas
+done, amber = what waits on you, red = stop (approval, breakage). System sans, 11px tracked caps for captions, Consolas
 for ids and key digits.
 
 STORY: The user glances over, sees a lit cue and its caption, reads one decision, hits GO or a digit, then replies
@@ -38,7 +39,7 @@ build without leaving the page.
 FIRST VIEWPORT: At 1440x900, left column (fluid, max 1360 page): the decision panel at top (caption with cue
 light, 22px summary, recap, one-line options, proposition, GO + Autre, "Ensuite" inline in the footer), the
 conversation panel directly under it (last exchanges, field, Envoyer). Right column 420px: À tester par toi (OK /
-Pas OK / Clarifier), Plans en cours (bar + current task), À builder ensuite, Connectés as one line of dots.
+Pas OK / Clarifier), Plans en cours (bar + current task), À builder ensuite, Connectés as one line of dots, each name followed by its context %.
 
 FORM: La régie, position 1 of my ordered list (the roll assigned 7, the user chose the pick); seed:86e6e4c701665753.
 

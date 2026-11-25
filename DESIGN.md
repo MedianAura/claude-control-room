@@ -132,7 +132,7 @@ Spacing: xs 6px, sm 10px, md 14px, lg 24px, xl 40px
 Radius: pip 2px, xs 3px, sm 4px, md 6px, round 50%
 North Star: "La régie"
 Rules:
-- The Fixed Jobs Rule. Green is go / OK / done and progress; amber is your decision and the recommendation; red is approval and breakage; blue is the away summary and nothing else.
+- The Fixed Jobs Rule. Green is go / OK / done and progress; amber is what waits on you (your decision, the recommendation, a session's context filling up); red is stop (approval, breakage, a session that must hand off and clear); blue is the away summary and nothing else.
 - The Ink Rule. Coloured text on a panel uses the ink tokens (Amber Ink, Red Ink); the fill tokens are for borders, dots, bars and filled buttons.
 - The Token-Only Rule. Every colour comes from the `:root` custom properties.
 - The One Loud Line Rule. Only the card summary is large.
