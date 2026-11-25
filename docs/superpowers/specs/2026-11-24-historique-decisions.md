@@ -34,9 +34,8 @@ discussion, `server.js:124` n'en crée plus), 1 approbation, ~18 décisions. L'h
 4. **Nom et place.** Bouton « Historique » (`#histBtn`) inchangé dans l'en-tête du panneau Orchestratrice ;
    panneau titré « Décisions prises » (au lieu de « Historique des réponses »), fermé par défaut, sous le fil, comme
    aujourd'hui.
-   Coordination avec g3 (tiroir « chat de l'orchestratrice ») : s'il devient un tiroir, son lien précède
-   « Historique » dans l'en-tête, il s'ouvre au plus près du fil, « Décisions prises » dessous ; les deux sont
-   indépendants (ouverture non exclusive). Le fil montre aussi les réponses de carte de l'utilisateur, choix et note
+   Coordination avec g3 : pas de tiroir, les textes de terminal de l'orchestratrice vont dans le fil
+   (2026-11-24-chat-complet.md) ; aucun autre panneau près de « Décisions prises ». Le fil montre aussi les réponses de carte de l'utilisateur, choix et note
    compris (« toi · décision « … » → choix », tranché par l'utilisateur avec g3, voir 2026-11-24-chat-complet.md) :
    le fil raconte, l'historique recense ; le doublon est voulu.
 
