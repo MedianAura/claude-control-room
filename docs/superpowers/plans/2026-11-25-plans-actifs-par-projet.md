@@ -83,7 +83,7 @@ l'ancienne liste globale est reprise au claim par chemin, `set_plan` sans claim 
   rien n'est écrit. Les 400 existants (`name` requis, `dir` ou `file` requis) passent avant.
 - Événement du claim quand des plans sont repris : `plans repris : <noms>`.
 
-- [ ] **Step 1: tests qui échouent** :
+- [x] **Step 1: tests qui échouent** :
   - `claim.test.js` : les tests `/api/plans` existants font `claimAs` d'abord et lisent la liste du projet
     (`readJson(active-plans.json)[projectKey('F:/p')]`).
   - nouveau : `set_plan` sans claim → 409, `active-plans.json` absent.
@@ -93,10 +93,10 @@ l'ancienne liste globale est reprise au claim par chemin, `set_plan` sans claim 
     dans `active-plans-legacy.json`.
   - `right.test.js` : le montage écrit `orchestrator.json` avec `project` et `active-plans.json` au nouveau format ;
     un fichier tableau donne une colonne vide.
-- [ ] **Step 2:** `node --test` → les nouveaux tests échouent.
-- [ ] **Step 3:** brancher `delivery.js` et `right.js`.
-- [ ] **Step 4:** `node --test` → tout passe.
-- [ ] **Step 5:** commit `fix(plans): les plans actifs suivent le projet déclaré`.
+- [x] **Step 2:** `node --test` → les nouveaux tests échouent.
+- [x] **Step 3:** brancher `delivery.js` et `right.js`.
+- [x] **Step 4:** `node --test` → tout passe.
+- [x] **Step 5:** commit `fix(plans): les plans actifs suivent le projet déclaré`.
 
 ### Task 3: vérification par l'utilisateur
 

@@ -7,7 +7,10 @@ const crypto = require('crypto');
 const { tempStateDir, startTestServer, request, pageHeaders, clientHeaders, claimAs, HOST } = require('./helpers');
 const { deliverTo } = require('../plugin/lib/inbox');
 const { createDelivery } = require('../plugin/lib/delivery');
-const { readJson } = require('../plugin/lib/store');
+const { readJson, writeJson } = require('../plugin/lib/store');
+const { projectKey } = require('../plugin/lib/active-plans');
+
+const plansOfP = () => (readJson(path.join(dir, 'active-plans.json')) || {})[projectKey('F:/p')];
 
 // Faux canal nommé qui enregistre les lignes reçues, comme la boîte d'une session.
 async function fakeInbox() {
@@ -152,12 +155,42 @@ test('a message nobody picks up raises the missing-listener alert', async () => 
   assert.match(delivery.alerts()[0], /control-room listen/);
 });
 
-test('active plans are declared by the orchestrator', async () => {
+test('active plans are declared by the orchestrator, under its project', async () => {
+  await claimAs(t, 'A');
   const r = await request(t.port, 'POST', '/api/plans', { body: { name: 'dungeon-speed', dir: 'F:/p/plans/dungeon-speed', label: '🏃', state: 'active' }, headers: clientHeaders(t) });
   assert.equal(r.status, 200);
-  assert.deepEqual(readJson(path.join(dir, 'active-plans.json')), [{ name: 'dungeon-speed', dir: 'F:/p/plans/dungeon-speed', label: '🏃' }]);
+  assert.deepEqual(plansOfP(), [{ name: 'dungeon-speed', dir: 'F:/p/plans/dungeon-speed', label: '🏃' }]);
   await request(t.port, 'POST', '/api/plans', { body: { name: 'dungeon-speed', state: 'archived' }, headers: clientHeaders(t) });
-  assert.deepEqual(readJson(path.join(dir, 'active-plans.json')), []);
+  assert.deepEqual(plansOfP(), []);
+});
+
+test('set_plan without a declared orchestrator is refused and writes nothing', async () => {
+  const r = await request(t.port, 'POST', '/api/plans', { body: { name: 'x', dir: 'F:/p/plans/x', state: 'active' }, headers: clientHeaders(t) });
+  assert.equal(r.status, 409);
+  assert.equal(r.json.error, 'aucune orchestratrice déclarée, lance control-room claim');
+  assert.equal(readJson(path.join(dir, 'active-plans.json')), null);
+});
+
+test('another project does not see the plans, and a re-claim of the first gets them back', async () => {
+  const right = require('../plugin/lib/right');
+  await claimAs(t, 'A', { project: 'F:/a', plans: 'F:/a/plans' });
+  await request(t.port, 'POST', '/api/plans', { body: { name: 'x', dir: 'F:/a/plans/x', label: 'X', state: 'active' }, headers: clientHeaders(t) });
+  assert.deepEqual(right.activePlans().map(p => p.name), ['x']);
+  await claimAs(t, 'B', { project: 'F:/b', plans: 'F:/b/plans' });
+  assert.deepEqual(right.activePlans(), []);
+  await claimAs(t, 'A', { project: 'F:/a', plans: 'F:/a/plans' });
+  assert.deepEqual(right.activePlans().map(p => p.name), ['x']);
+});
+
+test('claim takes back the old-format plans under its plans folder and leaves the others aside', async () => {
+  const old = [{ name: 'mine', dir: 'F:/p/plans/mine', label: 'M' }, { name: 'theirs', dir: 'F:/q/plans/theirs', label: 'T' }];
+  writeJson(path.join(dir, 'active-plans.json'), old);
+  const right = require('../plugin/lib/right');
+  assert.deepEqual(readJson(path.join(dir, 'active-plans.json')), old);
+  await claimAs(t, 'A');
+  assert.deepEqual(plansOfP(), [old[0]]);
+  assert.deepEqual(right.activePlans(), [old[0]]);
+  assert.deepEqual(readJson(path.join(dir, 'active-plans-legacy.json')), [old[1]]);
 });
 
 // ---------- revue finale ----------
@@ -209,19 +242,21 @@ test('claim stores the board path, and no master plan anymore', async () => {
 });
 
 test('set_plan without dir or file is refused and active-plans.json stays untouched', async () => {
+  await claimAs(t, 'A');
   const r = await request(t.port, 'POST', '/api/plans', { body: { name: 'x', label: 'X', state: 'active' }, headers: clientHeaders(t) });
   assert.equal(r.status, 400);
   assert.equal(readJson(path.join(dir, 'active-plans.json')), null);
 });
 
 test('rightState skips an active plan entry that has neither dir nor file', () => {
-  require('fs').writeFileSync(path.join(dir, 'orchestrator.json'), JSON.stringify({ board: path.join(dir, 'board.json') }));
-  require('fs').writeFileSync(path.join(dir, 'active-plans.json'), JSON.stringify([{ name: 'bad' }, null]));
+  require('fs').writeFileSync(path.join(dir, 'orchestrator.json'), JSON.stringify({ project: dir, board: path.join(dir, 'board.json') }));
+  require('fs').writeFileSync(path.join(dir, 'active-plans.json'), JSON.stringify({ [projectKey(dir)]: [{ name: 'bad' }, null] }));
   const right = require('../plugin/lib/right');
   assert.deepEqual(right.rightState().plans, []);
 });
 
 test('set_plan keeps a plan given as a file', async () => {
+  await claimAs(t, 'A');
   await request(t.port, 'POST', '/api/plans', { body: { name: 'big', file: 'F:/p/plans/big.md', label: 'B', state: 'active' }, headers: clientHeaders(t) });
-  assert.deepEqual(readJson(path.join(dir, 'active-plans.json')), [{ name: 'big', file: 'F:/p/plans/big.md', label: 'B' }]);
+  assert.deepEqual(plansOfP(), [{ name: 'big', file: 'F:/p/plans/big.md', label: 'B' }]);
 });

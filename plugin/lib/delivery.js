@@ -9,6 +9,7 @@
 const path = require('path');
 const crypto = require('crypto');
 const { stateDir, readJson, writeJson, addEvent } = require('./store');
+const activePlans = require('./active-plans');
 
 const TAKEOVER = '[control-room] Une autre orchestratrice a pris le relais. Arrête control-room listen ; tes cartes en attente passent à la nouvelle.';
 const sha = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');
@@ -17,7 +18,6 @@ const codeOf = (claimId) => sha(`code:${claimId}`).slice(0, 6);
 function createDelivery({ ackTimeoutMs = 120000, foreignTtlMs = 10 * 60000 } = {}) {
   const outboxFile = () => path.join(stateDir(), 'outbox.json');
   const orchFile = () => path.join(stateDir(), 'orchestrator.json');
-  const plansFile = () => path.join(stateDir(), 'active-plans.json');
   const load = () => readJson(outboxFile()) || [];
   const save = (box) => writeJson(outboxFile(), box);
   const current = () => readJson(orchFile());
@@ -45,6 +45,8 @@ function createDelivery({ ackTimeoutMs = 120000, foreignTtlMs = 10 * 60000 } = {
     const claimId = crypto.randomBytes(16).toString('hex');
     const next = { claimHash: sha(claimId), socketHash: sha(socket), code: codeOf(claimId), project, plans, board, version: version || null, claimedAt: Date.now() };
     writeJson(orchFile(), next);
+    const adopted = activePlans.adopt(project, plans);
+    if (adopted.length) addEvent(`plans repris : ${adopted.join(', ')}`);
     const box = load();
     for (const m of box) {
       const fromPrev = prev && m.owner === prev.claimHash && m.text !== TAKEOVER;
@@ -132,11 +134,13 @@ function createDelivery({ ackTimeoutMs = 120000, foreignTtlMs = 10 * 60000 } = {
     return out;
   }
 
+  // Rend false sans orchestratrice déclarée : un plan actif appartient toujours à un projet.
   function setPlan({ name, dir, file, label, state }) {
-    const plans = (readJson(plansFile()) || []).filter(p => p.name !== name);
-    if (state !== 'archived') plans.push(file ? { name, file, label } : { name, dir, label });
-    writeJson(plansFile(), plans);
+    const o = current();
+    if (!o || !activePlans.projectKey(o.project)) return false;
+    activePlans.setPlanFor(o.project, { name, dir, file, label, state });
     addEvent(state === 'archived' ? `plan archivé : ${name}` : `plan actif : ${label || name}`);
+    return true;
   }
 
   // Attente abandonnée quand la réponse ne peut plus partir (client parti).
@@ -181,7 +185,7 @@ function createDelivery({ ackTimeoutMs = 120000, foreignTtlMs = 10 * 60000 } = {
       const has = (v) => typeof v === 'string' && v.trim();
       if (!b || typeof b !== 'object' || !has(b.name)) return send(res, 400, { error: 'name requis' });
       if (b.state !== 'archived' && !has(b.dir) && !has(b.file)) return send(res, 400, { error: 'dir ou file requis pour un plan actif' });
-      setPlan(b);
+      if (!setPlan(b)) return send(res, 409, { error: 'aucune orchestratrice déclarée, lance control-room claim' });
       return send(res, 200, { ok: true });
     } },
   ];

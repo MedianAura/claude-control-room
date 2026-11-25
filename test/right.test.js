@@ -9,6 +9,7 @@ const orchRoutes = require('../plugin/lib/orchestrator-routes');
 const board = require('../plugin/lib/board');
 const { writeJson } = require('../plugin/lib/store');
 const { pendingCards } = require('../plugin/lib/cards');
+const { projectKey } = require('../plugin/lib/active-plans');
 
 let t, dir, boardPath, plansRoot;
 
@@ -18,7 +19,7 @@ test.beforeEach(async () => {
   fs.mkdirSync(path.join(plansRoot, 'dungeon-speed'), { recursive: true });
   fs.writeFileSync(path.join(plansRoot, 'dungeon-speed', 'plan.md'), '- [x] a\n- [ ] b\n');
   boardPath = path.join(dir, '.control-room', 'board.json');
-  writeJson(path.join(dir, 'orchestrator.json'), { plans: plansRoot, board: boardPath });
+  writeJson(path.join(dir, 'orchestrator.json'), { project: dir, plans: plansRoot, board: boardPath });
   t = await startTestServer({ routes, state: () => ({ right: rightState() }) });
 });
 test.afterEach(async () => { await t.close(); });
@@ -35,7 +36,7 @@ const ko = (id, note) => request(t.port, 'POST', '/api/test', { body: { id, resu
 const item = (id) => board.readBoard(boardPath).items.find(i => i.id === id);
 
 test('the right column shows open items grouped by the board view', () => {
-  writeJson(path.join(dir, 'active-plans.json'), [{ name: 'dungeon-speed', dir: path.join(plansRoot, 'dungeon-speed'), label: '🏃 dungeon-speed' }]);
+  writeJson(path.join(dir, 'active-plans.json'), { [projectKey(dir)]: [{ name: 'dungeon-speed', dir: path.join(plansRoot, 'dungeon-speed'), label: '🏃 dungeon-speed' }] });
   const a = board.addItem(boardPath, 'test', { text: 'scan', plan: 'dungeon-speed', task: 'Task 4: Deploy' });
   const b = board.addItem(boardPath, 'test', { text: 'hors plan', weight: 'high' });
   const c = board.addItem(boardPath, 'test', { text: 'déjà vu', plan: 'dungeon-speed', task: 'Task 4: Deploy' });
@@ -50,6 +51,17 @@ test('the right column shows open items grouped by the board view', () => {
   ]);
   assert.deepEqual(r.todos.map(g => [g.group, g.label, g.items.map(i => i.id)]), [['Bags', 'Bags', [d.id]]]);
   assert.deepEqual(r.plans, [{ name: 'dungeon-speed', label: '🏃 dungeon-speed', done: 1, total: 2, tasks: [] }]);
+});
+
+test('the column only shows the plans of the declared project', () => {
+  const plan = { name: 'dungeon-speed', dir: path.join(plansRoot, 'dungeon-speed'), label: '🏃' };
+  writeJson(path.join(dir, 'active-plans.json'), { [projectKey(path.join(dir, 'other'))]: [plan] });
+  assert.deepEqual(rightState().plans, []);
+});
+
+test('an old-format plans file (one list for every project) shows no plan', () => {
+  writeJson(path.join(dir, 'active-plans.json'), [{ name: 'dungeon-speed', dir: path.join(plansRoot, 'dungeon-speed'), label: '🏃' }]);
+  assert.deepEqual(rightState().plans, []);
 });
 
 test('without a claimed orchestrator the column is empty', () => {

@@ -2,12 +2,13 @@
 const path = require('path');
 const { stateDir, readJson, addEvent } = require('./store');
 const { planOutline } = require('./plan-file');
+const { plansOf } = require('./active-plans');
 const board = require('./board');
 const { boardFile, NO_BOARD } = require('./board-routes');
 const cards = require('./cards');
 
 function orchestrator() { return readJson(path.join(stateDir(), 'orchestrator.json')); }
-function activePlans() { return (readJson(path.join(stateDir(), 'active-plans.json')) || []).filter(p => p && p.name); }
+function activePlans() { const o = orchestrator(); return o ? plansOf(o.project) : []; }
 
 function readCurrentBoard() {
   const file = boardFile();
