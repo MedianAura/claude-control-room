@@ -179,14 +179,20 @@
     {
       "id": "8A2P",
       "kind": "todo",
-      "state": "open",
+      "state": "done",
       "text": "Implémenter les plans actifs par projet déclaré (adoption de l'ancienne liste sous --plans, set_plan sans claim → 409).",
       "detail": "Spec : docs/superpowers/specs/2026-11-24-plans-actifs-fantomes.md (0e4d7f8). Corrige stat-gains et crucible-quick-upgrade affichés dans control-room.",
       "group": "Plans actifs",
       "plan": null,
-      "notes": [],
+      "notes": [
+        {
+          "at": "2026-11-25T05:18:39.911Z",
+          "by": "orchestrator",
+          "text": "0fa06a7 ; #658B et #QXVY OK, #5W25 attend le claim d'AzerothCoreCOA."
+        }
+      ],
       "createdAt": "2026-11-25T05:02:43.325Z",
-      "closedAt": null,
+      "closedAt": "2026-11-25T05:18:39.911Z",
       "weight": "high"
     },
     {
@@ -265,7 +271,7 @@
     {
       "id": "5W25",
       "kind": "test",
-      "state": "open",
+      "state": "ok",
       "text": "Au prochain claim de l'orchestratrice d'AzerothCoreCOA, ses deux plans (stat-gains, crucible-quick-upgrade) réapparaissent dans sa page.",
       "detail": null,
       "plan": "2026-11-25-plans-actifs-par-projet",
@@ -276,7 +282,7 @@
       },
       "notes": [],
       "createdAt": "2026-11-25T05:14:08.504Z",
-      "closedAt": null,
+      "closedAt": "2026-11-25T05:18:50.112Z",
       "weight": "medium"
     }
   ]
