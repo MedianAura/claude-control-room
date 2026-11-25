@@ -162,6 +162,19 @@
       "notes": [],
       "createdAt": "2026-11-25T04:42:29.521Z",
       "closedAt": "2026-11-25T04:43:32.609Z"
+    },
+    {
+      "id": "SWDH",
+      "kind": "todo",
+      "state": "open",
+      "text": "Une orchestratrice remplacée par un nouveau claim mais encore vivante écrit encore dans le tableau et les plans actifs du nouveau projet.",
+      "detail": "Signalé par g1 pendant le grilling des plans fantômes (2026-11-24). Les outils du tableau et set_plan visent le claim en vigueur sans identifiant de claim : rien ne vérifie que l'appelant est l'orchestratrice déclarée.",
+      "group": "Confiance",
+      "plan": null,
+      "notes": [],
+      "createdAt": "2026-11-25T04:59:39.941Z",
+      "closedAt": null,
+      "weight": "medium"
     }
   ]
 }
