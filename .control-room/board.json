@@ -22,7 +22,7 @@
     {
       "id": "KRUV",
       "kind": "test",
-      "state": "open",
+      "state": "ok",
       "text": "Une décision complète sans ouvrir de terminal.",
       "detail": "Demande écrite dans la page → délégation → carte → réponse → la session concernée reçoit la décision.",
       "plan": "2026-11-21-control-room",
@@ -33,7 +33,7 @@
       },
       "notes": [],
       "createdAt": "2026-11-23T04:15:52.124Z",
-      "closedAt": null
+      "closedAt": "2026-11-25T04:42:51.190Z"
     },
     {
       "id": "JP8U",
