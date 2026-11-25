@@ -86,7 +86,7 @@
     {
       "id": "9EET",
       "kind": "test",
-      "state": "open",
+      "state": "ok",
       "text": "« Clarifie #XXXX » depuis la page : l'orchestratrice répond par une carte qui montre qu'elle a reçu le texte complet du test.",
       "detail": "OK sur un test : elle fait cocher l'étape dans le `plan.md` de la session.",
       "plan": "2026-11-22-board",
@@ -97,7 +97,7 @@
       },
       "notes": [],
       "createdAt": "2026-11-23T04:15:52.131Z",
-      "closedAt": null
+      "closedAt": "2026-11-25T04:37:17.895Z"
     }
   ]
 }
