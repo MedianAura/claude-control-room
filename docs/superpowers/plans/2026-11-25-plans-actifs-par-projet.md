@@ -53,7 +53,7 @@ l'ancienne liste globale est reprise au claim par chemin, `set_plan` sans claim 
   `dir` ou `file` est sous `plansDir` passent dans la liste du projet (sans écraser un plan du même nom déjà déclaré)
   et sortent de la liste mise à part ; celle-ci est supprimée une fois vide. Rend les noms repris.
 
-- [ ] **Step 1: tests qui échouent** dans `test/active-plans.test.js` :
+- [x] **Step 1: tests qui échouent** dans `test/active-plans.test.js` :
   - `projectKey('F:/p')`, `projectKey('F:\\p\\')`, `projectKey('f:\\P')` égaux sous Windows ; `projectKey('')` et
     `projectKey(undefined)` → `null`.
   - `isUnder('F:/p/plans/x', 'F:/p/plans')` vrai, `isUnder('F:/p/plans', 'F:/p/plans')` vrai,
@@ -65,10 +65,10 @@ l'ancienne liste globale est reprise au claim par chemin, `set_plan` sans claim 
     `adopt('F:/b', 'F:/b/plans')` rend `['y']` et `active-plans-legacy.json` n'existe plus.
   - `adopt` sans liste mise à part ni tableau : rend `[]`, ne crée aucun fichier.
   - `adopt` ne remplace pas un plan du même nom déjà déclaré pour le projet.
-- [ ] **Step 2:** `node --test test/active-plans.test.js` → échec (module absent).
-- [ ] **Step 3:** écrire `plugin/lib/active-plans.js` (lecture/écriture par `store.readJson`/`writeJson`).
-- [ ] **Step 4:** `node --test` → tout passe.
-- [ ] **Step 5:** commit `feat(plans): liste des plans actifs par projet, reprise de l'ancienne liste`.
+- [x] **Step 2:** `node --test test/active-plans.test.js` → échec (module absent).
+- [x] **Step 3:** écrire `plugin/lib/active-plans.js` (lecture/écriture par `store.readJson`/`writeJson`).
+- [x] **Step 4:** `node --test` → tout passe.
+- [x] **Step 5:** commit `feat(plans): liste des plans actifs par projet, reprise de l'ancienne liste`.
 
 ### Task 2: brancher le claim, `set_plan` et la colonne
 
