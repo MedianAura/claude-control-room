@@ -98,6 +98,70 @@
       "notes": [],
       "createdAt": "2026-11-23T04:15:52.131Z",
       "closedAt": "2026-11-25T04:37:17.895Z"
+    },
+    {
+      "id": "835Q",
+      "kind": "test",
+      "state": "open",
+      "text": "Poste perso, après mise à jour du plugin : avec le MCP, `reply` et `queue_decision` marchent comme avant.",
+      "detail": "Session avec MCP ; rien n'a changé par rapport à avant la voie CLI.",
+      "plan": "2026-11-23-sans-mcp-wsl",
+      "task": "Acceptation",
+      "origin": {
+        "file": "2026-11-23-sans-mcp-wsl.md",
+        "step": "Acceptation 1"
+      },
+      "notes": [],
+      "createdAt": "2026-11-25T04:42:29.411Z",
+      "closedAt": null
+    },
+    {
+      "id": "D4RP",
+      "kind": "test",
+      "state": "open",
+      "text": "Travail, MCP bloqué : un message de la page reçoit sa réponse par `control-room tool reply`.",
+      "detail": "`claim` → `listen` en arrière-plan → message depuis la page → `control-room tool reply` → la réponse apparaît dans le fil.",
+      "plan": "2026-11-23-sans-mcp-wsl",
+      "task": "Acceptation",
+      "origin": {
+        "file": "2026-11-23-sans-mcp-wsl.md",
+        "step": "Acceptation 2"
+      },
+      "notes": [],
+      "createdAt": "2026-11-25T04:42:29.447Z",
+      "closedAt": null
+    },
+    {
+      "id": "CPWC",
+      "kind": "test",
+      "state": "open",
+      "text": "Travail, MCP bloqué : une carte posée par `control-room tool queue_decision` revient par `listen` après le clic.",
+      "detail": "`control-room tool queue_decision` → carte → clic → réponse relayée par `listen`.",
+      "plan": "2026-11-23-sans-mcp-wsl",
+      "task": "Acceptation",
+      "origin": {
+        "file": "2026-11-23-sans-mcp-wsl.md",
+        "step": "Acceptation 3"
+      },
+      "notes": [],
+      "createdAt": "2026-11-25T04:42:29.483Z",
+      "closedAt": null
+    },
+    {
+      "id": "QTNB",
+      "kind": "test",
+      "state": "open",
+      "text": "WSL sans `CONTROL_ROOM_HOST` : `control-room start` ouvre la page dans le navigateur Windows.",
+      "detail": null,
+      "plan": "2026-11-23-sans-mcp-wsl",
+      "task": "Acceptation",
+      "origin": {
+        "file": "2026-11-23-sans-mcp-wsl.md",
+        "step": "Acceptation 4"
+      },
+      "notes": [],
+      "createdAt": "2026-11-25T04:42:29.521Z",
+      "closedAt": null
     }
   ]
 }
