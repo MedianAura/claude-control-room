@@ -171,5 +171,5 @@ un lanceur POSIX à la racine rejoint `control-room.cmd`.
   le MCP, rien n'a changé.
 - [x] (user) Travail, MCP bloqué : `claim` → `listen` en arrière-plan → message depuis la page →
   `control-room tool reply` → la réponse apparaît dans le fil.
-- [ ] (user) Travail : `control-room tool queue_decision` → carte → clic → réponse relayée par `listen`.
-- [ ] (user) WSL sans `CONTROL_ROOM_HOST` : `control-room start` ouvre la page dans le navigateur Windows.
+- [x] (user) Travail : `control-room tool queue_decision` → carte → clic → réponse relayée par `listen`.
+- [x] (user) WSL sans `CONTROL_ROOM_HOST` : `control-room start` ouvre la page dans le navigateur Windows.
