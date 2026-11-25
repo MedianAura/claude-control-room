@@ -38,7 +38,7 @@
     {
       "id": "JP8U",
       "kind": "test",
-      "state": "open",
+      "state": "ok",
       "text": "Une approbation depuis la page (par exemple `docker compose build` chez la session des builds).",
       "detail": "Autoriser fait continuer la session ; Refuser + note lui renvoie la note.",
       "plan": "2026-11-21-control-room",
@@ -49,7 +49,7 @@
       },
       "notes": [],
       "createdAt": "2026-11-23T04:15:52.126Z",
-      "closedAt": null
+      "closedAt": "2026-11-25T04:40:11.967Z"
     },
     {
       "id": "C5JE",
