@@ -169,7 +169,7 @@ un lanceur POSIX à la racine rejoint `control-room.cmd`.
 
 - [ ] (user) Poste perso, après `/plugin` mise à jour en 0.3.0 : session avec MCP, `reply` et `queue_decision` par
   le MCP, rien n'a changé.
-- [ ] (user) Travail, MCP bloqué : `claim` → `listen` en arrière-plan → message depuis la page →
+- [x] (user) Travail, MCP bloqué : `claim` → `listen` en arrière-plan → message depuis la page →
   `control-room tool reply` → la réponse apparaît dans le fil.
 - [ ] (user) Travail : `control-room tool queue_decision` → carte → clic → réponse relayée par `listen`.
 - [ ] (user) WSL sans `CONTROL_ROOM_HOST` : `control-room start` ouvre la page dans le navigateur Windows.
