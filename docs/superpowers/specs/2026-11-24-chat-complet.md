@@ -26,8 +26,18 @@
 > 5. **Markdown complet de ce qu'elle écrit** : tableaux, listes numérotées, titres, blocs de code (toujours
 >    échappés, Node/HTML sans dépendance).
 >
-> Prochaine étape : une maquette avec de vraies `reply`, à valider avant le plan. Les décisions dans le fil (point 3
-> ci-dessous, « toi · décision … → choix ») restent à trancher avec la maquette.
+> **Maquette validée le 2026-11-25** (vraies `reply`, plus une réponse d'état avec tableau, 1440×900) :
+>
+> - le panneau de discussion remplit la hauteur sous la carte (360 px au moins) ; seul le fil défile, la saisie
+>   reste en bas ; sans carte en attente, il prend tout l'écran ;
+> - un message : qui et l'heure dans une colonne de 112 px, le texte à 14,5 px / 1,6, 74 caractères au plus par
+>   ligne ; ses messages séparés par un filet, ceux de l'utilisateur sur le fond creusé (`--well`) ;
+> - tableaux : filets fins, en-tête en muted, défilement horizontal s'il est trop large ; blocs de code sur fond
+>   creusé ;
+> - l'heure passe sous le nom (plus de colonne à droite).
+>
+> Les décisions dans le fil (point 3 ci-dessous, « toi · décision … → choix », tranché par l'utilisateur avec g3)
+> ne sont pas dans la maquette : à reconfirmer, maintenant que « Décisions prises » est sur la carte.
 
 Date : 2026-11-24. Statut : décidé par grilling (g3, questions Q1 à Q9 relayées en cartes par l'orchestratrice). Pas de
 code modifié à cette étape. Vocabulaire : `GLOSSARY.md` (section Fil). Décision d'architecture :

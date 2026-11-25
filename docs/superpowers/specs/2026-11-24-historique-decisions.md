@@ -55,8 +55,11 @@ décision fait **deux lignes** en moyenne : « une ligne » (décision 3) veut d
   reconnaît la décision cherchée, et Ctrl+F doit trouver ce qui se voit.
 - **Le choix est l'ancre** : après `→`, couleur du texte principal, un peu plus gras ; heure (Consolas,
   `tabular-nums`) et session en muted. Pas de vert (le vert dit « go / OK », pas « tranché »).
-- **La note** en retrait dessous, en muted, avec le filet gauche des citations du fil.
-- Pas de hauteur maximale ni de défilement interne : 30 entrées suivent le défilement de la page.
+- **La note** en retrait dessous, en muted (retrait seul, pas de filet).
+- **Moitié de l'écran au plus** (`50vh`), avec son propre défilement : 30 entrées font ~1 700 px et poussaient la
+  discussion hors de l'écran (vu sur la maquette).
+- Heure seule aujourd'hui, « 22 nov 14 h 03 » sinon, dans une colonne étroite en Consolas.
+- Maquette validée le 2026-11-25 (vraies décisions, 1440×900) avec celle de la discussion.
 - **Rien ne bouge sous l'œil** : une décision arrivée pendant que le pointeur est sur la liste attend qu'il en
   sorte (même gel que le fil, `talkHover`).
 - Vide : « Aucune décision prise. »
